@@ -6,7 +6,7 @@
 ## Key Functions
 
 - **API Polling:** Periodically fetches the pending queue from the Backend.
-- **Process Detection:** Uses Win32 API (`FindWindow`, `GetWindowThreadProcessId`) to locate the `WoW.exe` (3.3.5a) process.
+- **Process Targeting (MVP):** Targets the **foreground** `WoW.exe` (3.3.5a) process. Process selection from a list is a roadmap feature.
 
 ## Command Injection (WPF to Addon)
 
@@ -14,10 +14,19 @@
 - Splits strings into chunks of < 255 characters (WoW chat limit).
 - Uses `PostMessage` to trigger `WM_KEYDOWN` (Enter), simulates pasting the string, then triggers Enter again.
 
+## Explicit Claim Flow (Desktop to Backend)
+
+The Desktop app uses an explicit claim model to avoid accidentally locking payouts:
+
+1. Desktop fetches the queue via **GET** `/api/payouts/pending`.
+2. When the streamer clicks **Sync/Inject**, Desktop marks selected payouts as `InProgress` via **PATCH** `/api/payouts/{id}/status`.
+3. Desktop injects the payload into WoW via `/run ReceiveGold("...")`.
+
 ### Feedback Loop (Addon to WPF)
 1. The WoW Addon will print a specific tag to the chat log upon successful mail sending (e.g., "MGM_CONFIRM:[PayoutId]").
-2. The WPF Utility will monitor `Logs/WoWChatLog.txt` in real-time.
-3. Upon detecting the confirmation tag, the WPF Utility will call the Backend API `PATCH /api/payouts/{id}` to mark the status as 'Sent'.
+2. The WPF Utility will monitor `Logs\WoWChatLog.txt` in real-time for the pattern `[MGM_CONFIRM:UUID]`.
+3. Upon detecting the confirmation tag, the WPF Utility will call the Backend API `PATCH /api/payouts/{id}/status` to mark the status as `Sent`.
+4. If the log entry is missed, the Desktop UI provides a manual **Mark as Sent** override.
 
 ## Libraries
 

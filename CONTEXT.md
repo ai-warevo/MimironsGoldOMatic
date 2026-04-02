@@ -6,6 +6,27 @@ Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.
 ## System Architecture
 `Twitch Extension -> ASP.NET Core API -> WPF App (WinAPI/PostMessage) -> WoW 3.3.5a Addon (Lua)`
 
+## MVP Specification (final)
+
+- **Gold per redemption**: fixed **1,000g**.
+- **Anti-abuse**:
+  - **Lifetime cap**: max **10,000g total** per Twitch user.
+  - **Concurrency**: **one active payout per Twitch user** at a time.
+  - **Rate limiting**: standard ASP.NET Core rate limiting (e.g. ~5 req/min per IP/user).
+- **Idempotency**: `TwitchTransactionId` (Twitch redemption unique id) is persisted and enforced unique in the database.
+- **Identity fields**:
+  - `TwitchUserId` (logic, limits, concurrency)
+  - `TwitchDisplayName` (WPF UX)
+- **Payout lifecycle statuses**: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`.
+- **Expiration**: Backend hourly job expires `Pending`/`InProgress` older than 24h; no reactivation.
+- **Security (MVP)**:
+  - Twitch Dev Rig focus; production-grade Twitch JWT validation is a roadmap milestone.
+  - Desktop-to-Backend uses a pre-shared `ApiKey` (locally trusted Desktop app).
+- **WoW targeting (MVP)**: Desktop targets the **foreground** `WoW.exe` process; process picker is roadmap.
+- **Confirmation**:
+  - Primary: Desktop monitors `Logs\WoWChatLog.txt` for `[MGM_CONFIRM:UUID]`.
+  - Fallback: Desktop provides a manual **Mark as Sent** button.
+
 ## Primary Data Flow (conceptual)
 1. Twitch Extension collects a player/character input and submits a claim to the ASP.NET Core API.
 2. The API validates the claim, persists payout state, and returns a payout payload compatible with the WPF app.

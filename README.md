@@ -7,6 +7,21 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 
 `Twitch Extension -> ASP.NET Core API -> WPF App (WinAPI/PostMessage) -> WoW 3.3.5a Addon (Lua)`
 
+## MVP Specification (final)
+
+- **Gold per redemption**: fixed **1,000g** (MVP).
+- **Anti-abuse**:
+  - **Lifetime cap**: max **10,000g total** per Twitch user.
+  - **Concurrency**: **one active payout per Twitch user** at a time (must be terminal before a new claim).
+  - **Rate limiting**: standard ASP.NET Core rate limiting (e.g. ~5 req/min per IP/user).
+- **Idempotency**: each Twitch redemption includes `TwitchTransactionId`; Backend enforces a unique constraint so **one redemption = one payout**.
+- **Statuses**: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired` (24h).
+- **Expiration**: Backend runs an hourly job to mark `Pending`/`InProgress` older than 24h as `Expired` (no reactivation).
+- **Confirmation**: Desktop watches `Logs\WoWChatLog.txt` for `[MGM_CONFIRM:UUID]` and also provides a manual **Mark as Sent** override.
+- **Security (MVP)**:
+  - Focus on Twitch Dev Rig debugging first; production-grade Twitch JWT verification is a roadmap milestone.
+  - Desktop-to-Backend uses a pre-shared `ApiKey` (locally trusted Desktop app).
+
 ## What you get
 
 - A shared contract library for payout requests/responses (so all modules agree on the same data model).
@@ -26,6 +41,7 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 ## Documentation
 
 - **Architecture & repo layout (docs entrypoint):** [`docs/ReadME.md`](docs/ReadME.md)
+- **Roadmap:** [`docs/ROADMAP.md`](docs/ROADMAP.md)
 - **Component READMEs:**
   - [`docs/MimironsGoldOMatic.Shared/ReadME.md`](docs/MimironsGoldOMatic.Shared/ReadME.md)
   - [`docs/MimironsGoldOMatic.Backend/ReadME.md`](docs/MimironsGoldOMatic.Backend/ReadME.md)
