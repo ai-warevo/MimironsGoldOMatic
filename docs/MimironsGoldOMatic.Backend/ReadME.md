@@ -1,7 +1,7 @@
-## MimironsGoldOMatic.Backend (ASP.NET Core)
+## MimironsGoldOMatic.Backend (ASP.NET Core | Bridge between Twitch & WPF Desktop app)
 
 - **Role:** Orchestrates the payout queue and manages persistent storage.
-- **Stack:** ASP.NET Core (.NET 10), Entity Framework Core, PostgreSQL.
+- **Stack:** ASP.NET Core, EF Core, Marten (Event Store), PostgreSQL.
 
 ## Key Functions
 
@@ -28,3 +28,19 @@
 
 - `Npgsql.EntityFrameworkCore.PostgreSQL`
 - `Microsoft.AspNetCore.Authentication.JwtBearer`
+
+## Architecture & Patterns
+- **Idempotency Pattern:**
+  Use `TwitchTransactionId` as the idempotency key. If a network lag causes the extension to send the same request twice, the backend must return the existing record instead of creating a duplicate or consuming limits.
+  
+- **Outbox Pattern:**
+  For any external notifications (Discord, logging), save them to an `Outbox` table within the same transaction as the payout. Use a background worker to process them. This ensures data consistency even if external services are down.
+
+- **Specification Pattern (Business Rules):**
+  Encapsulate business logic in Specification classes:
+  - `LifetimeLimitSpecification`: Checks the 10k gold cap.
+  - `ActiveRequestSpecification`: Ensures only one active request per Twitch user.
+  This makes business rules readable, testable, and reusable.
+
+## Event Sourcing
+- **Marten Integration:** Persist every state change as a sequence of events (`ClaimCreated`, `InjectedByDesktop`, `ConfirmedInGame`). This provides a full audit trail for both the streamer and developers.

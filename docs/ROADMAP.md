@@ -26,7 +26,7 @@ This roadmap reflects the **finalized MVP specification** agreed during design c
 
 Acting as **[Backend/API Expert]**:
 
-- Read `docs/MimironsGoldOMatic.Shared/ReadME.md`.
+- Read `ReadME.md`, `docs/ReadME.md` and `docs/MimironsGoldOMatic.Shared/ReadME.md`.
 - Initialize the .NET 10 Class Library project `MimironsGoldOMatic.Shared` inside `/src`.
 - Implement the shared contracts **as documented**:
   - `PayoutStatus` enum including: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`
@@ -59,7 +59,7 @@ Acting as **[Backend/API Expert]**:
 
 Acting as **[Backend/API Expert]**:
 
-- Read `docs/MimironsGoldOMatic.Backend/ReadME.md` and reference `MimironsGoldOMatic.Shared`.
+- Read `ReadME.md`, `docs/ReadME.md` and `docs/MimironsGoldOMatic.Backend/ReadME.md` and reference `MimironsGoldOMatic.Shared`.
 - Create the ASP.NET Core (.NET 10) Web API project `MimironsGoldOMatic.Backend` in `/src`.
 - Configure EF Core with PostgreSQL and implement persistence:
   - Unique constraint on `TwitchTransactionId` (idempotency)
@@ -88,7 +88,7 @@ Acting as **[Backend/API Expert]**:
 
 Acting as **[WoW Addon/Lua Expert]**:
 
-- Read `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`.
+- Read `ReadME.md`, `docs/ReadME.md` and `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`.
 - Create the `src/MimironsGoldOMatic.WoWAddon` folder.
 - Implement the 3.3.5a addon logic (Interface: 30300):
   - `MimironsGoldOMatic.lua` with global `ReceiveGold(dataString)` to parse and enqueue payouts
@@ -117,7 +117,7 @@ Acting as **[WoW Addon/Lua Expert]**:
 
 Acting as **[WPF/WinAPI Expert]**:
 
-- Read `docs/MimironsGoldOMatic.Desktop/ReadME.md` and reference `MimironsGoldOMatic.Shared`.
+- Read `ReadME.md`, `docs/ReadME.md` and `docs/MimironsGoldOMatic.Desktop/ReadME.md` and reference `MimironsGoldOMatic.Shared`.
 - Create the WPF Application (.NET 10) `MimironsGoldOMatic.Desktop` in `/src`.
 - Use CommunityToolkit.Mvvm for MVVM structure.
 - Implement explicit-claim queue flow:
@@ -145,7 +145,7 @@ Acting as **[WPF/WinAPI Expert]**:
 
 Acting as **[Frontend/Twitch Expert]**:
 
-- Read `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`.
+- Read `ReadME.md`, `docs/ReadME.md` and `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`.
 - Scaffold `src/MimironsGoldOMatic.TwitchExtension` using Vite + React + TypeScript.
 - Build the Character Name submission form.
 - Integrate with Twitch Extension helper (`window.Twitch.ext`) and send claims to Backend:
@@ -168,7 +168,7 @@ Acting as **[Frontend/Twitch Expert]**:
 
 Acting as **[Senior Architect]**:
 
-- Review `docs/ReadME.md` and `docs/ROADMAP.md` for end-to-end consistency.
+- Review `ReadME.md`, `docs/ReadME.md` and `docs/ROADMAP.md` for end-to-end consistency.
 - Ensure all projects are included in `src/MimironsGoldOMatic.sln`.
 - Synchronize component behavior and verify the full data flow:
   - Twitch Extension claim -> Backend pending

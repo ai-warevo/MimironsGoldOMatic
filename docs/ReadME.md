@@ -1,4 +1,16 @@
-# Architecture & Repo Layout
+# General Architectural Requirements (All Components) & Repo Layout
+
+## High-Level Patterns
+- **DDD (Domain-Driven Design):** The core logic, limits (10k gold), and state transitions must be encapsulated within the Domain layer (Aggregates/Value Objects).
+- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching.
+- **Event Sourcing (ES):** The system of record should be an Event Store (using **Marten** with PostgreSQL). Every change to a payout must be a persisted event for 100% auditability.
+- **Audit & Scalability:** Design for high availability and full transparency. A streamer should be able to see exactly when and why a payout failed or was delayed.
+
+## MimironsGoldOMatic.Shared (.NET 10)
+- **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across Backend and Desktop.
+- **Primary Constructors:** Use C# 14 / .NET 10 primary constructors for all DTOs and Records.
+- **Result Pattern:** Use `FluentResults` for domain and service layer responses instead of throwing exceptions.
+
 
 ## High-level Workflow
 1. **Redemption:** A viewer enters their Character Name in the Twitch Extension and spends Channel Points.

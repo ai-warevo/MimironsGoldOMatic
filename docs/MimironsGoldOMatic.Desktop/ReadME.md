@@ -1,4 +1,4 @@
-## MimironsGoldOMatic.Desktop (WPF)
+## MimironsGoldOMatic.Desktop (WPF | Bridge between backend & lua addon)
 
 - **Role:** Monitors the API and injects payout data into the WoW client.
 - **Stack:** .NET 10, WPF, MVVM (CommunityToolkit.Mvvm).
@@ -32,3 +32,16 @@ The Desktop app uses an explicit claim model to avoid accidentally locking payou
 
 - `Refit` or `HttpClient` (for API)
 - `CommunityToolkit.Mvvm`
+
+## Architecture & Patterns
+- **Strategy Pattern (Injection):**
+  Implement `IWoWInputStrategy`. Create `PostMessageStrategy` (background/silent injection) and `SendInputStrategy` (keyboard emulation as fallback). Allow the streamer to switch strategies in settings if one is blocked by a specific private server's anti-cheat.
+  
+- **Observer Pattern (Log Watcher):**
+  The `ChatLogWatcher` must be observable. When the specific string `[MGM_CONFIRM:UUID]` appears in `WoWChatLog.txt`, it must notify subscribers (the ViewModel to update UI and the API Service to send a status PATCH).
+
+- **State Pattern (UI Behavior):**
+  The "Sync" button must act as a state machine. Its appearance and logic should change based on the app state: `Searching for WoW` -> `Process Found` -> `Waiting for Mailbox` -> `Ready to Inject`.
+
+## Resilience
+- **Polly Integration:** Use Polly for all outgoing HTTP calls to the Backend to handle transient network issues with retries and exponential backoff.
