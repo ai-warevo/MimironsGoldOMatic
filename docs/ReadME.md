@@ -6,6 +6,10 @@
 - **Event Sourcing (ES):** The system of record should be an Event Store (using **Marten** with PostgreSQL). Every change to a payout must be a persisted event for 100% auditability.
 - **Audit & Scalability:** Design for high availability and full transparency. A streamer should be able to see exactly when and why a payout failed or was delayed.
 
+### MVP persistence stance (fixed)
+- **ES-first in MVP:** Marten/Event Store is the write-side source of truth.
+- **EF Core scope in MVP:** read-model projections only (query side), not the canonical write store.
+
 ## MimironsGoldOMatic.Shared (.NET 10)
 - **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across Backend and Desktop.
 - **Primary Constructors:** Use C# 14 / .NET 10 primary constructors for all DTOs and Records.
@@ -14,7 +18,7 @@
 
 ## High-level Workflow
 1. **Redemption:** A viewer enters their Character Name in the Twitch Extension and spends Channel Points.
-2. **Queueing:** The Backend API receives the request, validates it, and stores it in a PostgreSQL database with `Pending` status.
+2. **Queueing:** The Backend API receives the request, validates it, appends domain events to the Event Store, and updates read models with `Pending` state.
 3. **Synchronization:** The streamer opens the Desktop WPF App, which fetches pending payouts via REST API.
 4. **Injection:** The Desktop App uses Win32 API (`PostMessage`) to send specialized Lua commands into the WoW client.
 5. **Execution:** The WoW Addon receives the commands, populates an internal queue, and provides one-click gold sending via the Mailbox UI.
@@ -32,52 +36,11 @@
   - Twitch Dev Rig first; production JWT validation is roadmap.
   - Desktop uses a pre-shared `ApiKey` to call the Backend.
 
-## MVP API Contract (draft)
+## Technical specification (canonical)
 
-This section is the **MVP-level** API contract. Names may evolve, but the semantics should remain stable.
+The canonical, implementation-guiding contracts live in:
 
-### Common concepts
-
-- **Idempotency**: `TwitchTransactionId` is unique per Twitch redemption. The backend must enforce a unique constraint.
-- **Statuses**: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`.
-- **Expiration**: hourly job transitions `Pending`/`InProgress` older than 24h to `Expired` (terminal).
-- **Auth (MVP)**:
-  - Twitch Extension requests: Dev Rig-first (production JWT validation is a later milestone).
-  - Desktop requests: include a pre-shared `ApiKey` (header name to be finalized in implementation).
-
-### Endpoints
-
-- **POST** `/api/payouts/claim`
-  - **Purpose**: create a payout for a Twitch redemption.
-  - **Request**: `CharacterName`, `TwitchTransactionId`.
-  - **Behavior**:
-    - Enforce “one active payout per Twitch user”.
-    - Enforce 10,000g lifetime cap per Twitch user.
-    - Rate limit (e.g. ~5 req/min per IP/user).
-    - Create as `Pending` on success.
-
-- **GET** `/api/payouts/my-last`
-  - **Purpose**: viewer pull model; return the caller's latest payout (or none).
-  - **Returns**: a `PayoutDto` (or 404/empty contract; to be finalized).
-
-- **GET** `/api/payouts/pending`
-  - **Purpose**: Desktop fetches available queue for syncing/injection.
-  - **Returns**: list of payouts (primarily `Pending` for MVP).
-
-- **PATCH** `/api/payouts/{id}/status`
-  - **Purpose**: Desktop updates lifecycle state.
-  - **Allowed MVP transitions** (guideline):
-    - `Pending` -> `InProgress` (on **Sync/Inject**)
-    - `Pending/InProgress` -> `Cancelled` (streamer)
-    - `Pending/InProgress` -> `Failed` (streamer or Desktop failure)
-    - `InProgress` -> `Sent` (chat confirm or manual Mark Sent)
-
-### Common error cases (MVP semantics)
-
-- **Duplicate redemption**: same `TwitchTransactionId` already exists (idempotency).
-- **Active payout exists**: user already has a non-terminal payout.
-- **Lifetime cap reached**: user would exceed 10,000g total.
-- **Expired**: payout is older than 24h and is terminal.
+- `docs/SPEC.md` (API/DTOs, status transitions, idempotency, persistence rules, payload format, chunking, and log parsing)
 
 ## Core Components
 - **[Twitch Extension (Frontend)](MimironsGoldOMatic.TwitchExtension/ReadME.md):** Viewer-facing interface for claims.

@@ -10,7 +10,9 @@
 - **Twitch Integration:** Uses `window.Twitch.ext` to access the viewer's ID and context.
 - **API Interaction:**
   - **POST** `/api/payouts/claim` with `CharacterName` and `TwitchTransactionId` (Twitch redemption id) for idempotency.
+    - Expects `201 Created` for new payout and `200 OK` for idempotent duplicate replay.
   - **GET** `/api/payouts/my-last` (pull model) to show the viewer the latest payout status.
+    - Expects `404 Not Found` when no payout exists yet.
 
 ## Libraries
 

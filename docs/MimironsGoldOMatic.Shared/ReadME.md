@@ -40,3 +40,8 @@
 
 Contains shared validation (e.g., CharacterName regex). MVP business rules like fixed gold amount, lifetime caps,
 and concurrency limits are enforced by the Backend.
+
+Status and API semantics are normative in `docs/SPEC.md`:
+
+- `POST /api/payouts/claim`: `201` for new creation, `200` for idempotent duplicate replay.
+- `GET /api/payouts/my-last`: `404` when no payout exists for caller.

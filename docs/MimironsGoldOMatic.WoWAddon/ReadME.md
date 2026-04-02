@@ -8,7 +8,7 @@
 
 - **ReceiveGold(dataString):** Global function. Parses the semicolon-delimited string and populates a local `MimironsQueue` table.
 - **Event Handling:** Registers `MAIL_SHOW`. When the mailbox is opened, it shows a side panel.
-- **Confirmation Tag:** After successfully preparing/sending a payout (depending on final implementation), the addon prints `[MGM_CONFIRM:UUID]` to chat so the Desktop app can detect it via `Logs\WoWChatLog.txt`.
+- **Confirmation Tag:** After actual send confirmation, the addon prints `[MGM_CONFIRM:UUID]` to chat so the Desktop app can detect it via `Logs\WoWChatLog.txt`.
 
 ## UI Features
 

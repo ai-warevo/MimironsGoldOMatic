@@ -10,9 +10,12 @@
 
 ## Command Injection (WPF to Addon)
 
-- Converts the list of payouts into a Lua-compatible string: `/run ReceiveGold("PlayerA:100;PlayerB:500;")`.
+- Converts the list of payouts into a Lua-compatible string with canonical entry format:
+  - `UUID:CharacterName:GoldCopper;`
+  - Example: `/run ReceiveGold("2d2b7b2a-1111-2222-3333-444444444444:Somecharacter:10000000;")`
 - Splits strings into chunks of < 255 characters (WoW chat limit).
-- Uses `PostMessage` to trigger `WM_KEYDOWN` (Enter), simulates pasting the string, then triggers Enter again.
+- Uses `PostMessage` as primary strategy.
+- Uses `SendInput` fallback strategy (operator-switchable) when primary injection is blocked/unreliable.
 
 ## Explicit Claim Flow (Desktop to Backend)
 
@@ -23,7 +26,7 @@ The Desktop app uses an explicit claim model to avoid accidentally locking payou
 3. Desktop injects the payload into WoW via `/run ReceiveGold("...")`.
 
 ### Feedback Loop (Addon to WPF)
-1. The WoW Addon will print a specific tag to the chat log upon successful mail sending (e.g., "MGM_CONFIRM:[PayoutId]").
+1. The WoW Addon prints `[MGM_CONFIRM:UUID]` to chat upon actual mail send confirmation.
 2. The WPF Utility will monitor `Logs\WoWChatLog.txt` in real-time for the pattern `[MGM_CONFIRM:UUID]`.
 3. Upon detecting the confirmation tag, the WPF Utility will call the Backend API `PATCH /api/payouts/{id}/status` to mark the status as `Sent`.
 4. If the log entry is missed, the Desktop UI provides a manual **Mark as Sent** override.
@@ -35,7 +38,7 @@ The Desktop app uses an explicit claim model to avoid accidentally locking payou
 
 ## Architecture & Patterns
 - **Strategy Pattern (Injection):**
-  Implement `IWoWInputStrategy`. Create `PostMessageStrategy` (background/silent injection) and `SendInputStrategy` (keyboard emulation as fallback). Allow the streamer to switch strategies in settings if one is blocked by a specific private server's anti-cheat.
+  Implement `IWoWInputStrategy`. Create `PostMessageStrategy` (primary) and `SendInputStrategy` (fallback). Allow the streamer to switch strategies in settings if one is blocked by a specific private server's anti-cheat.
   
 - **Observer Pattern (Log Watcher):**
   The `ChatLogWatcher` must be observable. When the specific string `[MGM_CONFIRM:UUID]` appears in `WoWChatLog.txt`, it must notify subscribers (the ViewModel to update UI and the API Service to send a status PATCH).

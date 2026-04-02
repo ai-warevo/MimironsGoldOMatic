@@ -1,14 +1,16 @@
 ## MimironsGoldOMatic.Backend (ASP.NET Core | Bridge between Twitch & WPF Desktop app)
 
 - **Role:** Orchestrates the payout queue and manages persistent storage.
-- **Stack:** ASP.NET Core, EF Core, Marten (Event Store), PostgreSQL.
+- **Stack:** ASP.NET Core, Marten (Event Store), PostgreSQL, EF Core (read models only).
 
 ## Key Functions
 
 - **Authentication (phased):**
   - **MVP:** optimize for Twitch Dev Rig debugging; production-ready Twitch JWT validation (issuer/audience + key rotation) is a roadmap milestone.
   - **Desktop security (MVP):** Desktop-to-Backend uses a pre-shared `ApiKey` (locally trusted Desktop app).
-- **Database:** Persists payout payloads via `PayoutEntity` (mapped to PostgreSQL via EF Core).
+- **Persistence model (MVP):**
+  - Write-side source of truth: Marten Event Store in PostgreSQL.
+  - Read-side query model: projections/read tables (EF Core optional for mapping/querying projections).
 - **Idempotency:** `TwitchTransactionId` is stored and enforced unique (one redemption = one payout).
 - **Abuse prevention (MVP):**
   - Fixed 1,000g per redemption.
@@ -23,10 +25,14 @@
 - **GET** `/api/payouts/pending`: Fetched by the Desktop App. Returns the queue available for sync/injection (primarily `Pending`).
 - **PATCH** `/api/payouts/{id}/status`: Updates status. The Desktop App calls this to mark a payout as `Sent` after the WoW action completes.
 - **GET** `/api/payouts/my-last`: Used by the Twitch Extension (pull model) to show the viewer their latest payout status.
+  - Returns `404 Not Found` when no payout exists for caller.
+  - Returns `201 Created` for new claim creation and `200 OK` for idempotent duplicate claim replay.
 
 ## Additional Libraries
 
-- `Npgsql.EntityFrameworkCore.PostgreSQL`
+- `Marten`
+- `Npgsql`
+- `Npgsql.EntityFrameworkCore.PostgreSQL` (query-side mapping only)
 - `Microsoft.AspNetCore.Authentication.JwtBearer`
 
 ## Architecture & Patterns

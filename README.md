@@ -18,9 +18,14 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 - **Statuses**: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired` (24h).
 - **Expiration**: Backend runs an hourly job to mark `Pending`/`InProgress` older than 24h as `Expired` (no reactivation).
 - **Confirmation**: Desktop watches `Logs\WoWChatLog.txt` for `[MGM_CONFIRM:UUID]` and also provides a manual **Mark as Sent** override.
+- **Confirmation semantics**: `Sent` is tied to actual mail send confirmation (not prepare-only).
 - **Security (MVP)**:
   - Focus on Twitch Dev Rig debugging first; production-grade Twitch JWT verification is a roadmap milestone.
   - Desktop-to-Backend uses a pre-shared `ApiKey` (locally trusted Desktop app).
+- **Architecture (MVP)**:
+  - DDD + CQRS + Event Sourcing are mandatory.
+  - Marten/PostgreSQL Event Store is write-side source of truth.
+  - EF Core (if used) is restricted to read-model projections.
 
 ## What you get
 
@@ -41,6 +46,7 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 ## Documentation
 
 - **Architecture & repo layout (docs entrypoint):** [`docs/ReadME.md`](docs/ReadME.md)
+- **Technical specification (canonical contracts):** [`docs/SPEC.md`](docs/SPEC.md)
 - **Roadmap:** [`docs/ROADMAP.md`](docs/ROADMAP.md)
 - **Component READMEs:**
   - [`docs/MimironsGoldOMatic.Shared/ReadME.md`](docs/MimironsGoldOMatic.Shared/ReadME.md)
