@@ -8,11 +8,11 @@
 5. **Execution:** The WoW Addon receives the commands, populates an internal queue, and provides one-click gold sending via the Mailbox UI.
 
 ## Core Components
-- **Twitch Extension (Frontend):** Viewer-facing interface for claims.
-- **Backend (API):** Source of truth for payout lifecycle + persistence + authentication.
-- **Shared Library (Contracts):** DTOs/Enums shared between Backend and Desktop.
-- **Desktop Utility (WPF):** Bridge between the UI and the running WoW client (Win32 automation).
-- **WoW Addon (Lua):** Final in-game executor (mail hooks + UI helpers).
+- **[Twitch Extension (Frontend)](MimironsGoldOMatic.TwitchExtension/ReadME.md):** Viewer-facing interface for claims.
+- **[Backend (API)](MimironsGoldOMatic.Backend/ReadME.md):** Source of truth for payout lifecycle + persistence + authentication.
+- **[Shared Library (Contracts)](MimironsGoldOMatic.Shared/ReadME.md):** DTOs/Enums shared between Backend and Desktop.
+- **[Desktop Utility (WPF)](MimironsGoldOMatic.Desktop/ReadME.md):** Bridge between the UI and the running WoW client (Win32 automation).
+- **[WoW Addon (Lua)](MimironsGoldOMatic.WoWAddon/ReadME.md):** Final in-game executor (mail hooks + UI helpers).
 
 ## Repo Layout (expected)
 This repository is organized as a monorepo so the contract (`Shared`) and implementations (`Backend`, `Desktop`) evolve together.
@@ -34,11 +34,6 @@ MimironsGoldOMatic/
 ├── CONTEXT.md (architecture summary)
 └── AGENTS.md (agent roles + mandatory workflow)
 ```
-
-## Cursor prompts
-
-- **Initialization prompt:** `docs/prompts/history/2026-04-02/00-init/prompt.md`
-- **Bootstrap phases:** `docs/prompts/todo/`
 
 ## Naming Convention
 All C# namespaces must start with `MimironsGoldOMatic`.

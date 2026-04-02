@@ -23,10 +23,19 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 - `/.github/workflows` will contain CI build/test pipelines for both .NET and the React frontend.
 - `/.cursor` contains project-specific AI rules to keep naming and compatibility consistent.
 
-## Project prompts (Cursor)
+## Documentation
 
-- **Initialization prompt**: `docs/prompts/history/2026-04-02/00-init/prompt.md`
-- **Bootstrap phases**: `docs/prompts/todo/`
+- **Architecture & repo layout (docs entrypoint):** [`docs/ReadME.md`](docs/ReadME.md)
+- **Component READMEs:**
+  - [`docs/MimironsGoldOMatic.Shared/ReadME.md`](docs/MimironsGoldOMatic.Shared/ReadME.md)
+  - [`docs/MimironsGoldOMatic.Backend/ReadME.md`](docs/MimironsGoldOMatic.Backend/ReadME.md)
+  - [`docs/MimironsGoldOMatic.Desktop/ReadME.md`](docs/MimironsGoldOMatic.Desktop/ReadME.md)
+  - [`docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`](docs/MimironsGoldOMatic.TwitchExtension/ReadME.md)
+  - [`docs/MimironsGoldOMatic.WoWAddon/ReadME.md`](docs/MimironsGoldOMatic.WoWAddon/ReadME.md)
+- **Cursor / agent workflow docs:**
+  - **Prompt history:** [`docs/prompts/history/`](docs/prompts/history/)
+  - **Prompt templates:** [`docs/prompts/templates/`](docs/prompts/templates/)
+  - **Bootstrap TODOs:** [`docs/prompts/todo/`](docs/prompts/todo/)
 
 ## Notes
 
