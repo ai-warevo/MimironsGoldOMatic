@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj" />
+  <Project Path="MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj" />
+  <Project Path="MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj" />
+</Solution>
