@@ -23,6 +23,11 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 - `/.github/workflows` will contain CI build/test pipelines for both .NET and the React frontend.
 - `/.cursor` contains project-specific AI rules to keep naming and compatibility consistent.
 
+## Project prompts (Cursor)
+
+- **Initialization prompt**: `docs/prompts/history/2026-04-02/00-init/prompt.md`
+- **Bootstrap phases**: `docs/prompts/todo/`
+
 ## Notes
 
 WoW 3.3.5a compatibility relies on:

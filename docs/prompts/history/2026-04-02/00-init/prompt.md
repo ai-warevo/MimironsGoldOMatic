@@ -6,7 +6,7 @@ Referencing my previous project @C:\dev\ai-warevo\RPG\, please initialize the ne
 ## 1. Project Infrastructure
 Create the following root directories and files:
 - `/docs`: Technical documentation and flowcharts.
-- `/.cursor`: Project-specific AI rules (including rules.md).
+- `/.cursor`: Project-specific AI rules (see `.cursor/rules/*.mdc`).
 - `/.github/workflows`: CI/CD pipelines (Build/Test for .NET & React).
 - `/src`: Source code root.
 - `.gitignore`: Unified template for .NET, Node.js (Vite), and WoW Addons.
@@ -30,7 +30,9 @@ Inside `/src`, create a new Visual Studio Solution (.sln) and projects:
 
 ## 4. Key Configurations
 - Setup a GitHub Action `.yml` for building the .NET solution based on the old project's workflow.
-- Create a `rules.md` in `/.cursor` enforcing strict naming conventions: "MimironsGoldOMatic" namespace prefix for all modules.
+- Add Cursor rules under `/.cursor/rules/`:
+  - `agent-protocol-compat.mdc` (follow `AGENTS.md` on workflow/safety)
+  - `project-rules.mdc` (naming conventions, repo layout, WoW/WinAPI compatibility notes)
 - Ensure all WinAPI logic in WPF is documented for WoW 3.3.5a compatibility.
 
 Start by creating the folder structure and core documentation files (README, CONTEXT, AGENTS).

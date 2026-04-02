@@ -35,5 +35,10 @@ MimironsGoldOMatic/
 └── AGENTS.md (agent roles + mandatory workflow)
 ```
 
+## Cursor prompts
+
+- **Initialization prompt:** `docs/prompts/history/2026-04-02/00-init/prompt.md`
+- **Bootstrap phases:** `docs/prompts/todo/`
+
 ## Naming Convention
 All C# namespaces must start with `MimironsGoldOMatic`.
