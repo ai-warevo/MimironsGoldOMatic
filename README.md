@@ -51,7 +51,7 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 - **Cursor / agent workflow docs:**
   - **Prompt history:** [`docs/prompts/history/`](docs/prompts/history/)
   - **Prompt templates:** [`docs/prompts/templates/`](docs/prompts/templates/)
-  - **Bootstrap TODOs:** [`docs/prompts/todo/`](docs/prompts/todo/)
+  - **Bootstrap prompts:** now embedded in [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
 ## Notes
 
