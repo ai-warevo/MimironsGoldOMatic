@@ -1,0 +1,57 @@
+# Unified ignore template for:
+# - .NET (Visual Studio / SDK-style)
+# - Node.js + Vite (React/TS)
+# - WoW 3.3.5a Addon development
+
+# --- dotenv / local config ---
+.env
+.env.*
+
+# --- .NET / Visual Studio ---
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+bin/
+obj/
+
+TestResults/
+artifacts/
+coverage/
+
+# Rider / VS build artifacts
+*.cache
+.idea/
+
+# --- NuGet / restore ---
+*.nupkg
+packages/
+
+# --- Node / Vite / React ---
+node_modules/
+dist/
+build/
+
+# Vite caches
+.vite/
+.turbo/
+
+# --- Logs ---
+logs/
+*.log
+*.tmp
+*.bak
+
+# --- WoW addon packaging / distribution ---
+*.zip
+*.rar
+*.7z
+
+# (If your repo includes a local WoW install dump)
+WTF/
+Cache/
+Interface/AddOns/*/WTF/
+Interface/AddOns/*/Cache/
+

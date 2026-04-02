@@ -1,0 +1,10 @@
+---
+description: Minimal compatibility shim to follow AGENTS.md
+alwaysApply: true
+---
+
+# Cursor agent protocol (minimal)
+
+- Treat `AGENTS.md` in the repo root as the single source of truth for the agent workflow (history, plan/checks/report, and safety constraints).
+- If you find conflicting instructions, follow `AGENTS.md`.
+

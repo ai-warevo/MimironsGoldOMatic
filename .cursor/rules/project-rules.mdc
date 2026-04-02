@@ -1,0 +1,27 @@
+---
+description: Project-specific Cursor rules for Mimiron's Gold-o-Matic
+alwaysApply: true
+---
+
+# Cursor Rules: Mimiron's Gold-o-Matic
+
+## Naming & Namespaces (Strict)
+
+1. Every C# namespace in this repo MUST start with `MimironsGoldOMatic`.
+   - Examples: `MimironsGoldOMatic.Backend.*`, `MimironsGoldOMatic.Desktop.*`, `MimironsGoldOMatic.Shared.*`
+2. Every C# project name MUST be prefixed with `MimironsGoldOMatic.`.
+   - Example projects: `MimironsGoldOMatic.Shared`, `MimironsGoldOMatic.Backend`, `MimironsGoldOMatic.Desktop`
+3. For TypeScript/React modules, use consistent `MimironsGoldOMatic` naming for exported identifiers/types, and keep internal import paths aligned with that prefix (no random abbreviations).
+
+## Compatibility Documentation (WinAPI / WoW)
+
+When implementing WinAPI logic in the WPF layer that targets WoW 3.3.5a:
+- Document required window/process discovery steps and expected timing behavior.
+- Explain why a given focus/message/post strategy works for 3.3.5a and what breaks if timing differs.
+- Include any known assumptions (window title, process name, frame names, chunking strategy).
+
+## Source Layout Expectations
+
+- `/src` is the root for all code (dotnet solution/projects + Vite/React + WoW addon).
+- `/docs` is documentation and engineering workflow artifacts.
+- `/.github/workflows` contains CI pipelines.
