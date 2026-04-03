@@ -13,7 +13,7 @@
   - Write-side source of truth: Marten Event Store in PostgreSQL.
   - Read-side query model: projections/read tables (EF Core optional for mapping/querying projections).
 - **Chat ingestion (MVP):** **EventSub** `channel.chat.message` — ingest **`!twgold <CharacterName>`** only (enroll / **replace** name for same user per `docs/SPEC.md` §5). **Subscriber** + **unique** name among others; non-subscribers: **log only** (no chat reply). Dedupe by Twitch **`message_id`**. **Acceptance** is **`POST .../confirm-acceptance`** after **`[MGM_ACCEPT:UUID]`** in **`WoWChatLog.txt`** (see `docs/SPEC.md` §9–10).
-- **Roulette `/who`:** Desktop forwards **file-bridge** JSON → **`POST /api/roulette/verify-candidate`**; Backend **authoritatively** creates **`Pending`** or **no winner** (no re-draw same cycle; `docs/SPEC.md` §5, §8).
+- **Roulette `/who`:** Desktop parses **`[MGM_WHO]`** from **`WoWChatLog.txt`** and forwards JSON → **`POST /api/roulette/verify-candidate`**; Backend **authoritatively** creates **`Pending`** or **no winner** (**no** second candidate in the same **5-minute** cycle — see `docs/SPEC.md` §1, §5, §8).
 - **Idempotency / pool:** **Unique `CharacterName`** in active pool; optional **`EnrollmentRequestId`** for Extension **`POST /api/payouts/claim`**.
 - **Abuse prevention (MVP):**
   - Fixed 1,000g per **winning** payout (after a spin selects a winner).

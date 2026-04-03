@@ -9,7 +9,7 @@ Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.
 ## MVP Specification (final)
 
 - **Participant pool**: the viewer **must subscribe**, then enroll by **`!twgold <CharacterName>`** in **broadcast Twitch chat** (monitored by the Backend; **`!twgold`** prefix **case-insensitive**). **`CharacterName`** must be **unique** among active pool entries. Channel Points are **not** part of MVP.
-- **Roulette**: **visual roulette**; **every 5 minutes** selects **one winner** (no early/off-schedule spins). **Spin schedule** is **server-authoritative**; Extension **countdown** uses **`GET /api/roulette/state`** (`docs/SPEC.md` §5.1). **Non-winners stay in the pool.** **Winners are removed when payout is `Sent`**; they may **re-enter** via **`!twgold <CharacterName>`** in chat. Minimum pool size **1**. Each finalized winner **must** be **online-verified** via **`/who <Winner_InGame_Nickname>`** before **`Pending` payout** / notification.
+- **Roulette**: **visual roulette**; **every 5 minutes** selects **one winner** (no early/off-schedule spins). **Spin schedule** is **server-authoritative**; Extension **countdown** uses **`GET /api/roulette/state`** (`docs/SPEC.md` §5.1). **Non-winners stay in the pool.** **Winners are removed when payout is `Sent`**; they may **re-enter** via **`!twgold <CharacterName>`** in chat. Minimum pool size **1**. Each finalized winner **must** be **online-verified** via **`/who <Winner_InGame_Nickname>`** before **`Pending` payout** / notification; the addon emits **`[MGM_WHO]`** + JSON into **`WoWChatLog.txt`** (no file-bridge; `docs/SPEC.md` §8).
 - **Winner notification**: Extension **“You won”** plus **in-game** flow: addon sends **`/whisper <Winner_Name> …`** (Russian text, `docs/SPEC.md` §9); winner replies with **`!twgold`** in WoW (**case-insensitive**). Character **existence/online** at win time is verified with **in-game `/who`** (no external realm API in MVP).
 - **Gold per winning payout**: fixed **1,000g** (when a spin produces a payable winner).
 - **Anti-abuse**:
@@ -23,7 +23,7 @@ Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.
 - **Payout lifecycle statuses** (for the **current winner’s** payout): `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`.
 - **Expiration**: Backend hourly job expires `Pending`/`InProgress` older than 24h; no reactivation.
 - **Security (MVP)**:
-  - Twitch Dev Rig focus; production-grade Twitch JWT validation is a roadmap milestone.
+  - **Twitch Extension JWT:** **Dev Rig** and **deployed** backends use **real Twitch-issued** Extension tokens; the API **validates** them per Twitch (no long-term mock-JWT bypass; `docs/SPEC.md` deployment scope).
   - Desktop-to-Backend uses a pre-shared `ApiKey` (locally trusted Desktop app).
 - **WoW targeting (MVP)**: Desktop targets the **foreground** `WoW.exe` process; process picker is roadmap.
 - **Confirmation**:

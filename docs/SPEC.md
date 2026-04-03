@@ -7,6 +7,8 @@ This document is the **canonical implementation contract** for the MVP.
 ### MVP deployment scope (normative)
 
 - **Single broadcaster** for MVP: one configured Twitch **channel / broadcaster** per Backend deployment. Extension JWT and chat ingest target that channel only. Multi-channel support is **out of scope** for MVP unless added later.
+- **Auth (MVP, locked):** **Twitch Dev Rig** and **production** both use **real Twitch-issued Extension JWTs** (Bearer); the Backend **must** validate them per Twitch (no long-term “mock JWT” bypass for the first deploy). Pool/roulette/payout-read routes that require JWT (**§5.1**) remain **JWT-only** as specified.
+- **Pause / resume distribution:** **not** in MVP — no API or Desktop “pause mode”; streamers stop by not running Desktop or by operator workflow only.
 
 ## 1) Glossary
 
@@ -17,9 +19,9 @@ This document is the **canonical implementation contract** for the MVP.
 - **Pool re-enroll / name change (same viewer):** If a **`TwitchUserId`** already has a pool row and sends a new **`!twgold <OtherName>`**, **replace** that row’s **`CharacterName`** with the new name (release the old name for other viewers), subject to validation and uniqueness of **OtherName**.
 - **Participant pool**: the set of **subscribers** who have successfully enrolled via **`!twgold <CharacterName>`** and not been removed per pool rules. **Non-winners of a spin remain in the pool.** **Winners are removed from the pool when their payout becomes `Sent`** (gold mail confirmed — see §3, §5); they **may re-enter** the pool by sending **`!twgold <CharacterName>`** again in broadcast chat.
 - **Spin / roulette**: a **scheduled** selection every **5 minutes** that picks **one** winner from the current participant pool using a **visual roulette** (viewer-facing, e.g. in the Twitch Extension overlay). There is **no** early or off-schedule spin. The **next spin time** is **server-authoritative** (see **`GET /api/roulette/state`**); the Extension **must** display the **roulette countdown** using API-provided timestamps (not a free-running client-only clock as the source of truth).
-- **Online verification (`/who`)**: the roulette **must** ensure the **candidate winner** is **actually in-game and online** by running **`/who <Winner_InGame_Nickname>`** where the name matches the pool **`CharacterName`**. **MVP normative split:** the **addon** runs **`/who`**, **parses** the **3.3.5a** result, and writes a **file-bridge** JSON payload (§8); **Desktop** reads the file and **POST**s the result to the Backend. The **Backend** is **authoritative**: it **only** creates a **`Pending`** payout when it accepts an **`online: true`** report for the current spin cycle. **No re-draw** in the same **5-minute** cycle: if the candidate is **offline** (or a single-person pool is offline), **no winner** is produced until the **next** scheduled spin.
+- **Online verification (`/who`)**: the roulette **must** ensure the **candidate winner** is **actually in-game and online** by running **`/who <Winner_InGame_Nickname>`** where the name matches the pool **`CharacterName`**. **MVP normative split:** the **addon** runs **`/who`**, **parses** the **3.3.5a** result, and emits a **`[MGM_WHO]`** log line (§8, §10) via **`DEFAULT_CHAT_FRAME:AddMessage`** (or equivalent) so it appears in **`Logs\WoWChatLog.txt`** — **WoW 3.3.5a addons cannot write arbitrary files**; there is **no** JSON file-bridge. **Desktop** **tails** the same log, parses **`[MGM_WHO]`**, and **POST**s the payload to **`POST /api/roulette/verify-candidate`**. The **Backend** is **authoritative**: it **only** creates a **`Pending`** payout when it accepts an **`online: true`** report for the current spin cycle (subject to **§5** grace window). **No re-draw** in the same **5-minute** cycle: if the candidate is **offline** (or a single-person pool is offline), **no winner** is produced until the **next** scheduled spin.
 - **Winner notification (Twitch Extension)**: the Extension **may** show **“You won”** (see §11); **normative** winner contact is **in-game** (§9).
-- **Winner notification whisper (WoW, normative)**: After a **`Pending`** payout exists for the winner, the **addon** (with Desktop **command injection**/`PostMessage` as needed) **must** cause the client to send an in-game **whisper** to the winner’s character (**`<Winner_InGame_Nickname>`** = enrolled **`CharacterName`**) using this **exact** chat command text (single line; split/injection strategy must respect WoW chat limits per §8):
+- **Winner notification whisper (WoW, normative)**: After a **`Pending`** payout exists for the winner, the **addon** **must** cause the client to send an in-game **whisper** to the winner’s character (**`<Winner_InGame_Nickname>`** = enrolled **`CharacterName`**) using this **exact** chat command text (single line; if the line exceeds client limits, use an addon-defined strategy that preserves the **exact** Russian body text):
 
   `/whisper <Winner_InGame_Nickname> Поздравляю, ты победил в розыгрыше! Дай мне своё согласие на получение награды - ответь на это сообщение одной фразой: !twgold`
 
@@ -37,7 +39,7 @@ This document is the **canonical implementation contract** for the MVP.
 
 - **GoldAmount**: fixed at **1,000g** per winning payout (enforce per `TwitchUserId` / enrollment idempotency as in §4).
 - **Lifetime cap**: max **10,000g total** per `TwitchUserId`.
-- **Concurrency**: only **one active payout** per `TwitchUserId` at a time (same as before; applies once a viewer becomes a spin winner and a payout record exists).
+- **Concurrency**: only **one active payout** per `TwitchUserId` at a time (same as before; applies once a viewer becomes a spin winner and a payout record exists). A second win/spin finalize while a non-terminal payout exists **must** be rejected with **`active_payout_exists`** (or equivalent); **do not** auto-expire or replace an existing active payout to make room.
 - **Rate limiting**: ASP.NET Core rate limiting, target ~**5 requests/min** per IP/user (implementation detail).
 
 ## 3) Statuses & lifecycle transitions
@@ -45,7 +47,7 @@ This document is the **canonical implementation contract** for the MVP.
 ### Status enum (MVP)
 
 - `Pending`: created for the **selected winner** after a spin, not yet synced/injected by Desktop.
-- `InProgress`: explicitly claimed by Desktop when streamer clicks **Sync/Inject** (prepares mail / queue). Desktop **must** only perform this transition when the **WoW client target is detected** (MVP: foreground `WoW.exe` per §8); **do not** move to **`InProgress`** if WoW is not found.
+- `InProgress`: explicitly claimed by Desktop when streamer clicks **Sync/Inject** (prepares mail / queue). Desktop **must** only perform this transition when the **WoW client target is detected** (MVP: foreground `WoW.exe` per **Desktop → WoW injection**, §8); **do not** move to **`InProgress`** if WoW is not found.
 - `Sent`: confirmed on the **server** when the Desktop utility observes **`[MGM_CONFIRM:UUID]`** for that payout id in **`Logs\WoWChatLog.txt`** (required mail-send confirmation). **WoW whisper reply** **`!twgold`** (case-insensitive) records **willingness to accept** earlier in the flow and **does not** replace **`[MGM_CONFIRM:UUID]`**. Transitioning to **`Sent`** **removes** that winner from the **participant pool** (they may re-enroll via **`!twgold <CharacterName>`** in Twitch chat).
 - `Failed`: streamer/Desktop marked failure (e.g., faction restriction, injection failure, etc.).
 - `Cancelled`: streamer cancelled in Desktop.
@@ -55,7 +57,7 @@ This document is the **canonical implementation contract** for the MVP.
 
 | From | To | Who/when |
 |---|---|---|
-| `Pending` | `InProgress` | Desktop on **Sync/Inject**, **only after** WoW target is detected (§8) |
+| `Pending` | `InProgress` | Desktop on **Sync/Inject**, **only after** WoW target is detected (§8 Desktop → WoW injection) |
 | `Pending` | `Cancelled` | Desktop (streamer) |
 | `Pending` | `Failed` | Desktop (streamer) |
 | `InProgress` | `Sent` | **Desktop** observes **`[MGM_CONFIRM:UUID]`** in **`Logs\WoWChatLog.txt`** and calls Backend (`PATCH` status or dedicated endpoint); or **manual Mark as Sent** if policy allows |
@@ -110,11 +112,11 @@ This section defines the MVP endpoints and semantics. **`GET /api/roulette/state
 - On each **spin** (scheduled every **5 minutes** only), the system selects **one winner** from the pool. **Losers of that spin (non-winners) stay in the pool.**
 - **Winner removal:** When a winner’s payout transitions to **`Sent`**, **remove** that participant (**`TwitchUserId`** + **`CharacterName`**) from the pool. They **may** join again with a new **`!twgold <CharacterName>`** message in chat.
 - **Minimum pool size**: **1** (spin still runs).
-- **Online check (required):** For each spin cycle, the Backend selects a **candidate** from the pool, then requires an **`online: true`** **`/who`** report via the **file-bridge → Desktop → HTTP** path (**§8**). If the report is **`online: false`** (or missing before cycle boundary), **no `Pending` payout** is created for that cycle — **no re-draw** in the same **5-minute** window. If the pool had **exactly one** participant and they are offline, **no winner** this cycle (same rule).
+- **Online check (required):** For each spin cycle, the Backend selects a **candidate** from the pool, then requires an **`online: true`** **`/who`** report delivered via **`[MGM_WHO]`** in **`Logs\WoWChatLog.txt`** → Desktop **tail** → **`POST /api/roulette/verify-candidate`** (**§8**, **§10**). If the report is **`online: false`** (or missing before the cycle boundary + grace window), **no `Pending` payout** is created for that cycle — **no re-draw** in the same **5-minute** window. If the pool had **exactly one** participant and they are offline, **no winner** this cycle (same rule).
 
 - After the Backend **accepts** an **`online: true`** report for the candidate, it **creates** a payout record in **`Pending`** for that winner’s **`CharacterName`**.
 
-**Implementation note:** **Chat ingestion** for **enrollment** uses **EventSub** `channel.chat.message` (see glossary); document reconnect/backfill policy. **Acceptance** is **WoW whisper `!twgold`** (§9). **Pool + spin schedule** for the Extension are normative in **§5.1**. **`/who`** run/parse is **addon**; **report transport** is **file-bridge** + Desktop (**§8**).
+**Implementation note:** **Chat ingestion** for **enrollment** uses **EventSub** `channel.chat.message` (see glossary); document reconnect/backfill policy. **Acceptance** is **WoW whisper `!twgold`** (§9). **Pool + spin schedule** for the Extension are normative in **§5.1**. **`/who`** run/parse is **addon**; **report transport** is **chat log line `DEFAULT_CHAT_FRAME:AddMessage`** → **`WoWChatLog.txt`** → Desktop (**§8**, **§10**).
 
 ### Error model (MVP)
 
@@ -195,9 +197,9 @@ Recommended `code` values (MVP):
 
 **Purpose**: Desktop updates lifecycle state where allowed (see §3), including the **`InProgress` → `Pending`** escape hatch (streamer unlock after failed inject).
 
-### POST `/api/payouts/{id}/confirm-acceptance` (Desktop or chat-ingestion) — **recommended**
+### POST `/api/payouts/{id}/confirm-acceptance` (Desktop) — **recommended**
 
-**Purpose**: Record that the winner **confirmed willingness to accept** gold when the **addon** observed an in-game **private message** to the streamer with body matching **`!twgold`** (**case-insensitive** after trim; reply to the winner notification whisper; see §9) — not that mail was sent.
+**Purpose**: Record that the winner **confirmed willingness to accept** gold when the **addon** observed an in-game **private message** to the streamer with body matching **`!twgold`** (**case-insensitive** after trim; reply to the winner notification whisper; see §9) — not that mail was sent. **MVP:** only **Desktop** calls this endpoint, after **`[MGM_ACCEPT:UUID]`** in the log (**§10**); Twitch chat ingestion **does not** drive acceptance.
 
 **Trigger (MVP, normative):** Desktop **must** call this after observing **`[MGM_ACCEPT:UUID]`** for that **`{id}`** in **`Logs\WoWChatLog.txt`** (see §10). The **`{id}`** in the URL **must** match the UUID in the tag.
 
@@ -233,7 +235,7 @@ Recommended `code` values (MVP):
 
 **Auth:** `X-MGM-ApiKey` (Desktop).
 
-**Request** (normative): same object as **§8** file-bridge (may include **`schemaVersion`**; Backend **must** accept **`schemaVersion`: 1**).
+**Request** (normative): same JSON object as emitted by the addon after the **`[MGM_WHO]`** prefix on the log line (**§8**; may include **`schemaVersion`**; Backend **must** accept **`schemaVersion`: 1**).
 
 ```json
 {
@@ -250,8 +252,9 @@ Recommended `code` values (MVP):
 - If **`online`** is **`true`** and **`spinCycleId`** matches the active spin cycle and **`characterName`** matches the server-selected candidate, the Backend **creates** the **`Pending`** payout for that viewer.
 - If **`online`** is **`false`**, the Backend **does not** create a payout; **no re-draw** occurs in the same cycle (**§1** glossary).
 - If the payload is **invalid** or **out of sequence**, return **`400`** with a stable error `code`.
+- **Late arrival (locked):** If **`capturedAt`** is within **30 seconds** after the **scheduled spin cycle boundary** for that cycle, the Backend **may** still accept the report (implementation-defined tolerance for client/log delay). Beyond that window, treat as **out of sequence** (**`400`**) unless the Backend defines a broader policy in a later revision.
 
-**File-bridge alignment:** The JSON **must** match the **file-bridge** schema in **§8** so Desktop can forward the addon-written file **verbatim** (or parse and POST).
+**Log alignment:** Desktop **must** build this JSON **from** the **`[MGM_WHO]`** line in **`WoWChatLog.txt`** (**§8**, **§10**) and POST it; the body **must** match what the addon printed (same fields).
 
 ### Minimum pool & roulette HTTP contract (MVP, normative)
 
@@ -280,8 +283,8 @@ These routes supply **server-authoritative** spin scheduling and pool hints for 
 - **`serverNow`**: ISO-8601 UTC “now” on the server (helps correct client drift when computing remaining time).
 - **`spinIntervalSeconds`**: **300** in MVP.
 - **`poolParticipantCount`**: non-negative integer; number of **active** pool entries for the current channel.
-- **`spinPhase`**: **closed enum** for MVP — exactly one of: **`idle`**, **`collecting`**, **`spinning`**, **`verification`**, **`completed`**.
-- **`currentSpinCycleId`**: UUID string for the **active** spin cycle (omit or `null` when **`spinPhase`** is **`idle`**); used to correlate **`POST /api/roulette/verify-candidate`** and **file-bridge** payloads.
+- **`spinPhase`**: **closed enum** for MVP — exactly one of: **`idle`**, **`collecting`**, **`spinning`**, **`verification`**, **`completed`**. **Transitions** between phases for a cycle are **Backend-defined** (implementation detail), as long as responses remain consistent with this contract and **`docs/UI_SPEC.md`** UX.
+- **`currentSpinCycleId`**: UUID string for the **active** spin cycle (omit or `null` when **`spinPhase`** is **`idle`**); used to correlate **`POST /api/roulette/verify-candidate`** and **`[MGM_WHO]`** log payloads.
 
 #### GET `/api/pool/me`
 
@@ -304,6 +307,10 @@ These routes supply **server-authoritative** spin scheduling and pool hints for 
 
 - **`nextSpinAt` / `serverNow`** are the **only** authoritative schedule for “time until next spin”; the Extension **must still display** the roulette timer/countdown in the UI (see §11).
 - Early/off-schedule spins remain **forbidden** (glossary).
+
+#### Extension resilience (overload / errors)
+
+- On **`429`**, **`503`**, or network failure when polling **`GET /api/roulette/state`**, **`GET /api/pool/me`**, or **`GET /api/payouts/my-last`**, the Extension **should** show a **friendly error** (see **`docs/UI_SPEC.md`**) and **exponential backoff** between retries (cap the maximum interval, e.g. **≤ 60s**), plus a **Retry** control so the viewer is not stuck in a tight loop.
 
 ## 6) Persistence model (MVP, ES-first)
 
@@ -370,11 +377,12 @@ WoW chat command input has a practical limit (commonly ~255 chars). For MVP:
 - Pack as many complete entries into one payload chunk as possible while keeping the full command line under 255 chars.
 - Send multiple `/run ReceiveGold("...")` lines if needed.
 
-### Roulette `/who` verification & file-bridge (MVP, normative)
+### Roulette `/who` verification & unified log bridge (MVP, normative)
 
-- The **addon** **runs** **`/who <CharacterName>`** in the client, **parses** online/offline for **3.3.5a**, and writes the result to a **JSON file** (the **file-bridge**).
-- **Desktop** watches or polls that file (configurable path; **default** under a documented location next to the WoW install or in `%LocalAppData%\MimironsGoldOMatic\` — **operator override** required for non-default layouts). Desktop **POST**s the same payload to **`POST /api/roulette/verify-candidate`** with **`X-MGM-ApiKey`**. The **Backend** is **authoritative** for creating **`Pending`** (see **§5**).
-- **Schema (normative):** UTF-8 JSON, one object per write:
+WoW **3.3.5a** addon Lua **cannot** write arbitrary files to disk for Desktop consumption. **All** addon → Desktop signaling for **`/who`** results **and** payout acceptance/confirmation uses **one** channel: lines that appear in **`Logs\WoWChatLog.txt`** (default path below).
+
+- The **addon** **runs** **`/who <CharacterName>`** in the client, **parses** online/offline for **3.3.5a**, then emits **one** line to the **default chat frame** via **`DEFAULT_CHAT_FRAME:AddMessage`** (or equivalent) so the client records it in **`WoWChatLog.txt`**.
+- **Line format (normative):** the literal prefix **`[MGM_WHO]`** immediately followed by a **single JSON object** (UTF-8) on the **same** line — no newlines inside the object. The JSON fields **must** match **`POST /api/roulette/verify-candidate`** (**§5**):
 
 ```json
 {
@@ -386,11 +394,16 @@ WoW chat command input has a practical limit (commonly ~255 chars). For MVP:
 }
 ```
 
+Example log line (single line):
+
+`[MGM_WHO]{"schemaVersion":1,"spinCycleId":"550e8400-e29b-41d4-a716-446655440000","characterName":"Norinn","online":true,"capturedAt":"2026-04-04T12:00:01.000Z"}`
+
 - **`schemaVersion`:** **1** for MVP.
 - **`spinCycleId`:** must match **`currentSpinCycleId`** from **`GET /api/roulette/state`** for the active cycle.
-- **`capturedAt`:** ISO-8601 UTC from the addon/client when the result was determined.
+- **`capturedAt`:** ISO-8601 UTC when the addon determined the result.
+- **Desktop** **tails** **`Logs\WoWChatLog.txt`**, parses **`[MGM_WHO]`** lines, and **POST**s the JSON to **`POST /api/roulette/verify-candidate`** with **`X-MGM-ApiKey`**. The **Backend** is **authoritative** for creating **`Pending`** (see **§5**).
 
-**WoW `Logs\WoWChatLog.txt` path (Desktop):** **Default** `Logs\WoWChatLog.txt` relative to the configured **WoW install directory**; **full path override** in Desktop settings (**§10**).
+**WoW `Logs\WoWChatLog.txt` path (Desktop):** **Default** `Logs\WoWChatLog.txt` relative to the configured **WoW install directory**; **full path override** in Desktop settings (**§10**). **No separate file-bridge path** — only this log file for addon-originated signals in MVP.
 
 ## 9) Addon: winner whisper, consent reply `!twgold`, mail queue, and mail-send tag (MVP)
 
@@ -409,7 +422,7 @@ Example:
 
 ### Winner notification whisper (normative)
 
-When a **`Pending`** payout exists for a winner, the addon (and/or **Desktop** via **`PostMessage`** injection into the chat box) **must** send the following **exact** command as a single client chat line (subject to §8 length limits — if too long, chunk or use an approved alternate delivery that preserves the **exact** Russian text):
+When a **`Pending`** payout exists for a winner, the **addon** **must** send the following **exact** command as a single client chat line (MVP: **addon-only**; **not** Desktop `PostMessage` for this whisper). If the line exceeds client limits, use an addon-defined strategy that preserves the **exact** Russian body text:
 
 ```
 /whisper <Winner_InGame_Nickname> Поздравляю, ты победил в розыгрыше! Дай мне своё согласие на получение награды - ответь на это сообщение одной фразой: !twgold
@@ -441,14 +454,23 @@ where `UUID` is the payout id. Desktop **must** monitor **`Logs\WoWChatLog.txt`*
 
 ### Desktop `WoWChatLog.txt` responsibilities (normative summary)
 
-**Single integration surface for MVP:** Desktop **must** implement **one** real-time tail of **`Logs\WoWChatLog.txt`** and apply **two** normative patterns:
+**Single integration surface for MVP:** Desktop **must** implement **one** real-time tail of **`Logs\WoWChatLog.txt`** and apply **three** normative patterns:
 
-| Tag | When emitted by addon | Desktop action |
+| Tag / prefix | When emitted by addon | Desktop action |
 |-----|------------------------|----------------|
+| **`[MGM_WHO]{...json}`** | After **`/who`** parse for the spin candidate (§8) | **`POST /api/roulette/verify-candidate`** with parsed JSON + **`X-MGM-ApiKey`** |
 | **`[MGM_ACCEPT:UUID]`** | After Lua detects valid whisper **`!twgold`** from the expected winner (§9) | **`POST /api/payouts/{id}/confirm-acceptance`** with **`{id}`** = UUID |
 | **`[MGM_CONFIRM:UUID]`** | After mail is actually sent (§9) | **`PATCH`** payout → **`Sent`** (or equivalent) |
 
 - **Important:** **`[MGM_ACCEPT:UUID]`** is **addon-emitted** after whisper events — Desktop is **not** parsing the user’s whisper body from the log. (Parsing raw whisper lines from **`WoWChatLog.txt`** remains **out of scope** for MVP.)
+
+### `[MGM_WHO]` path (required for automated `verify-candidate`)
+
+Desktop **must** monitor the **same** tail as **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`**.
+
+- **Prefix (normative):** `[MGM_WHO]` immediately followed by JSON (**§8**).
+- **Parse:** extract the JSON object after the prefix; validate **`schemaVersion`**; **POST** to **`POST /api/roulette/verify-candidate`**.
+- Duplicate or stale lines: follow **§5** idempotency / **`400`** for out-of-sequence reports.
 
 ### WoW whisper path (acceptance — not `Sent`, normative)
 
@@ -487,7 +509,8 @@ Behavior notes:
 - Display the **participant pool** (or count) and a **visual roulette** animation on each spin.
 - Show a **countdown / timer** to the next spin using **`GET /api/roulette/state`** (`nextSpinAt`, `serverNow`); do **not** use a client-only clock as the authority for spin timing. Fixed **5-minute** cadence; **no** early spin UX.
 - **Enrollment copy:** tell viewers they **must be subscribers** and must type **`!twgold <CharacterName>`** in **stream chat** to join the pool (not only a form inside the Extension). **Character names** in the pool must be **unique** (explain collision if needed).
-- **Online verification** for the winning entry uses **`/who <Winner_InGame_Nickname>`** before the win is final (see §5); the Extension may reflect “checking…” / “verified” state if the Backend exposes it.
+- **Online verification** for the winning entry uses **`/who <Winner_InGame_Nickname>`** before the win is final (see §5); the Extension may reflect “checking…” / “verified” state if the Backend exposes it via **`spinPhase`** / API fields.
 - Present the **winner** to the streamer and **all viewers**. For the **winning viewer**, show **“You won”** as soon as the Backend reports their win (after online verification and **`Pending` payout** if applicable).
 - **Winner-facing** instructions **must** say: you will receive an **in-game whisper** (Russian text per §9) from the streamer’s character; **reply** to that whisper with **`!twgold`** (case-insensitive) to **consent**; then the streamer sends gold mail; **`Sent`** follows **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
 - After **`Sent`**, the winner is **removed** from the pool; they can **re-enter** with **`!twgold <CharacterName>`** in chat again.
+- On **overload** (**`429`**, **`503`**, network errors), follow **§5.1 Extension resilience** (backoff + Retry).

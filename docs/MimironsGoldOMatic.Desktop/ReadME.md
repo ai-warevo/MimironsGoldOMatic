@@ -7,7 +7,7 @@
 ## Key Functions
 
 - **API Polling:** Periodically fetches the pending **winner** payout queue from the Backend.
-- **Roulette `/who`:** Watches **file-bridge** JSON from the addon (`docs/SPEC.md` §8) and **`POST`s** **`/api/roulette/verify-candidate`** with **`X-MGM-ApiKey`**; Backend creates **`Pending`** or **no winner** (no re-draw same cycle).
+- **Roulette `/who`:** Tails **`Logs\WoWChatLog.txt`** for **`[MGM_WHO]`** lines from the addon (`docs/SPEC.md` §8) and **`POST`s** **`/api/roulette/verify-candidate`** with **`X-MGM-ApiKey`**; Backend creates **`Pending`** or **no winner** (no re-draw same cycle).
 - **Process Targeting (MVP):** Targets the **foreground** `WoW.exe` (3.3.5a) process. Process selection from a list is a roadmap feature.
 
 ## Command Injection (WPF to Addon)
@@ -44,7 +44,7 @@ The Desktop app uses an explicit claim model to avoid accidentally locking payou
   Implement `IWoWInputStrategy`. Create `PostMessageStrategy` (primary) and `SendInputStrategy` (fallback). Allow the streamer to switch strategies in settings if one is blocked by a specific private server's anti-cheat.
   
 - **Observer Pattern (ChatLogWatcher):**
-  The **`ChatLogWatcher`** (single tail of **`WoWChatLog.txt`**) must be observable. On **`[MGM_ACCEPT:UUID]`** vs **`[MGM_CONFIRM:UUID]`**, route to **`confirm-acceptance`** vs **`PATCH` `Sent`** respectively (`docs/SPEC.md` §10).
+  The **`ChatLogWatcher`** (single tail of **`WoWChatLog.txt`**) must be observable. On **`[MGM_WHO]`** vs **`[MGM_ACCEPT:UUID]`** vs **`[MGM_CONFIRM:UUID]`**, route to **`verify-candidate`** vs **`confirm-acceptance`** vs **`PATCH` `Sent`** respectively (`docs/SPEC.md` §10).
 
 - **State Pattern (UI Behavior):**
   The "Sync" button must act as a state machine. Its appearance and logic should change based on the app state: `Searching for WoW` -> `Process Found` -> `Waiting for Mailbox` -> `Ready to Inject`.

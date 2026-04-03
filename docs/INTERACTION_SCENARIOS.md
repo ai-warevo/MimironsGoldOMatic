@@ -21,7 +21,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 1. [Viewer] → [Twitch Chat]: `!twgold Norinn` | [ChatIngest] → [Backend]: enroll subscriber with **unique** name
 2. [Backend] → [Backend]: persist **pool enrollment**; no `Pending` payout yet (`docs/SPEC.md` §5)
 3. [System] → [Backend]: spin fires on **5-minute** schedule (UTC **:00/:05/…**); candidate drawn; **`currentSpinCycleId`** issued (`docs/SPEC.md` §5.1)
-4. [WoWAddon] → [WoW Client]: run **`/who Norinn`**; parse **3.3.5a** result → write **file-bridge** JSON (`docs/SPEC.md` §8) | [Desktop] reads file → **`POST /api/roulette/verify-candidate`** (`X-MGM-ApiKey`)
+4. [WoWAddon] → [WoW Client]: run **`/who Norinn`**; parse **3.3.5a** result → **`DEFAULT_CHAT_FRAME:AddMessage`** **`[MGM_WHO]{...json}`** → **`Logs\WoWChatLog.txt`** (`docs/SPEC.md` §8) | [Desktop] tails log → **`POST /api/roulette/verify-candidate`** (`X-MGM-ApiKey`)
 5. [Backend] → [Backend]: if **`online: true`**, create **payout** `Pending`; else **no winner** this cycle (**no** re-draw); expose state for Extension when **`Pending`** exists (**winner notification**)
 6. [TwitchExtension] → [Viewer]: **“You won”** + instruct **WoW whisper reply `!twgold`** (`docs/SPEC.md` §11)
 7. [WoWAddon] / [Desktop] → [WoW Client]: send **winner notification whisper** per **`docs/SPEC.md` §9** (`/whisper Norinn …`)
@@ -399,9 +399,9 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Expected Side Effects:**
 
-- Possible spin **re-draw** event in event store (if implemented).
+- No **`Pending`** payout created for this spin cycle; pool unchanged until next scheduled spin.
 
-**Notes:** Re-draw policy is implementation detail (`docs/SPEC.md` §5).
+**Notes:** **`docs/SPEC.md`** — **no re-draw** in the same **5-minute** cycle; no second candidate pick.
 
 ---
 
@@ -1215,7 +1215,7 @@ Summary of **documented** boundaries. Pool/spin polling routes are defined in **
 | Direction | Message/Endpoint | Payload shape | Success response | Failure response |
 |-----------|------------------|---------------|------------------|------------------|
 | API ← Desktop | `GET /api/payouts/pending` | header `X-MGM-ApiKey` | `200` JSON list of **winner** payouts (`Pending` primary) | `403` `forbidden_apikey` |
-| API ← Desktop | `POST /api/roulette/verify-candidate` | file-bridge JSON + `X-MGM-ApiKey` (`docs/SPEC.md` §5, §8) | `200` (may create `Pending`) | `400`; `403` |
+| API ← Desktop | `POST /api/roulette/verify-candidate` | JSON from **`[MGM_WHO]`** line + `X-MGM-ApiKey` (`docs/SPEC.md` §5, §8) | `200` (may create `Pending`) | `400`; `403` |
 | API ← Desktop | `PATCH /api/payouts/{id}/status` | `{ "status": "…" }` — allowed: `Pending`/`InProgress`/`Sent`/`Failed`/`Cancelled` per **`docs/SPEC.md` §3** (includes **`InProgress` → `Pending`** escape hatch) | `200` | `400` `terminal_status_change_not_allowed`; `403`; `404` `not_found` |
 | API ← Desktop | `POST /api/payouts/{id}/confirm-acceptance` | `{ "characterName": string }` (**required**) | `200` (acceptance recorded; not `Sent`) | `403`; `404` |
 | API ← Desktop | Mail-send path | Desktop derives from log → `PATCH` → `Sent` | `200` | same as PATCH |
@@ -1237,14 +1237,14 @@ Summary of **documented** boundaries. Pool/spin polling routes are defined in **
 | Client → Addon | Global `ReceiveGold(dataString)` | semicolon entries: `UUID:CharacterName:GoldCopper;` | Queued mail prep | Parse error; invalid delimiters |
 | Client → Addon | **MAIL_SHOW** (event) | (FrameXML) | Side panel + queue UX | Events not fired if wrong hook |
 | Client → Addon | Whisper events | sender + text matching **`!twgold`** (case-insensitive) | Print **`[MGM_ACCEPT:UUID]`** to chat | Wrong event registration on 3.3.5a |
-| Addon → Client | Chat print `[MGM_ACCEPT:UUID]` / `[MGM_CONFIRM:UUID]` | string | lines in `WoWChatLog.txt` | Wrong tag; mail not sent → no **CONFIRM** |
-| Addon → **File-bridge** | JSON write (`docs/SPEC.md` §8) | `/who` parse result | Desktop reads → **`POST /api/roulette/verify-candidate`** | Path/permission; parse failure |
+| Addon → Client | Chat print **`[MGM_WHO]`** + JSON / `[MGM_ACCEPT:UUID]` / `[MGM_CONFIRM:UUID]` | string | lines in `WoWChatLog.txt` | Wrong tag; mail not sent → no **CONFIRM** |
+| Addon → **Chat log** | **`[MGM_WHO]`** + JSON (`docs/SPEC.md` §8) | `/who` parse result | Desktop tail **`WoWChatLog.txt`** → **`POST /api/roulette/verify-candidate`** | Line missing; parse failure |
 
 ### WoW Addon → WPF Desktop App → ASP.NET Core API
 
 | Direction | Message/Endpoint | Payload shape | Success response | Failure response |
 |-----------|------------------|---------------|------------------|------------------|
-| Addon → Desktop | **File-bridge** JSON (`docs/SPEC.md` §8) | `/who` result for **`verify-candidate`** | Desktop **`POST /api/roulette/verify-candidate`** | Path/permission; stale **`spinCycleId`** |
+| Addon → Desktop | **`[MGM_WHO]`** in **`Logs\WoWChatLog.txt`** (`docs/SPEC.md` §8) | `/who` result for **`verify-candidate`** | Desktop **`POST /api/roulette/verify-candidate`** | Log path wrong; stale **`spinCycleId`** |
 | Addon → Desktop | **`[MGM_ACCEPT:UUID]`** in `Logs\WoWChatLog.txt` | addon prints after Lua whisper match | Desktop **confirm-acceptance** | Log path wrong; tag missing |
 | Desktop → API | `POST /api/payouts/{id}/confirm-acceptance` | JSON body + ApiKey | `200` | `403`, `404`, validation |
 | Desktop → API | `PATCH /api/payouts/{id}/status` `Sent` | after **`[MGM_CONFIRM:UUID]`** in `Logs\WoWChatLog.txt` | `200` | transition errors |

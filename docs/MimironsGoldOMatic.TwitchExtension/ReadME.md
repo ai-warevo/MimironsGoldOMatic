@@ -9,7 +9,7 @@
 - **On-panel copy:** Viewers **subscribe** and type **`!twgold <CharacterName>`** in **stream chat** to join the pool; after a win, **watch WoW** for the streamer’s **whisper** (Russian text, `docs/SPEC.md` §9) and **reply `!twgold`** in-game before gold mail.
 - **Twitch Integration:** Uses `window.Twitch.ext` for viewer identity and **polls** Backend for pool size, spin state, and winner/payout status.
 - **API Interaction (typical):**
-  - **GET** `/api/roulette/state`, **`GET /api/pool/me`**, **`GET /api/payouts/my-last`** — all use **Twitch Extension JWT (Bearer)** only in MVP (`docs/SPEC.md` §5, §5.1).
+  - **GET** `/api/roulette/state`, **`GET /api/pool/me`**, **`GET /api/payouts/my-last`** — all use **Twitch Extension JWT (Bearer)** only in MVP (`docs/SPEC.md` §5, §5.1). **Dev Rig** uses **real Twitch-issued** tokens; Backend validates per Twitch (`docs/SPEC.md` deployment scope).
   - **`GET /api/roulette/state`** + **`GET /api/pool/me`** — server-authoritative **`nextSpinAt`** (UTC **:00/:05/…**), **`spinPhase`** enum, optional **`currentSpinCycleId`**. **Must** drive the **countdown** from `nextSpinAt` / `serverNow`.
   - **`GET /api/payouts/my-last`** — **`PayoutDto`** or **`404`** when the viewer has **no** winner payout yet.
   - **Optional:** **POST** `/api/payouts/claim` for Dev Rig / testing only (same semantics as chat enroll; see `docs/SPEC.md`).
@@ -34,3 +34,4 @@
 
 ## Key Features
 - **Pull-based Status:** Poll the backend for pool/spin state and `/my-last` to show **winner** payout progress (`Pending` -> `InProgress` -> `Sent`). Messaging: **`Sent`** means mail was confirmed via **`[MGM_CONFIRM:UUID]`** after **WoW whisper `!twgold`** consent (see `docs/SPEC.md`).
+- **Resilience:** On **`429`**, **`503`**, or network errors, use **exponential backoff** (cap interval, e.g. ≤ 60s) and a **Retry** action (`docs/SPEC.md` §5.1).

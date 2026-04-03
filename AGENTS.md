@@ -73,7 +73,7 @@ This repository uses multiple AI specialist “roles” for implementation consi
 Responsibilities:
 - Design ASP.NET Core API endpoints for **participant pool / roulette spins** (including **`/who`‑gated** winner finalization), **Twitch chat ingestion** for **`!twgold <CharacterName>`** (enroll) only, **`confirm-acceptance`** from Desktop after **WoW whisper `!twgold`**, **winner notification** state for the Extension, **payouts** (validation, auth, status updates), **pool removal** when **`Sent`**, and **`Sent`** after **`[MGM_CONFIRM:UUID]`** from the Desktop log watcher.
 - Persist the **write model** with **Marten Event Store on PostgreSQL** (canonical source of truth): **one stream per payout id**; **separate** **Pool** vs **Payout** aggregates (see `docs/SPEC.md` §6). **EF Core** is **optional** and **read-model / projections only**. **Outbox** only when the first external side-effect integration is added (`docs/SPEC.md` §6).
-- **Chat:** **EventSub** `channel.chat.message` for enrollment; **`POST /api/roulette/verify-candidate`** for **`/who`** file-bridge results; **single broadcaster** MVP (`docs/SPEC.md` deployment scope).
+- **Chat:** **EventSub** `channel.chat.message` for enrollment; **`POST /api/roulette/verify-candidate`** for **`/who`** results (from **`[MGM_WHO]`** in **`WoWChatLog.txt`**); **single broadcaster** MVP (`docs/SPEC.md` deployment scope).
 - Define shared DTOs/enums and ensure backward-compatible API contracts.
 - Integrate JWT auth for the Twitch Extension flow.
 
@@ -82,7 +82,7 @@ Responsibilities:
 Responsibilities:
 - Implement the WPF MVVM client UI and view models.
 - Handle Win32 integration for WoW 3.3.5a (process discovery, window focus, and message/posting).
-- Bridge **addon-originated `!twgold` acceptance** to the Backend: tail **`WoWChatLog.txt`** (default + override path) for **`[MGM_ACCEPT:UUID]`** → **`POST .../confirm-acceptance`**; tail the **same** log for **`[MGM_CONFIRM:UUID]`** → **`Sent`**; watch **file-bridge** for **`/who`** → **`POST /api/roulette/verify-candidate`** (see `docs/SPEC.md` §8–10).
+- Bridge **addon-originated `!twgold` acceptance** to the Backend: tail **`WoWChatLog.txt`** (default + override path) for **`[MGM_ACCEPT:UUID]`** → **`POST .../confirm-acceptance`**; tail the **same** log for **`[MGM_CONFIRM:UUID]`** → **`Sent`**; parse **`[MGM_WHO]`** lines from the **same** log → **`POST /api/roulette/verify-candidate`** (see `docs/SPEC.md` §8–10).
 - Ensure payload conversion into WoW-compatible command strings (including 255-char chunking).
 - Document WinAPI behaviors/timing and provide reliability notes specific to 3.3.5a.
 
@@ -92,7 +92,7 @@ Responsibilities:
 - Implement WoW 3.3.5a addon scaffolding (`.toc` + Lua).
 - Hook into the mail interface (event hooking / frame integration) to receive queued payout payloads.
 - Send the **winner notification whisper** per `docs/SPEC.md` §9 (`/whisper <Winner_InGame_Nickname> …` Russian text); intercept **whisper/private messages** where the body matches **`!twgold`** (**case-insensitive**, no extra text) and **print `[MGM_ACCEPT:UUID]`** to chat so Desktop can read **`WoWChatLog.txt`** (**`Sent`** still requires **`[MGM_CONFIRM:UUID]`** per `docs/SPEC.md` §9–10).
-- Run **`/who`**, parse **3.3.5a**, write **file-bridge** JSON for Desktop/**Backend** (`docs/SPEC.md` §8); support mail flow as before.
+- Run **`/who`**, parse **3.3.5a**, emit **`[MGM_WHO]`** + JSON to the default chat frame so it appears in **`WoWChatLog.txt`** (`docs/SPEC.md` §8); support mail flow as before.
 - Provide a robust mail queue processor and UI population logic.
 - Keep code compatible with FrameXML and the 3.3.5a Lua environment constraints.
 

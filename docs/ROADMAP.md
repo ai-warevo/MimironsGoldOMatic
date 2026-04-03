@@ -75,7 +75,7 @@ Acting as **[Backend/API Expert]**:
   - `GET /api/payouts/my-last` (`404` when none exists)
   - `GET /api/roulette/state` — server-authoritative **`nextSpinAt`** / **`serverNow`** + pool count + spin phase (`docs/SPEC.md` §5.1)
   - `GET /api/pool/me` — viewer enrollment hint for Extension (`docs/SPEC.md` §5.1)
-  - `POST /api/roulette/verify-candidate` — Desktop submits **`/who`** file-bridge result; Backend creates **`Pending`** or **no winner** (`docs/SPEC.md` §5, §8)
+  - `POST /api/roulette/verify-candidate` — Desktop submits **`/who`** result (parsed from **`[MGM_WHO]`** in **`WoWChatLog.txt`**); Backend creates **`Pending`** or **no winner** (`docs/SPEC.md` §5, §8)
 - Background job:
   - Hourly: mark `Pending`/`InProgress` older than 24h as `Expired` (terminal, no reactivation)
 - Auth/security (MVP):
@@ -102,7 +102,7 @@ Acting as **[Backend/API Expert]**:
   - Keep `EnrollmentRequestId` idempotency guarantees in write/read flow
 - Implement endpoints:
   - `POST /api/payouts/claim` (pool **enrollment**; enforce caps + idempotency; rate limit; return `201` for new and `200` for idempotent replay)
-  - **Pool / roulette** services + **EventSub** chat ingestion for **`!twgold <CharacterName>`** (**`!twgold`** prefix **case-insensitive**; non-subscribers **log only**); **`GET /api/roulette/state`** + **`GET /api/pool/me`** per `docs/SPEC.md` §5.1 (**JWT-only** Extension auth); **`POST /api/roulette/verify-candidate`** (file-bridge from **`docs/SPEC.md` §8**); **winner whisper** + **`confirm-acceptance`** per `docs/SPEC.md` §9; **UTC** spin boundaries **:00/:05/…**; **no re-draw** same cycle; **min 1** participant; **non-winners stay**; **remove winner on `Sent`**; **`CharacterName`** validation **§4**; **winner notification** payload for Extension; **single broadcaster** MVP (`docs/SPEC.md` deployment scope)
+  - **Pool / roulette** services + **EventSub** chat ingestion for **`!twgold <CharacterName>`** (**`!twgold`** prefix **case-insensitive**; non-subscribers **log only**); **`GET /api/roulette/state`** + **`GET /api/pool/me`** per `docs/SPEC.md` §5.1 (**JWT-only** Extension auth; **real Twitch JWTs**); **`POST /api/roulette/verify-candidate`** (**`[MGM_WHO]`** log line from **`docs/SPEC.md` §8**); **winner whisper** + **`confirm-acceptance`** per `docs/SPEC.md` §9; **UTC** spin boundaries **:00/:05/…**; **no re-draw** same cycle; **min 1** participant; **non-winners stay**; **remove winner on `Sent`**; **`CharacterName`** validation **§4**; **winner notification** payload for Extension; **single broadcaster** MVP (`docs/SPEC.md` deployment scope)
   - `GET /api/payouts/pending` (**winner** payouts)
   - `PATCH /api/payouts/{id}/status`
   - `POST /api/payouts/{id}/confirm-acceptance` after **`!twgold`**; **`Sent`** when log shows **`[MGM_CONFIRM:UUID]`**
@@ -138,7 +138,7 @@ Acting as **[WoW Addon/Lua Expert]**:
   - UI side panel that hooks into `MAIL_SHOW`
   - Auto-fill logic for `SendMailNameEditBox` and `MoneyInputFrame_SetCopper`
 - Implement **`!twgold`** whisper detection; print **`[MGM_ACCEPT:UUID]`** to chat for **`WoWChatLog.txt`** / Desktop (no HTTP from Lua)
-- **Roulette `/who`:** run **`/who`**, parse **3.3.5a**, write **file-bridge** JSON per **`docs/SPEC.md` §8** for Desktop → **`POST /api/roulette/verify-candidate`**
+- **Roulette `/who`:** run **`/who`**, parse **3.3.5a**, emit **`[MGM_WHO]`** + JSON per **`docs/SPEC.md` §8** ( **`WoWChatLog.txt`** ) for Desktop → **`POST /api/roulette/verify-candidate`**
 - Emit **`[MGM_CONFIRM:UUID]`** after mail send (**required** for **`Sent`** via chat log)
 
 ### MVP-4: Desktop WPF utility (`MimironsGoldOMatic.Desktop`)
@@ -181,7 +181,7 @@ Acting as **[WPF/WinAPI Expert]**:
   - Implement <255 char chunking for injected `/run` commands
   - Add `SendInput` fallback strategy for blocked/unreliable primary injection
 - Implement confirmation loop:
-  - Watch **file-bridge** path → **`POST /api/roulette/verify-candidate`**; **Required** log tail: **`[MGM_ACCEPT:UUID]`** → Backend **acceptance**; **`[MGM_CONFIRM:UUID]`** → Backend **`Sent`**; configurable **`WoWChatLog.txt`** path (**§10**)
+  - **Single** log tail **`Logs\WoWChatLog.txt`**: **`[MGM_WHO]`** → **`POST /api/roulette/verify-candidate`**; **`[MGM_ACCEPT:UUID]`** → Backend **acceptance**; **`[MGM_CONFIRM:UUID]`** → Backend **`Sent`**; configurable log path (**§10**)
   - Allow **`PATCH` `InProgress` → `Pending`** per **`docs/SPEC.md` §3**
   - Provide manual overrides: **Mark as Sent**, **Fail**, **Cancel**
 - Use the pre-shared Desktop `ApiKey` when calling Backend endpoints.
