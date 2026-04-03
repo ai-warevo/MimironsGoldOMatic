@@ -6,6 +6,8 @@ Canonical implementation contracts live in:
 
 - `docs/SPEC.md`
 
+**Interaction scenarios & test cases (for implementation / verification):** When executing MVP steps below, agents should use [`docs/INTERACTION_SCENARIOS.md`](INTERACTION_SCENARIOS.md) for scenario IDs (SC-001, …), paired test cases (TC-001, …), and the **Component Contracts** section at each boundary.
+
 **Payout model note:** Redeeming adds viewers to a **participant pool** and **does not** pay gold instantly. A **visual roulette** (default **every 5 minutes**, minimum **1** participant) picks **one winner** per spin; **non-winners stay in the pool**. Before a win is final, **`/who <Winner_InGame_Nickname>`** **must** confirm the player is **online**; the **Extension must notify** the winner and tell them to **whisper `!twgold`** **to receive the gold mail**. Channel Points reward **“Switch to instant spin”** triggers the next spin early. **`Sent`** is set only after **`[MGM_CONFIRM:UUID]`** appears in **`WoWChatLog.txt`** (required mail-send confirmation), after **`!twgold`** acceptance.
 
 ## MVP (End-to-end happy path)

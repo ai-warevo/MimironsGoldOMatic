@@ -53,6 +53,7 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 - **Architecture & repo layout (docs entrypoint):** [`docs/ReadME.md`](docs/ReadME.md)
 - **Technical specification (canonical contracts):** [`docs/SPEC.md`](docs/SPEC.md)
 - **Roadmap:** [`docs/ROADMAP.md`](docs/ROADMAP.md)
+- **Interaction scenarios & test cases:** [`docs/INTERACTION_SCENARIOS.md`](docs/INTERACTION_SCENARIOS.md)
 - **Component READMEs:**
   - [`docs/MimironsGoldOMatic.Shared/ReadME.md`](docs/MimironsGoldOMatic.Shared/ReadME.md)
   - [`docs/MimironsGoldOMatic.Backend/ReadME.md`](docs/MimironsGoldOMatic.Backend/ReadME.md)
