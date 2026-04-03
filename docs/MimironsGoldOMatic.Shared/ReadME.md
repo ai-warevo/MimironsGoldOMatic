@@ -16,10 +16,10 @@
 
 ## Core Entities
 
-- **PayoutStatus (Enum):**
+- **PayoutStatus (Enum):** (applies to **winner** payouts after a roulette spin)
   - `Pending` (Initial)
   - `InProgress` (Explicitly claimed by Desktop when streamer clicks Sync/Inject)
-  - `Sent` (Confirmed in-game or manually marked)
+  - `Sent` (Mail-send confirmed via **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** → Desktop/Backend, or manually marked)
   - `Failed` (Error occurred)
   - `Cancelled` (Streamer cancelled)
   - `Expired` (Older than 24h; closed permanently)
@@ -32,7 +32,7 @@
   - `string TwitchTransactionId` (idempotency: unique per Twitch redemption)
   - `PayoutStatus Status`
   - `DateTime CreatedAt`
-- **CreatePayoutRequest (Record):** Used by Twitch Extension to initiate a claim:
+- **CreatePayoutRequest (Record):** Used by Twitch Extension to **join the participant pool**:
   - `string CharacterName`
   - `string TwitchTransactionId`
 

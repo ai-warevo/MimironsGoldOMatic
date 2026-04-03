@@ -1,4 +1,10 @@
-# React + TypeScript + Vite
+# Mimiron's Gold-o-Matic — Twitch Extension
+
+Viewer UI for **pool enrollment**, **visual roulette** (**`/who`‑gated** winners per [`docs/SPEC.md`](../../docs/SPEC.md)), **“You won”** notifications with **whisper `!twgold`** instructions (**required** to receive gold mail), and status polling. **`Sent`** follows **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** after mail is sent.
+
+---
+
+## Tooling: React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

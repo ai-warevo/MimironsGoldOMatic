@@ -70,7 +70,7 @@ This repository uses multiple AI specialist “roles” for implementation consi
 ### [Backend/API Expert]
 
 Responsibilities:
-- Design ASP.NET Core API endpoints for payouts (validation, auth, status updates).
+- Design ASP.NET Core API endpoints for **participant pool / roulette spins** (including **`/who`‑gated** winner finalization), **winner notification** state for the Extension, **payouts** (validation, auth, status updates), **acceptance** via **`!twgold`** reply (willing to receive gold), and **`Sent`** after **`[MGM_CONFIRM:UUID]`** from the Desktop log watcher.
 - Implement PostgreSQL persistence using EF Core.
 - Define shared DTOs/enums and ensure backward-compatible API contracts.
 - Integrate JWT auth for the Twitch Extension flow.
@@ -80,6 +80,7 @@ Responsibilities:
 Responsibilities:
 - Implement the WPF MVVM client UI and view models.
 - Handle Win32 integration for WoW 3.3.5a (process discovery, window focus, and message/posting).
+- Bridge **addon-originated `!twgold` acceptance** to the Backend; coordinate **`/who`** verification for roulette; tail **`WoWChatLog.txt`** for **`[MGM_CONFIRM:UUID]`** and transition **`Sent`** (local IPC + log watcher → HTTP to API).
 - Ensure payload conversion into WoW-compatible command strings (including 255-char chunking).
 - Document WinAPI behaviors/timing and provide reliability notes specific to 3.3.5a.
 
@@ -88,6 +89,8 @@ Responsibilities:
 Responsibilities:
 - Implement WoW 3.3.5a addon scaffolding (`.toc` + Lua).
 - Hook into the mail interface (event hooking / frame integration) to receive queued payout payloads.
+- Intercept **whisper/private messages** where the body is exactly **`!twgold`** and forward **willingness to accept** gold to the Desktop utility (after **winner notification**; **`Sent`** still requires **`[MGM_CONFIRM:UUID]`** in the chat log).
+- Support **`/who <Winner_InGame_Nickname>`** as needed for **roulette online verification** (with Desktop).
 - Provide a robust mail queue processor and UI population logic.
 - Keep code compatible with FrameXML and the 3.3.5a Lua environment constraints.
 
@@ -95,7 +98,7 @@ Responsibilities:
 
 Responsibilities:
 - Scaffold the Twitch Extension UI using React + Vite + TypeScript.
-- Implement the “claim payout” flow to the ASP.NET Core API.
+- Implement redemption that **joins the participant pool** (not instant payout) and the **visual roulette** (default **5-minute** spin cadence; **instant spin** via **“Switch to instant spin”** Channel Points reward); **“You won”** UX and **whisper `!twgold`** instructions (**required** to receive gold mail).
 - Integrate with the expected Twitch auth/token mechanism for the API.
 - Align client-side types with shared DTOs produced/consumed by the backend.
 
