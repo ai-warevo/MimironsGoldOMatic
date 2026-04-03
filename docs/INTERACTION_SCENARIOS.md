@@ -2,7 +2,7 @@
 
 This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** viewers join a **pool**; a **roulette** selects an **online-verified** winner; **`!twgold`** records **acceptance**; **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** drives **`Sent`**.
 
-**References:** `README.md`, `CONTEXT.md`, `AGENTS.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
+**References:** `README.md`, `CONTEXT.md`, `AGENTS.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md` (screen-level UX aligned to these flows), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
 
 ---
 

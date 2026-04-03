@@ -6,6 +6,7 @@ You are an expert software engineer agent. Your goal is to execute tasks with hi
 ## 2. Project Knowledge Base
 - **Templates**: Located in `docs/prompts/templates/`. Always check these before starting a specific type of task (e.g., feature, bugfix).
 - **History**: All AI interactions must be logged in `docs/prompts/history/YYYY-MM-DD/N-task-name/`.
+- **UI/UX**: `docs/UI_SPEC.md` — screen inventory, states, ASCII layouts, and design tokens for Twitch Extension, WPF Desktop, and WoW 3.3.5a addon; use with `docs/SPEC.md` and `docs/INTERACTION_SCENARIOS.md` when building or changing user-facing behavior.
 
 ## 3. Mandatory Workflow Steps
 ### Step 1: Initialization & Context

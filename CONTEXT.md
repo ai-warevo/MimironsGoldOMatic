@@ -42,6 +42,7 @@ Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.
 ## Data & Artifacts
 - Shared contracts (DTOs/enums) live in `MimironsGoldOMatic.Shared` so all modules agree on the payout payload.
 - WoW addon payload format must remain compatible with the WPF chunking strategy and 3.3.5a Lua/FrameXML constraints.
+- **UI/UX artifact:** `docs/UI_SPEC.md` describes every MVP screen (**UI-1xx–4xx**), element IDs, and navigation flow for Twitch Extension, WPF Desktop, and WoW addon.
 - Repo engineering workflow artifacts live under `docs/prompts/` (templates + logged task history).
 
 ## Test Topology (when solution exists)

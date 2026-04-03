@@ -1,7 +1,8 @@
 # Mimiron's Gold-o-Matic — Technical Specification (MVP)
 
 This document is the **canonical implementation contract** for the MVP.  
-`docs/ROADMAP.md` contains step-by-step prompts and links into this spec.
+`docs/ROADMAP.md` contains step-by-step prompts and links into this spec.  
+**User-facing UI** (Twitch Extension, WPF, WoW addon screens, states, ASCII layouts): `docs/UI_SPEC.md`.
 
 ## 1) Glossary
 

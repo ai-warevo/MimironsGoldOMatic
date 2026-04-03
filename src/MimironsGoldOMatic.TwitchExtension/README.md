@@ -1,6 +1,6 @@
 # Mimiron's Gold-o-Matic — Twitch Extension
 
-Viewer UI for **pool enrollment**, **visual roulette** (**`/who`‑gated** winners per [`docs/SPEC.md`](../../docs/SPEC.md)), **“You won”** notifications with **whisper `!twgold`** instructions (**required** to receive gold mail), and status polling. **`Sent`** follows **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** after mail is sent.
+Viewer UI for **pool enrollment**, **visual roulette** (**`/who`‑gated** winners per [`docs/SPEC.md`](../../docs/SPEC.md)), **“You won”** notifications with **whisper `!twgold`** instructions (**required** to receive gold mail), and status polling. **`Sent`** follows **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** after mail is sent. Screen-level layout and element IDs: [`docs/UI_SPEC.md`](../../docs/UI_SPEC.md) (**UI-101–106**).
 
 ---
 

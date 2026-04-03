@@ -8,6 +8,8 @@ Canonical implementation contracts live in:
 
 **Interaction scenarios & test cases (for implementation / verification):** When executing MVP steps below, agents should use [`docs/INTERACTION_SCENARIOS.md`](INTERACTION_SCENARIOS.md) for scenario IDs (SC-001, …), paired test cases (TC-001, …), and the **Component Contracts** section at each boundary.
 
+**UI/UX (screens, element inventory, flows):** Use [`docs/UI_SPEC.md`](UI_SPEC.md) for **UI-1xx–UI-4xx** panel definitions, Twitch panel constraints (~318px), WPF window layouts, and WoW 3.3.5a frame notes while implementing MVP-3 / MVP-4 / MVP-5.
+
 **Payout model note:** Redeeming adds viewers to a **participant pool** and **does not** pay gold instantly. A **visual roulette** (default **every 5 minutes**, minimum **1** participant) picks **one winner** per spin; **non-winners stay in the pool**. Before a win is final, **`/who <Winner_InGame_Nickname>`** **must** confirm the player is **online**; the **Extension must notify** the winner and tell them to **whisper `!twgold`** **to receive the gold mail**. Channel Points reward **“Switch to instant spin”** triggers the next spin early. **`Sent`** is set only after **`[MGM_CONFIRM:UUID]`** appears in **`WoWChatLog.txt`** (required mail-send confirmation), after **`!twgold`** acceptance.
 
 ## MVP (End-to-end happy path)

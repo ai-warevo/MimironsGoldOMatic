@@ -1,5 +1,6 @@
 ## MimironsGoldOMatic.TwitchExtension (React | Bridge between twitch & backend)
 
+- **UI spec:** `docs/UI_SPEC.md` §1 (viewer panel **UI-101–106**; optional broadcaster **UI-201–204**).
 - **Role:** Viewer-facing interface for **joining the participant pool** and **watching the roulette**.
 - **Stack:** React 18+, Vite, TypeScript, Tailwind CSS.
 

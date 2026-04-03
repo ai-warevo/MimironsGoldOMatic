@@ -1,5 +1,6 @@
 ## MimironsGoldOMatic.Desktop (WPF | Bridge between backend & lua addon)
 
+- **UI spec:** `docs/UI_SPEC.md` §3 (WPF **UI-301–308**: API setup, main window, queue, settings, modals, log).
 - **Role:** Monitors the API and injects **winner** payout data into the WoW client; bridges **addon → Backend** for **`!twgold`** (acceptance) and **`WoWChatLog.txt`** tailing for **`[MGM_CONFIRM:UUID]`** (required **mail-sent → `Sent`**).
 - **Stack:** .NET 10, WPF, MVVM (CommunityToolkit.Mvvm).
 

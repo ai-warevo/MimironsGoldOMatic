@@ -2,6 +2,7 @@
 
 This matrix is a final consistency sweep for the approved MVP decisions.
 Canonical normative source remains `docs/SPEC.md`.
+For **user-visible** behavior and layout, cross-check `docs/UI_SPEC.md` (UI-1xx–4xx) alongside component READMEs.
 
 | Decision | Required state | Fixed in docs | Status |
 |---|---|---|---|

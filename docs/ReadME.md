@@ -44,6 +44,7 @@
 The canonical, implementation-guiding contracts live in:
 
 - `docs/SPEC.md` (API/DTOs, status transitions, idempotency, persistence rules, payload format, chunking, and log parsing)
+- `docs/UI_SPEC.md` (user-facing UI inventory, states, ASCII layouts, navigation flow, design tokens for Extension / Desktop / WoW addon)
 
 ## Core Components
 - **[Twitch Extension (Frontend)](MimironsGoldOMatic.TwitchExtension/ReadME.md):** Viewer-facing interface for claims.
@@ -65,6 +66,7 @@ MimironsGoldOMatic/
 ├── .github/
 │   └── workflows/
 ├── docs/
+│   ├── SPEC.md, ROADMAP.md, UI_SPEC.md, INTERACTION_SCENARIOS.md, …
 │   ├── MimironsGoldOMatic.*/ReadME.md
 │   └── prompts/ (Cursor prompt templates + task history)
 ├── src/ (solution/projects root)

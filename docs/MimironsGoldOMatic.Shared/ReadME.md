@@ -45,3 +45,5 @@ Status and API semantics are normative in `docs/SPEC.md`:
 
 - `POST /api/payouts/claim`: `201` for new creation, `200` for idempotent duplicate replay.
 - `GET /api/payouts/my-last`: `404` when no payout exists for caller.
+
+Field labels and validation-driven UX (e.g. character name length in forms) are aligned with **`docs/UI_SPEC.md`** design tokens and element inventories where applicable.
