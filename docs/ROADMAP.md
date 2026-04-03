@@ -10,7 +10,7 @@ Canonical implementation contracts live in:
 
 **UI/UX (screens, element inventory, flows):** Use [`docs/UI_SPEC.md`](UI_SPEC.md) for **UI-1xx–UI-4xx** panel definitions, Twitch panel constraints (~318px), WPF window layouts, and WoW 3.3.5a frame notes while implementing MVP-3 / MVP-4 / MVP-5.
 
-**Payout model note:** Redeeming adds viewers to a **participant pool** and **does not** pay gold instantly. A **visual roulette** (default **every 5 minutes**, minimum **1** participant) picks **one winner** per spin; **non-winners stay in the pool**. Before a win is final, **`/who <Winner_InGame_Nickname>`** **must** confirm the player is **online**; the **Extension must notify** the winner and tell them to **whisper `!twgold`** **to receive the gold mail**. Channel Points reward **“Switch to instant spin”** triggers the next spin early. **`Sent`** is set only after **`[MGM_CONFIRM:UUID]`** appears in **`WoWChatLog.txt`** (required mail-send confirmation), after **`!twgold`** acceptance.
+**Payout model note:** **Subscribers** join by **`!twgold <CharacterName>`** in **broadcast Twitch chat** (monitored by Backend); **character names** are **unique** in the pool. Gold is **not** paid instantly. A **visual roulette** (**every 5 minutes**, minimum **1** participant) picks **one winner**; **non-winners stay**; **winners are removed from the pool when `Sent`**, and may **re-enter** via chat. **Consent** is **WoW whisper `!twgold`** after the **winner notification whisper** (`docs/SPEC.md` §9). **`Sent`** only after **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
 
 ## MVP (End-to-end happy path)
 
@@ -31,9 +31,9 @@ Spec links:
 ### MVP-1: Shared contracts (`MimironsGoldOMatic.Shared`)
 
 - Define `PayoutStatus`: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`
-- Define `CreatePayoutRequest`: `CharacterName`, `TwitchTransactionId`
+- Define `CreatePayoutRequest`: `CharacterName`, `EnrollmentRequestId`
 - Define `PayoutDto` fields (MVP):
-  - `Id`, `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount` (fixed 1,000g), `TwitchTransactionId`, `Status`, `CreatedAt`
+  - `Id`, `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount` (fixed 1,000g), `EnrollmentRequestId`, `Status`, `CreatedAt`
 - Add shared validation for `CharacterName`
 
 Spec links:
@@ -49,8 +49,8 @@ Acting as **[Backend/API Expert]**:
 - Initialize the .NET 10 Class Library project `MimironsGoldOMatic.Shared` inside `/src`.
 - Implement the shared contracts **as documented**:
   - `PayoutStatus` enum including: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`
-  - `PayoutDto` record including: `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount`, `TwitchTransactionId`, `Status`, `CreatedAt`
-  - `CreatePayoutRequest` record including: `CharacterName`, `TwitchTransactionId`
+  - `PayoutDto` record including: `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount`, `EnrollmentRequestId`, `Status`, `CreatedAt`
+  - `CreatePayoutRequest` record including: `CharacterName`, `EnrollmentRequestId`
 - Ensure the namespace is `MimironsGoldOMatic.Shared`.
 
 ### MVP-2: Backend API + persistence (`MimironsGoldOMatic.Backend`)
@@ -59,10 +59,10 @@ Acting as **[Backend/API Expert]**:
 - Persistence rules:
   - Write-side source of truth: Event Store (Marten)
   - Read-side query models/projections (EF Core optional for query mapping)
-  - Defensive uniqueness on read model for `TwitchTransactionId` (idempotency)
+  - Defensive uniqueness on read model for `EnrollmentRequestId` (idempotency)
 - Business rules (MVP):
-  - Fixed 1,000g per **winning** payout; redemptions **join the pool** first
-  - **Roulette** on a **5-minute** cadence (min **1** participant); **“Switch to instant spin”** Channel Points reward
+  - Fixed 1,000g per **winning** payout; **subscribe + chat** **`!twgold <CharacterName>`** **joins the pool** first
+  - **Roulette** on a **5-minute** cadence (min **1** participant); **no** early spin
   - 10,000g lifetime cap per Twitch user
   - One active payout per Twitch user
   - Rate limiting (e.g. ~5 req/min per IP/user)
@@ -73,7 +73,9 @@ Acting as **[Backend/API Expert]**:
   - `POST /api/payouts/{id}/confirm-acceptance` (or equivalent) — Desktop after **`!twgold`** (willing to accept)
   - **`Sent`** via **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** → Desktop → **`PATCH` status** (or equivalent)
   - `GET /api/payouts/my-last` (`404` when none exists)
-  - Additional **pool / spin** endpoints per `docs/SPEC.md` (to be finalized in implementation)
+  - `GET /api/roulette/state` — server-authoritative **`nextSpinAt`** / **`serverNow`** + pool count + spin phase (`docs/SPEC.md` §5.1)
+  - `GET /api/pool/me` — viewer enrollment hint for Extension (`docs/SPEC.md` §5.1)
+  - `POST /api/roulette/verify-candidate` — Desktop submits **`/who`** file-bridge result; Backend creates **`Pending`** or **no winner** (`docs/SPEC.md` §5, §8)
 - Background job:
   - Hourly: mark `Pending`/`InProgress` older than 24h as `Expired` (terminal, no reactivation)
 - Auth/security (MVP):
@@ -84,7 +86,7 @@ Spec links:
 
 - `docs/SPEC.md#2-mvp-economics--anti-abuse-rules`
 - `docs/SPEC.md#3-statuses--lifecycle-transitions`
-- `docs/SPEC.md#5-api-contract-mvp`
+- `docs/SPEC.md#5-api-contract-mvp` (includes §5.1 pool/roulette GETs)
 - `docs/SPEC.md#6-persistence-model-mvp-es-first`
 - `docs/SPEC.md#7-expiration-job-mvp`
 
@@ -97,10 +99,10 @@ Acting as **[Backend/API Expert]**:
 - Configure Marten Event Store with PostgreSQL and implement CQRS persistence:
   - Write-side events are the canonical source of truth
   - Read models include `TwitchUserId` and `TwitchDisplayName`
-  - Keep `TwitchTransactionId` idempotency guarantees in write/read flow
+  - Keep `EnrollmentRequestId` idempotency guarantees in write/read flow
 - Implement endpoints:
   - `POST /api/payouts/claim` (pool **enrollment**; enforce caps + idempotency; rate limit; return `201` for new and `200` for idempotent replay)
-  - **Pool / roulette** services (scheduled **5-minute** spin, **instant spin** reward, **min 1** participant; **non-winners stay**; **`/who`** gate; **winner notification** payload for Extension)
+  - **Pool / roulette** services + **EventSub** chat ingestion for **`!twgold <CharacterName>`** (**`!twgold`** prefix **case-insensitive**; non-subscribers **log only**); **`GET /api/roulette/state`** + **`GET /api/pool/me`** per `docs/SPEC.md` §5.1 (**JWT-only** Extension auth); **`POST /api/roulette/verify-candidate`** (file-bridge from **`docs/SPEC.md` §8**); **winner whisper** + **`confirm-acceptance`** per `docs/SPEC.md` §9; **UTC** spin boundaries **:00/:05/…**; **no re-draw** same cycle; **min 1** participant; **non-winners stay**; **remove winner on `Sent`**; **`CharacterName`** validation **§4**; **winner notification** payload for Extension; **single broadcaster** MVP (`docs/SPEC.md` deployment scope)
   - `GET /api/payouts/pending` (**winner** payouts)
   - `PATCH /api/payouts/{id}/status`
   - `POST /api/payouts/{id}/confirm-acceptance` after **`!twgold`**; **`Sent`** when log shows **`[MGM_CONFIRM:UUID]`**
@@ -135,7 +137,8 @@ Acting as **[WoW Addon/Lua Expert]**:
   - `MimironsGoldOMatic.lua` with global `ReceiveGold(dataString)` to parse and enqueue payouts
   - UI side panel that hooks into `MAIL_SHOW`
   - Auto-fill logic for `SendMailNameEditBox` and `MoneyInputFrame_SetCopper`
-- Implement **`!twgold`** whisper detection and a **Desktop notification** path (no direct HTTP from Lua)
+- Implement **`!twgold`** whisper detection; print **`[MGM_ACCEPT:UUID]`** to chat for **`WoWChatLog.txt`** / Desktop (no HTTP from Lua)
+- **Roulette `/who`:** run **`/who`**, parse **3.3.5a**, write **file-bridge** JSON per **`docs/SPEC.md` §8** for Desktop → **`POST /api/roulette/verify-candidate`**
 - Emit **`[MGM_CONFIRM:UUID]`** after mail send (**required** for **`Sent`** via chat log)
 
 ### MVP-4: Desktop WPF utility (`MimironsGoldOMatic.Desktop`)
@@ -178,23 +181,20 @@ Acting as **[WPF/WinAPI Expert]**:
   - Implement <255 char chunking for injected `/run` commands
   - Add `SendInput` fallback strategy for blocked/unreliable primary injection
 - Implement confirmation loop:
-  - Addon-originated **`!twgold`** → Backend **acceptance**
-  - **Required** log tail for **`[MGM_CONFIRM:UUID]`** → Backend **`Sent`**
+  - Watch **file-bridge** path → **`POST /api/roulette/verify-candidate`**; **Required** log tail: **`[MGM_ACCEPT:UUID]`** → Backend **acceptance**; **`[MGM_CONFIRM:UUID]`** → Backend **`Sent`**; configurable **`WoWChatLog.txt`** path (**§10**)
+  - Allow **`PATCH` `InProgress` → `Pending`** per **`docs/SPEC.md` §3**
   - Provide manual overrides: **Mark as Sent**, **Fail**, **Cancel**
 - Use the pre-shared Desktop `ApiKey` when calling Backend endpoints.
 
 ### MVP-5: Twitch Extension (`MimironsGoldOMatic.TwitchExtension`)
 
 - Dev Rig-focused integration
-- Enrollment flow (join pool — **not instant payout**):
-  - Collect `CharacterName`
-  - Submit `TwitchTransactionId`
-  - Call `POST /api/payouts/claim` (or future enroll endpoint per `docs/SPEC.md`)
+- **Enrollment** is **not** form-primary: viewers use **`!twgold <CharacterName>`** in **stream chat** (see `docs/SPEC.md`). Extension shows **instructions + status** (poll Backend).
+  - Optional Dev Rig: **`POST /api/payouts/claim`** with `EnrollmentRequestId` for testing
 - **Visual roulette** UI:
-  - Default spin every **5 minutes**; **minimum 1** participant
-  - **“Switch to instant spin”** Channel Points reward skips wait until next spin
-  - **Non-winners stay in the pool**
-  - **“You won”** notification + **whisper `!twgold`** instructions (**required** to receive gold mail)
+  - Spin every **5 minutes**; **minimum 1** participant
+  - Copy: **subscribe** + **`!twgold <CharacterName>`** in chat; **unique** name; **removed from pool** after **`Sent`**; re-enter via chat
+  - **“You won”** + **WoW whisper reply `!twgold`** (after notification whisper, `docs/SPEC.md` §9)
   - Optional UI for **`/who`** / verification state if API exposes it
 - Status UX (pull model):
   - `GET /api/payouts/my-last` and/or pool/spin endpoints as implemented
@@ -210,20 +210,18 @@ Acting as **[Frontend/Twitch Expert]**:
 
 - Read `docs/SPEC.md` and `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`.
 - Scaffold `src/MimironsGoldOMatic.TwitchExtension` using Vite + React + TypeScript.
-- Build the Character Name submission form.
-- Integrate with Twitch Extension helper (`window.Twitch.ext`) and send claims to Backend:
-  - Include `TwitchTransactionId` for idempotency
-  - Call `POST /api/payouts/claim` (pool enrollment)
-- Implement **visual roulette** + countdown / instant spin behavior (aligned with Backend).
+- Build **instructional** UI (chat commands) and status polling — **not** the sole enrollment path.
+- Integrate with Twitch Extension helper (`window.Twitch.ext`); optional **`POST /api/payouts/claim`** for Dev Rig with `EnrollmentRequestId`
+- Implement **visual roulette** + **5-minute** countdown (aligned with Backend; **no** early spin).
 - Implement pull status UX:
   - Call `GET /api/payouts/my-last` (and any pool APIs)
 - Ensure alignment with Twitch Dev Rig for MVP debugging.
 
 ### MVP-6: End-to-end demo & verification
 
-- Demo scenario: enroll → **roulette spin** → **`/who`** online OK → **notify winner** (“whisper **`!twgold`**) → winner **pending** → desktop inject → winner **replies** **`!twgold`** → streamer sends mail → **`[MGM_CONFIRM:UUID]`** in log → backend **`Sent`**
+- Demo scenario: **`!twgold <CharacterName>`** in **chat** → **roulette spin** → **`/who`** online OK → **winner notification whisper** (§9) → winner **`!twgold`** in **WoW** → **confirm-acceptance** → desktop inject → streamer sends mail → **`[MGM_CONFIRM:UUID]`** in log → backend **`Sent`** → **winner removed from pool**
 - Add minimal backend tests for:
-  - idempotency (`TwitchTransactionId`)
+  - idempotency (`EnrollmentRequestId`)
   - one-active-per-user
   - lifetime cap (10k)
   - expiration behavior
@@ -240,10 +238,10 @@ Acting as **[Senior Architect]**:
 - Review `docs/SPEC.md` and `docs/ROADMAP.md` for end-to-end consistency.
 - Ensure all projects are included in `src/MimironsGoldOMatic.sln`.
 - Synchronize component behavior and verify the full data flow:
-  - Twitch Extension enrollment -> participant pool + roulette UX
+  - **Chat** enrollment + Extension status/roulette UX
   - **`/who`** validates winner online -> notify winner -> Backend **winner payout** `Pending`
   - Desktop explicit claim + inject -> Addon queue
-  - **`!twgold`** → acceptance; **`[MGM_CONFIRM:UUID]`** → `Sent`
+  - **WoW whisper `!twgold`** → acceptance; **`[MGM_CONFIRM:UUID]`** → `Sent` → pool removal
 - Finalize setup notes in root docs as needed.
 
 ## Beta (Reliability & streamer UX)

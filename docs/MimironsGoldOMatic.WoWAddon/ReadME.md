@@ -9,8 +9,8 @@
 
 - **ReceiveGold(dataString):** Global function. Parses the semicolon-delimited string and populates a local `MimironsQueue` table.
 - **Event Handling:** Registers `MAIL_SHOW`. When the mailbox is opened, it shows a side panel.
-- **`/who` (roulette):** Participate in **online verification** for the selected **Winner_InGame_Nickname** (run or consume **`/who`** results per `docs/SPEC.md`) so offline winners are not finalized.
-- **`!twgold` whisper:** After the winner has been **notified** (Extension), when they **reply** with a **private message** whose text is exactly **`!twgold`**, the addon **notifies the Desktop utility** (IPC bridge) so the Backend records **willingness to accept** gold (**required** to receive the mail). The recipient must be **online**.
+- **`/who` (roulette):** **Run** **`/who`**, **parse** the **3.3.5a** result, **write file-bridge JSON** (`docs/SPEC.md` §8) for Desktop → **`POST /api/roulette/verify-candidate`**; Backend **authoritatively** creates **`Pending`** or **no winner** this cycle.
+- **Winner notification whisper (normative):** Send **`/whisper <Winner_InGame_Nickname> …`** with the exact Russian text in **`docs/SPEC.md` §9** (via injection/`PostMessage` if needed). **Acceptance:** when the winner **whispers** text matching **`!twgold`** (**case-insensitive** after trim), the addon **prints `[MGM_ACCEPT:UUID]`** to WoW chat (captured in **`Logs\WoWChatLog.txt`**) so the Desktop utility can call **`confirm-acceptance`**. The recipient must be **online**. **`[MGM_CONFIRM:UUID]`** is printed after mail send (`docs/SPEC.md` §9–10).
 - **Mail-send tag (required):** After the streamer **actually sends** the in-game mail for a payout, the addon **must** print **`[MGM_CONFIRM:UUID]`** to chat so it appears in **`Logs\WoWChatLog.txt`**. Desktop uses this to set **`Sent`** on the server.
 
 ## UI Features
@@ -40,4 +40,4 @@ Only accepts commands via the global function; no external network access (WoW l
   The addon must expose a single global object `MimironsGoldOMatic` for coordination.
 
 ## Technical Details
-- **Feedback loop:** **`!twgold`** → Desktop → Backend **acceptance**. **`[MGM_CONFIRM:UUID]`** → **`WoWChatLog.txt`** → Desktop → Backend **`Sent`**.
+- **Feedback loop:** **`!twgold`** (Lua) → **`[MGM_ACCEPT:UUID]`** in chat/log → Desktop → Backend **acceptance**. **`[MGM_CONFIRM:UUID]`** → same log → Desktop → Backend **`Sent`**.

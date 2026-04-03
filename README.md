@@ -7,23 +7,24 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 
 `Twitch Extension -> ASP.NET Core API -> WPF App (WinAPI/PostMessage) -> WoW 3.3.5a Addon (Lua)`
 
+**MVP deployment:** **one** broadcaster channel per Backend instance (see `docs/SPEC.md` deployment scope).
+
 ## MVP Specification (final)
 
-- **Gold per winning payout**: fixed **1,000g** (MVP). Viewers who redeem are **added to a participant pool**; they are **not** paid instantly.
-- **Roulette**: a **visual roulette** runs on a **5-minute** cadence (default) and selects **one winner** per spin from the pool. **Participants who are not selected remain on the list** for future spins. Before a win counts, the system **must** verify the chosen player is **online** using WoW **`/who <Winner_InGame_Nickname>`** (enrolled character name); **offline picks are invalid** (re-draw / retry per implementation).
-- **Winner notification**: the winning viewer **must** be told they won (e.g. Twitch Extension). They **must** be instructed to **whisper the streamer** exactly **`!twgold`** in a **private message** **to receive the in-game mail with gold**; the streamer **waits for that whisper** before mailing.
+- **Gold per winning payout**: fixed **1,000g** (MVP). **Subscribers** join the giveaway by typing **`!twgold <CharacterName>`** in **broadcast Twitch chat** (**`!twgold`** prefix **case-insensitive**; server nickname for the roulette); the Backend **monitors chat** (e.g. EventSub). **Character names** in the pool must be **unique**. Channel Points are **not** used.
+- **Roulette**: a **visual roulette** runs on a **5-minute** cadence and selects **one winner** per spin. The **next spin time** is **server-authoritative** (`GET /api/roulette/state`); the Extension **shows a countdown** from that schedule. **Non-winners stay in the pool.** **Winners are removed from the pool when their payout is `Sent`** (after mail is confirmed); they may **re-enter** with **`!twgold <CharacterName>`** in chat again. There is **no** early or off-schedule spin. Before a win counts, the system **must** verify the chosen player is **online** using WoW **`/who <Winner_InGame_Nickname>`**; **offline picks are invalid** (re-draw / retry per implementation).
+- **Winner notification**: the winning viewer is told they won (e.g. Twitch Extension). **Normative consent:** the **WoW addon** (with Desktop injection if needed) sends an in-game **`/whisper <Winner_Name> …`** to the winner with the exact Russian text in **`docs/SPEC.md` §9**; the winner **replies** in-game with **`!twgold`** (private message; **case-insensitive** match) to **consent**. The streamer sends gold mail after acceptance; **`Sent`** requires **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
 - **Minimum participants**: **1** (a spin can run with a single entrant).
-- **Instant spin**: Channel Points reward **“Switch to instant spin”** triggers the next spin **without** waiting for the current 5-minute window.
 - **Anti-abuse**:
   - **Lifetime cap**: max **10,000g total** per Twitch user.
   - **Concurrency**: **one active payout per Twitch user** at a time (must be terminal before a new claim), applied when a payout exists for a spin winner.
   - **Rate limiting**: standard ASP.NET Core rate limiting (e.g. ~5 req/min per IP/user).
-- **Idempotency**: each Twitch redemption includes `TwitchTransactionId`; Backend enforces uniqueness for the redemption/enrollment flow.
+- **Idempotency / dedupe:** chat enrollments dedupe by Twitch **`message_id`**; optional Extension **`POST /api/payouts/claim`** may use **`EnrollmentRequestId`**; **unique `CharacterName`** in the active pool is enforced.
 - **Statuses** (payout for the **selected winner**): `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired` (24h).
 - **Expiration**: Backend runs an hourly job to mark `Pending`/`InProgress` older than 24h as `Expired` (no reactivation).
-- **Acceptance**: After **winner notification**, the **winner** **replies** with an in-game **private message** to the streamer whose text is exactly **`!twgold`**, confirming they **will accept** the gold and want the delivery. The **addon intercepts** it and **notifies the Desktop utility**, which records **acceptance** on the **server** (not **`Sent`** yet). **They must send this whisper to receive the gold letter.**
+- **Acceptance**: After the **in-game winner notification whisper** (`docs/SPEC.md` §9), the **winner** sends a **private in-game message** matching **`!twgold`** (**case-insensitive**); the **addon** prints **`[MGM_ACCEPT:UUID]`** to chat → **`WoWChatLog.txt`** → Desktop → **`confirm-acceptance`** on the **server** (not **`Sent`** yet). **They must confirm before the streamer sends gold mail.**
 - **Mail sent → `Sent`**: After the streamer sends mail in-game, the addon **must** print **`[MGM_CONFIRM:UUID]`** so it appears in **`Logs\WoWChatLog.txt`**. The Desktop utility **must** parse that line and then set the payout to **`Sent`** on the server. Manual **Mark as Sent** remains an operator override if needed.
-- **Confirmation semantics**: **`Sent`** means **mail-send confirmation** via **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** (required for automation). **`!twgold`** is **willingness to accept**, not proof that mail was sent.
+- **Confirmation semantics**: **`Sent`** means **mail-send confirmation** via **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** (required for automation). WoW whisper **`!twgold`** (consent reply) is **willingness to accept**, not proof that mail was sent.
 - **Security (MVP)**:
   - Focus on Twitch Dev Rig debugging first; production-grade Twitch JWT verification is a roadmap milestone.
   - Desktop-to-Backend uses a pre-shared `ApiKey` (locally trusted Desktop app).

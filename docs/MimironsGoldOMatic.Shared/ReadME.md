@@ -29,16 +29,16 @@
   - `string TwitchDisplayName` (UX: shown in Desktop)
   - `string CharacterName`
   - `long GoldAmount` (MVP fixed at 1,000g)
-  - `string TwitchTransactionId` (idempotency: unique per Twitch redemption)
+  - `string EnrollmentRequestId` (links payout to pool enrollment / audit trail where stored)
   - `PayoutStatus Status`
   - `DateTime CreatedAt`
 - **CreatePayoutRequest (Record):** Used by Twitch Extension to **join the participant pool**:
   - `string CharacterName`
-  - `string TwitchTransactionId`
+  - `string EnrollmentRequestId`
 
 ## Validation / Logic
 
-Contains shared validation (e.g., CharacterName regex). MVP business rules like fixed gold amount, lifetime caps,
+Contains shared validation for **`CharacterName`** per **`docs/SPEC.md` §4** (length **2–12**; Latin/Cyrillic letters only; no spaces). MVP business rules like fixed gold amount, lifetime caps,
 and concurrency limits are enforced by the Backend.
 
 Status and API semantics are normative in `docs/SPEC.md`:
@@ -46,4 +46,4 @@ Status and API semantics are normative in `docs/SPEC.md`:
 - `POST /api/payouts/claim`: `201` for new creation, `200` for idempotent duplicate replay.
 - `GET /api/payouts/my-last`: `404` when no payout exists for caller.
 
-Field labels and validation-driven UX (e.g. character name length in forms) are aligned with **`docs/UI_SPEC.md`** design tokens and element inventories where applicable.
+Field labels and validation-driven UX are aligned with **`docs/UI_SPEC.md`**. **Enrollment** is primarily via Twitch chat **`!twgold <CharacterName>`**; optional **`CreatePayoutRequest`** / **`EnrollmentRequestId`** applies to Extension/Dev Rig paths only (see `docs/SPEC.md`).

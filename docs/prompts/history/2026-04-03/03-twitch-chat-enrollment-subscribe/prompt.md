@@ -1,0 +1,3 @@
+# Original request
+
+I forgot to clarify that viewers must not only subscribe but also enter their server nickname in the chat and confirm receipt of gold via the chat command. Therefore, you need to monitor the chat; I think the best way is to enter your nickname via the command !twgold <CharacterNameForParticipationInRoulette>. The character name must be unique, but if this player wins the roulette, they can participate in the drawing again. Therefore, after the gold is sent to the winner, they are removed from the list of participants. They can re-enter the list by entering a message in the broadcast chat.

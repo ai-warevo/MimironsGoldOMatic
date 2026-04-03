@@ -17,13 +17,13 @@
 
 
 ## High-level Workflow
-1. **Redemption:** A viewer enters their Character Name in the Twitch Extension and spends Channel Points; they are **added to the participant pool** (not paid instantly).
-2. **Roulette:** A **visual roulette** runs on a **5-minute** cadence by default (minimum **1** participant). **Non-winners remain in the pool.** Viewers may redeem **“Switch to instant spin”** to trigger the next spin early. **Online check:** **`/who <Winner_InGame_Nickname>`** before finalizing the winner.
-3. **Winner payout:** When a spin yields an **online-verified** winner, the Backend creates **payout** state; the **Extension notifies** the winner and instructs **whisper `!twgold`** to receive gold.
+1. **Subscribe + chat enroll:** A **subscriber** types **`!twgold <CharacterName>`** in **broadcast Twitch chat** (**`!twgold`** prefix **case-insensitive**); the Backend **monitors chat** and **adds** them to the **participant pool** if the name is **unique** in the pool. Channel Points are **not** used.
+2. **Roulette:** A **visual roulette** runs on a **5-minute** cadence (minimum **1** participant); **next spin** time is **server-authoritative** (`GET /api/roulette/state`, `docs/SPEC.md` §5.1); Extension **countdown** uses that API. **Non-winners remain in the pool.** **Winners leave the pool when gold is `Sent`** and may **re-enter** with **`!twgold <CharacterName>`** again. **Online check:** **`/who <Winner_InGame_Nickname>`** before finalizing the winner.
+3. **Winner payout:** When a spin yields an **online-verified** winner, the Backend creates **payout** state; the **Extension** shows **“You won”**; the **addon** sends the **winner notification whisper** (`docs/SPEC.md` §9); the winner **replies in WoW** with **`!twgold`** before mail.
 4. **Synchronization:** The streamer opens the Desktop WPF App, which fetches **pending winner payouts** via REST API.
 5. **Injection:** The Desktop App uses Win32 API (`PostMessage`) to send specialized Lua commands into the WoW client.
 6. **Execution:** The WoW Addon receives the commands, populates an internal queue, and provides mail UI helpers for sending gold.
-7. **Acceptance:** After **winner notification**, the winner **replies** with whisper **`!twgold`** (required **to receive the gold mail**); the addon notifies Desktop → **server records acceptance**.
+7. **Acceptance:** After the **in-game notification whisper**, the winner sends **`!twgold`** in **WoW** (private message); addon prints **`[MGM_ACCEPT:UUID]`** → **`WoWChatLog.txt`** → Desktop → **server records acceptance**.
 8. **Mail sent:** The addon prints **`[MGM_CONFIRM:UUID]`**; Desktop tails **`WoWChatLog.txt`** → **server** marks **`Sent`**.
 
 ## MVP Specification (final)
@@ -31,7 +31,7 @@
 - **GoldAmount:** fixed **1,000g** per **winning** payout (MVP).
 - **Limits:** max **10,000g lifetime** per Twitch user.
 - **Concurrency:** **one active payout** per Twitch user at a time (when a payout exists).
-- **Idempotency:** `TwitchTransactionId` is persisted and enforced unique for redemptions/enrollment.
+- **Pool rules:** **Unique `CharacterName`** among active pool entries; chat dedupe by message id; optional **`EnrollmentRequestId`** for Extension enroll API.
 - **Statuses** (winner payout): `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired` (24h).
 - **Expiration:** Backend hourly job marks `Pending`/`InProgress` older than 24h as `Expired` (no reactivation).
 - **Confirmation:** **`/who`** online gate; **winner notification**; **`!twgold`** reply → acceptance on Backend; **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** → **`Sent`** (required for automation); manual **Mark as Sent** per `docs/SPEC.md`.

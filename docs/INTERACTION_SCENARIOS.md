@@ -1,6 +1,6 @@
 # Mimiron's Gold-o-Matic — Interaction Scenarios & Test Cases
 
-This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** viewers join a **pool**; a **roulette** selects an **online-verified** winner; **`!twgold`** records **acceptance**; **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** drives **`Sent`**.
+This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** **subscribers** join via **`!twgold <CharacterName>`** in **broadcast chat**; a **roulette** selects an **online-verified** winner; **WoW whisper reply `!twgold`** (after the **winner notification whisper**, `docs/SPEC.md` §9) leads the addon to print **`[MGM_ACCEPT:UUID]`** → Desktop **`confirm-acceptance`**; **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** drives **`Sent`** and **removes** the winner from the pool.
 
 **References:** `README.md`, `CONTEXT.md`, `AGENTS.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md` (screen-level UX aligned to these flows), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
 
@@ -10,33 +10,33 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ### SC-001: Viewer obtains gold successfully (full end-to-end)
 
-**Trigger:** Viewer redeems Channel Points to join pool; later roulette selects them as **online-verified** winner; they accept and receive mail.
+**Trigger:** Viewer is a **subscriber**, sends **`!twgold Norinn`** in **broadcast chat**, and later roulette selects them as **online-verified** winner; they **`!twgold`** in **WoW** (whisper reply) to consent and receive mail.
 
-**Actor:** Viewer (Twitch + WoW), Streamer (WoW + Desktop), System (Backend spin/schedule)
+**Actor:** Viewer (Twitch + WoW), Streamer (WoW + Desktop), System (Backend chat + spin/schedule)
 
-**Preconditions:** Backend reachable; Extension authorized (MVP: Dev Rig posture); viewer supplies valid `CharacterName`; pool has ≥1 participant; Desktop eventually online with correct `ApiKey`; WoW 3.3.5a running (foreground for MVP).
+**Preconditions:** Backend reachable; chat ingestion active; viewer **subscribed**; **`CharacterName`** **unique** in pool; pool has ≥1 participant; Extension authorized for status UI (MVP: Dev Rig posture); Desktop eventually online with correct `ApiKey`; WoW 3.3.5a running (foreground for MVP).
 
 **Flow:**
 
-1. [TwitchExtension] → [Backend]: `POST /api/payouts/claim` | payload: `{ "characterName": "Norinn", "twitchTransactionId": "tx-redemption-001" }` (+ Twitch identity/JWT as implemented)
+1. [Viewer] → [Twitch Chat]: `!twgold Norinn` | [ChatIngest] → [Backend]: enroll subscriber with **unique** name
 2. [Backend] → [Backend]: persist **pool enrollment**; no `Pending` payout yet (`docs/SPEC.md` §5)
-3. [System] → [Backend]: spin fires (5-minute or **Switch to instant spin**); candidate winner drawn
-4. [Desktop] + [WoWAddon] ↔ [WoW Client]: execute **`/who Norinn`**; parse online result; report pass/fail to orchestration (`docs/SPEC.md` §5, §8)
-5. [Backend] → [Backend]: create **payout** `Pending` for winner; expose state for Extension (**winner notification**)
-6. [TwitchExtension] → [Viewer]: **“You won”** + instruct whisper `!twgold` to streamer (`docs/SPEC.md` §11)
-7. [Viewer/WoW] → [Streamer/WoW]: private message **`!twgold`**
-8. [WoWAddon] → [Desktop]: IPC bridge **acceptance signal** (mechanism TBD) | payload: `{ "payoutId": "<uuid>", "characterName": "Norinn" }` (shape illustrative)
-9. [Desktop] → [Backend]: `POST /api/payouts/{id}/confirm-acceptance` \| body: `{ "characterName": "Norinn" }` + header `X-MGM-ApiKey`
+3. [System] → [Backend]: spin fires on **5-minute** schedule (UTC **:00/:05/…**); candidate drawn; **`currentSpinCycleId`** issued (`docs/SPEC.md` §5.1)
+4. [WoWAddon] → [WoW Client]: run **`/who Norinn`**; parse **3.3.5a** result → write **file-bridge** JSON (`docs/SPEC.md` §8) | [Desktop] reads file → **`POST /api/roulette/verify-candidate`** (`X-MGM-ApiKey`)
+5. [Backend] → [Backend]: if **`online: true`**, create **payout** `Pending`; else **no winner** this cycle (**no** re-draw); expose state for Extension when **`Pending`** exists (**winner notification**)
+6. [TwitchExtension] → [Viewer]: **“You won”** + instruct **WoW whisper reply `!twgold`** (`docs/SPEC.md` §11)
+7. [WoWAddon] / [Desktop] → [WoW Client]: send **winner notification whisper** per **`docs/SPEC.md` §9** (`/whisper Norinn …`)
+8. [Viewer/WoW] → [Streamer/WoW]: whisper reply matching **`!twgold`** (**case-insensitive**)
+9. [WoWAddon] → [WoW Chat Log]: print `[MGM_ACCEPT:<uuid>]` → [Desktop] tails `WoWChatLog.txt` | [Desktop] → [Backend]: `POST /api/payouts/{id}/confirm-acceptance`
 10. [Desktop] → [Backend]: `GET /api/payouts/pending` → streamer **Sync/Inject**
 11. [Desktop] → [Backend]: `PATCH /api/payouts/{id}/status` `{ "status": "InProgress" }`
 12. [Desktop] → [WoW Client]: WinAPI **PostMessage** / **SendInput** fallback: `/run ReceiveGold("<chunked payload>")` \<255 chars per line (`docs/SPEC.md` §8)
 13. [WoW Client] → [WoWAddon]: Lua `ReceiveGold(dataString)`; queue `MAIL_SHOW` UX; streamer sends mail (1000g = 10000000 copper)
 14. [WoWAddon] → [WoW Chat Log]: print `[MGM_CONFIRM:<uuid>]` → appears in `Logs\WoWChatLog.txt`
-15. [Desktop] → [Backend]: tail log → `PATCH /api/payouts/{id}/status` `{ "status": "Sent" }`
+15. [Desktop] → [Backend]: tail log → `PATCH /api/payouts/{id}/status` `{ "status": "Sent" }` → **remove winner from pool**
 
-**Postconditions:** Payout `Sent`; event store / read model reflect acceptance + sent; viewer sees status progression in Extension.
+**Postconditions:** Payout `Sent`; winner **removed** from participant pool; pool row may be re-added later via **`!twgold <CharacterName>`**; viewer sees status in Extension.
 
-**Failure exits:** enrollment rejected (cap, invalid name); **offline at `/who`** (re-draw, no final winner); missing `!twgold`; injection or mail failure; log never shows `MGM_CONFIRM`; API down at any HTTP step.
+**Failure exits:** enrollment rejected (not subscribed, duplicate **character name** in pool, cap, invalid name); **offline at `/who`** (**no winner** this cycle — **no** re-draw); missing **WoW whisper `!twgold`** consent; injection or mail failure; log never shows `MGM_CONFIRM`; API down at any HTTP step.
 
 ---
 
@@ -131,11 +131,11 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 1. [Desktop] → [OS]: locate WoW → **fails**
 2. [Desktop] → [Desktop]: UI state “Searching for WoW” / error; **no** successful `PostMessage`
 
-**Postconditions:** No injection; payout may remain `Pending` or partial `InProgress` if PATCH already sent (operator should avoid PATCH without inject per UX).
+**Postconditions:** No injection; payout remains **`Pending`** (Desktop **must not** `PATCH` to **`InProgress`** until WoW is detected — `docs/SPEC.md` §3).
 
 **Failure exits:** user never launches WoW; wrong client build.
 
-> ⚠️ **OPEN QUESTION:** Whether Desktop is allowed to `PATCH InProgress` before WoW is detected is not fully specified; implementation should align streamer UX to avoid stuck `InProgress`.
+> **Resolution (product):** Desktop **must not** transition **`Pending` → `InProgress`** until the WoW client target is found (`docs/SPEC.md` §3).
 
 ---
 
@@ -145,37 +145,37 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Actor:** Viewer
 
-**Preconditions:** Backend validates **format** (shared validation); no Armory/realm proof in MVP docs.
+**Preconditions:** Backend validates **format** (shared validation). MVP does **not** call external realm/Armory APIs.
 
 **Flow:**
 
 1. [TwitchExtension] → [Backend]: `POST /api/payouts/claim` with bogus name (format-valid)
 2. [Backend] → [Backend]: may accept enrollment if only regex rules apply (`docs/SPEC.md` §4, §5)
-3. Later: mail or streamer discovers invalid recipient — **manual** fail path (`Failed`) per README/SPEC (faction/manual handling)
+3. At **spin / win** time, **`/who <Name>`** in-game is the **online / presence** check (`docs/SPEC.md` glossary). A non-existent name will typically fail **`/who`** / mail UX; otherwise streamer uses **manual** fail path (`Failed`) (faction/manual handling).
 
 **Postconditions:** Possible **enrollment** stored; payout delivery may hit **Failed** in Desktop or streamer correction.
 
 **Failure exits:** mail cannot be delivered to non-existent toon; addon/mail API errors.
 
-> ⚠️ **OPEN QUESTION:** Whether API rejects names not found on realm is **not** defined in `docs/SPEC.md` (only format validation and caps). Test cases below assume **format-only** MVP unless product adds realm lookup.
+> **Resolution (product):** No separate “realm database” lookup in MVP. **In-game `/who`** is the normative check when a candidate winner is evaluated; enrollment remains **format + pool rules** only.
 
 ---
 
 ### SC-013: Duplicate gold request for the same viewer within cooldown window
 
-**Trigger:** Same viewer repeats redeem or rapid duplicate HTTP calls before rate limit window elapses.
+**Trigger:** Same viewer repeats enroll submit or rapid duplicate HTTP calls before rate limit window elapses.
 
 **Actor:** Viewer / network retry
 
-**Preconditions:** Existing enrollment for same `TwitchTransactionId` or active payout per user.
+**Preconditions:** Existing enrollment for same `EnrollmentRequestId` or active payout per user.
 
-**Flow (idempotent enroll):** [TwitchExtension] → [Backend]: duplicate `twitchTransactionId` → `200 OK` same enrollment (`docs/SPEC.md` §4).
+**Flow (idempotent enroll):** [TwitchExtension] → [Backend]: duplicate `enrollmentRequestId` → `200 OK` same enrollment (`docs/SPEC.md` §4).
 
 **Flow (rate limit):** burst of requests → `429` or server rate-limit response (ASP.NET Core rate limiter ~5/min per SPEC).
 
 **Flow (active payout):** second **winner** payout while one **active** → `409`-style error body e.g. `active_payout_exists` (`docs/SPEC.md` §5).
 
-**Postconditions:** No double-spend via same redemption id; abuse bounded by rate limit.
+**Postconditions:** No double-spend via same enrollment request id; abuse bounded by rate limit.
 
 **Failure exits:** client mishandles idempotent `200` vs `201`.
 
@@ -337,17 +337,16 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 | Field | Value |
 |-------|-------|
 | characterName | Norinn |
-| twitchTransactionId | tx-e2e-7f3a |
+| enrollmentRequestId | 550e8400-e29b-41d4-a716-446655440000 |
 | twitchUserId | 90001337 |
 | goldAmount (winner payout) | 1000g (10000000 copper) |
 
 **Steps:**
 
-1. Extension `POST /api/payouts/claim` → `201`
+1. Simulate chat **`!twgold Norinn`** → pool enroll **or** Extension `POST /api/payouts/claim` → `201`
 2. Simulate/trigger spin + `/who` success (test hook or scripted Desktop)
 3. Assert Backend has `Pending` payout for Norinn
-4. Extension shows winner UX; viewer sends `!twgold` in test harness
-5. Desktop `confirm-acceptance` → success
+4. Extension shows winner UX; simulate **WoW whisper `!twgold`** → Desktop `confirm-acceptance` → success
 6. Desktop `PATCH InProgress`, inject `ReceiveGold`, complete mail in-game
 7. Assert `WoWChatLog.txt` contains `[MGM_CONFIRM:<id>]`
 8. Desktop `PATCH Sent`
@@ -763,7 +762,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ---
 
-### TC-013: Idempotent duplicate twitchTransactionId
+### TC-013: Idempotent duplicate enrollmentRequestId
 
 **Covers:** SC-013
 
@@ -775,7 +774,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 | Field | Value |
 |-------|-------|
-| twitchTransactionId | tx-dup-001 |
+| enrollmentRequestId | 550e8400-e29b-41d4-a716-446655440001 |
 
 **Steps:**
 
@@ -1198,24 +1197,27 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ## Component Contracts
 
-Summary of **documented** boundaries. Pool/spin push routes are **not** fully specified in `docs/SPEC.md`—placeholders use **`<pool/spin TBD>`**.
+Summary of **documented** boundaries. Pool/spin polling routes are defined in **`docs/SPEC.md` §5.1**.
 
 ### Twitch Extension → ASP.NET Core API
 
 | Direction | Message/Endpoint | Payload shape | Success response | Failure response |
 |-----------|------------------|---------------|------------------|------------------|
-| Extension → API | `POST /api/payouts/claim` | `{ "characterName": string, "twitchTransactionId": string }` + Twitch auth | `201 Created` (new enroll) or `200 OK` (idempotent) | `400` `invalid_character_name`; `401` `unauthorized`; `429` rate limit; cap errors e.g. `lifetime_cap_reached` |
-| Extension → API | `GET /api/payouts/my-last` | auth headers | `200` + `PayoutDto` or enrollment summary | `404` when none |
-| Extension → API | `<pool/spin TBD>` e.g. poll spin state | per implementation | `200` + spin/pool DTO | `401`, `429`, domain errors |
-| API → Extension | (pull only in MVP docs) | — | Extension polls for **winner notification** / status | Error boundary UI per TwitchExtension ReadME |
+| Extension → API | `POST /api/payouts/claim` (optional) | `{ "characterName": string, "enrollmentRequestId": string }` + Twitch JWT (subscriber verified server-side) | `201 Created` (new enroll) or `200 OK` (idempotent) | `400` `invalid_character_name`; `401` `unauthorized`; `403`/`400` if not subscribed; `409`/`400` `character_name_taken_in_pool`; `429` rate limit; cap errors e.g. `lifetime_cap_reached` |
+| Chat → Backend | `!twgold <CharacterName>` | **EventSub** `channel.chat.message` (MVP) | pool enroll / replace per `docs/SPEC.md` §5 | domain errors per `docs/SPEC.md` §5 |
+| Extension → API | `GET /api/payouts/my-last` | Twitch Extension **JWT** (Bearer) | `200` + **`PayoutDto`** | **`404`** when no winner payout |
+| Extension → API | `GET /api/roulette/state` | Twitch Extension **JWT** | `200` + schedule + **`spinPhase`** enum + optional **`currentSpinCycleId`** (`docs/SPEC.md` §5.1) | `401`, `429`, domain errors |
+| Extension → API | `GET /api/pool/me` | Twitch Extension **JWT** | `200` + enrollment hint | `401`, `429` |
+| API → Extension | (pull only in MVP) | — | Extension polls for **winner notification** / status | Error boundary UI per TwitchExtension ReadME |
 
 ### ASP.NET Core API → WPF Desktop App
 
 | Direction | Message/Endpoint | Payload shape | Success response | Failure response |
 |-----------|------------------|---------------|------------------|------------------|
 | API ← Desktop | `GET /api/payouts/pending` | header `X-MGM-ApiKey` | `200` JSON list of **winner** payouts (`Pending` primary) | `403` `forbidden_apikey` |
-| API ← Desktop | `PATCH /api/payouts/{id}/status` | `{ "status": "Pending\|InProgress\|Sent\|Failed\|Cancelled" }` (allowed transitions §3) | `200` | `400` `terminal_status_change_not_allowed`; `403`; `404` `not_found` |
-| API ← Desktop | `POST /api/payouts/{id}/confirm-acceptance` | `{ "characterName": string }` | `200` (acceptance recorded; not `Sent`) | `403`; `404` |
+| API ← Desktop | `POST /api/roulette/verify-candidate` | file-bridge JSON + `X-MGM-ApiKey` (`docs/SPEC.md` §5, §8) | `200` (may create `Pending`) | `400`; `403` |
+| API ← Desktop | `PATCH /api/payouts/{id}/status` | `{ "status": "…" }` — allowed: `Pending`/`InProgress`/`Sent`/`Failed`/`Cancelled` per **`docs/SPEC.md` §3** (includes **`InProgress` → `Pending`** escape hatch) | `200` | `400` `terminal_status_change_not_allowed`; `403`; `404` `not_found` |
+| API ← Desktop | `POST /api/payouts/{id}/confirm-acceptance` | `{ "characterName": string }` (**required**) | `200` (acceptance recorded; not `Sent`) | `403`; `404` |
 | API ← Desktop | Mail-send path | Desktop derives from log → `PATCH` → `Sent` | `200` | same as PATCH |
 
 > Desktop **does not** consume a Backend push channel in MVP docs; **polling** is implied.
@@ -1234,18 +1236,20 @@ Summary of **documented** boundaries. Pool/spin push routes are **not** fully sp
 |-----------|------------------|---------------|------------------|------------------|
 | Client → Addon | Global `ReceiveGold(dataString)` | semicolon entries: `UUID:CharacterName:GoldCopper;` | Queued mail prep | Parse error; invalid delimiters |
 | Client → Addon | **MAIL_SHOW** (event) | (FrameXML) | Side panel + queue UX | Events not fired if wrong hook |
-| Client → Addon | Whisper events | sender + text `!twgold` | Notify Desktop (IPC) | Wrong event registration on 3.3.5a |
-| Addon → Client | Chat print `[MGM_CONFIRM:UUID]` | string | line in `WoWChatLog.txt` | Mail not sent → must not print |
+| Client → Addon | Whisper events | sender + text matching **`!twgold`** (case-insensitive) | Print **`[MGM_ACCEPT:UUID]`** to chat | Wrong event registration on 3.3.5a |
+| Addon → Client | Chat print `[MGM_ACCEPT:UUID]` / `[MGM_CONFIRM:UUID]` | string | lines in `WoWChatLog.txt` | Wrong tag; mail not sent → no **CONFIRM** |
+| Addon → **File-bridge** | JSON write (`docs/SPEC.md` §8) | `/who` parse result | Desktop reads → **`POST /api/roulette/verify-candidate`** | Path/permission; parse failure |
 
 ### WoW Addon → WPF Desktop App → ASP.NET Core API
 
 | Direction | Message/Endpoint | Payload shape | Success response | Failure response |
 |-----------|------------------|---------------|------------------|------------------|
-| Addon → Desktop | IPC (TBD: file, socket, etc.) | e.g. `{ payoutId, characterName }` for **`!twgold`** | Desktop receives | IPC full disk / permission |
+| Addon → Desktop | **File-bridge** JSON (`docs/SPEC.md` §8) | `/who` result for **`verify-candidate`** | Desktop **`POST /api/roulette/verify-candidate`** | Path/permission; stale **`spinCycleId`** |
+| Addon → Desktop | **`[MGM_ACCEPT:UUID]`** in `Logs\WoWChatLog.txt` | addon prints after Lua whisper match | Desktop **confirm-acceptance** | Log path wrong; tag missing |
 | Desktop → API | `POST /api/payouts/{id}/confirm-acceptance` | JSON body + ApiKey | `200` | `403`, `404`, validation |
 | Desktop → API | `PATCH /api/payouts/{id}/status` `Sent` | after **`[MGM_CONFIRM:UUID]`** in `Logs\WoWChatLog.txt` | `200` | transition errors |
 | Desktop | Manual **Mark as Sent** | operator override | same PATCH path | audit note |
 
 ---
 
-**Document maintenance:** When `docs/SPEC.md` adds concrete **pool/spin** routes and **IPC** shapes, update SC-001 flow steps and the **Component Contracts** table in lockstep.
+**Document maintenance:** If **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`** log formats change, update regexes in Desktop and **`docs/SPEC.md` §10**. **Pool/spin** routes: `docs/SPEC.md` §5.1 (`GET /api/roulette/state`, `GET /api/pool/me`).

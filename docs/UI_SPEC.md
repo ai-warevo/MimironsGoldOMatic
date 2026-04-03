@@ -24,9 +24,9 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 
 **Global product rules (UI copy must reflect these):**
 
-- Viewers **join a participant pool** via redemption; **gold is not paid instantly** on enroll.
-- A **visual roulette** runs on a **default 5-minute** cadence (or **“Switch to instant spin”** Channel Points reward).
-- **Winners** are **online-verified** via **`/who`** before **`Pending` payout**; Extension shows **“You won”** and **`!twgold`** instructions.
+- Viewers **must subscribe** and type **`!twgold <CharacterName>`** in **broadcast stream chat** to join the pool (**`!twgold`** prefix **case-insensitive**; **CharacterName** = server nickname; **unique** among pool participants). **Gold is not paid instantly** on enroll. Channel Points are **not** used.
+- A **visual roulette** runs on a **fixed 5-minute** cadence (**no** early or off-schedule spin). The **next spin** instant is **server-authoritative**; the Extension **must** show a **countdown / timer** using **`GET /api/roulette/state`** (`docs/SPEC.md` §5.1, §11). **Non-winners stay** in the pool; **winners are removed when `Sent`** and may **re-enter** with **`!twgold <CharacterName>`** again.
+- **Winners** are **online-verified** via **`/who`** before **`Pending` payout**; Extension shows **“You won”**; **in WoW**, winner gets the **notification whisper** and replies **`!twgold`** (**case-insensitive**; `docs/SPEC.md` §5, §9).
 - **Fixed 1,000g** per winning payout (`docs/SPEC.md` §2). **Desktop** holds **`X-MGM-ApiKey`**; Extension uses Twitch EBS/JWT to **Backend** (not the Desktop secret).
 
 > ⚠️ **DECISION:** Streamer **Extension dashboard** screens (UI-201–204) are specified as **future-facing / optional for MVP-5** because **`docs/SPEC.md`** does not yet define broadcaster-only config endpoints or Extension-configured gold amounts (MVP gold is fixed). Layouts below support implementation when APIs exist.
@@ -45,7 +45,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 
 **Component:** Frontend (Twitch Extension)  
 **Actor:** Viewer (or System)  
-**Trigger:** Extension mounted; JWT not ready; viewer denied; or Channel Points unavailable.  
+**Trigger:** Extension mounted; JWT not ready; viewer denied; or status unavailable.  
 **MVP Stage:** MVP-5
 
 ### Element Inventory
@@ -55,14 +55,14 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 | EL-101-01 | Static text | "Mimiron's Gold-o-Matic" | default / dimmed | none |
 | EL-101-02 | Static text | Status line (see states) | loading / error | none |
 | EL-101-03 | Button | [ Retry ] | default / disabled | re-init `window.Twitch.ext` context, refetch auth |
-| EL-101-04 | Static text | Hint: "Redeem channel points to join the gold pool" | shown when auth OK but not enrolled | none |
+| EL-101-04 | Static text | Hint: "Subscribe and type !twgold <name> in chat" | shown when auth OK; enrollment is **chat**, not the panel | none |
 
 ### States
 
 - **Default (loading):** Twitch helper loading; spinner or gnomish gears metaphor.
 - **Unauthenticated:** Viewer has not granted required identity — show EL-101-02 explaining log in to Twitch / open in live channel.
 - **Error (Extension / EBS):** EL-101-02 shows friendly failure; EL-101-03 enabled.
-- **Authenticated, pre-enrollment:** EL-101-04 visible; transition to UI-102.
+- **Authenticated:** EL-101-04 visible; transition to UI-102 (instructions + live status).
 
 ### ASCII Visualization
 
@@ -112,11 +112,11 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 
 ---
 
-## UI-102: Viewer Panel — Enroll / Pool (character + redeem)
+## UI-102: Viewer Panel — How to join / Pool status (chat enrollment)
 
 **Component:** Frontend  
 **Actor:** Viewer  
-**Trigger:** Authenticated; viewer has Channel Points reward available (product: redeem opens form or pre-fills).  
+**Trigger:** Authenticated; panel shows **instructions** and **polls** Backend for pool/spin state (enrollment happens in **Twitch chat**, not here).  
 **MVP Stage:** MVP-5
 
 ### Element Inventory
@@ -124,57 +124,42 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 | ID     | Element Type | Label/Placeholder | State variants | Action on interact |
 |--------|--------------|-------------------|----------------|---------------------|
 | EL-102-01 | Static text | Title | default | none |
-| EL-102-02 | Input | [Character name________] | empty / filled / error | validation on blur; max length |
-| EL-102-03 | Static text | Realm hint (optional) | default | none |
-| EL-102-04 | Button | [ Join gold pool ] | default / disabled / loading | triggers Channel Points redeem flow + `POST /api/payouts/claim` |
-| EL-102-05 | Static text | Pool size / "You're in the pool" | default | none |
+| EL-102-02 | Static text | **How to join** block: subscribe + `!twgold <CharacterName>` in **chat** | default | none |
+| EL-102-03 | Static text | Realm hint | default | *"Same realm as the streamer’s WoW character"* (`docs/SPEC.md`) |
+| EL-102-04 | Static text | **Uniqueness** note: one character name per pool slot | default | none |
+| EL-102-05 | Static text | Pool size / "You're in the pool" (from API if viewer is in pool) | default | none |
 | EL-102-06 | Link-like button | [ View rules ▼ ] | collapsed / expanded | toggles accordion |
 
-> ⚠️ **DECISION:** **`docs/SPEC.md`** uses single-realm **`CharacterName`** only (no `realm` field in `CreatePayoutRequest`). EL-102-03 shows **read-only** hint: *"Same realm as the streamer’s WoW character"* — not a second field.
+> ⚠️ **DECISION:** Optional **Dev Rig** control: hidden **POST** `/api/payouts/claim` test button — **not** shown in production MVP copy.
 
 ### States
 
-- **Default:** Empty name; Join disabled until valid name.
-- **Invalid name:** EL-102-02 error border; message from `invalid_character_name`.
-- **Submitting:** EL-102-04 loading; debounce 2–3s per component ReadME.
-- **Enrolled:** EL-102-05 shows success; roulette region becomes active (UI-106 + animation area).
+- **Default:** Instructions visible; EL-102-05 from **`GET`** pool/me if implemented.
+- **In pool:** EL-102-05 shows membership; roulette region active (UI-106 + animation area).
+- **API error:** UI-105 variant.
 
 ### ASCII Visualization
 
 ```
 ╔══════════════════════════════════════════╗
 ║  Gold Pool  (viewer)                     ║
-║  ┌────────────────────────────────────┐  ║
-║  │ Character on streamer's realm:      │  ║
-║  │ [____________]                      │  ║ ← EL-102-02
-║  │ Same realm as streamer (MVP).       │  ║ ← EL-102-03
-║  └────────────────────────────────────┘  ║
-║  Pool: 12 gnomes spinning   EL-102-05   ║
-║  [ Join gold pool ]                      ║  ← EL-102-04
-╚══════════════════════════════════════════╝
-```
-
-```
-╔══════════════════════════════════════════╗
-║  Gold Pool                               ║
-║  ┌────────────────────────────────────┐  ║
-║  │ [ Thrallsgurl__ ]  ⚠ invalid       │  ║
-║  │ Use letters only (realm rules).     │  ║
-║  └────────────────────────────────────┘  ║
-║  [ Join gold pool ]  (disabled)         ║
+║  To join: subscribe, then type in       ║
+║  stream chat: !twgold YourName           ║  ← EL-102-02
+║  (Name must be unique in the pool.)    ║  ← EL-102-04
+║  Same realm as streamer (MVP).         ║  ← EL-102-03
+║  Pool: 12 gnomes    EL-102-05           ║
 ╚══════════════════════════════════════════╝
 ```
 
 ### Transitions
 
-- Default → Submitting: valid name + redeem → `POST /api/payouts/claim`.
-- Submitting → Enrolled: `201`/`200` → update Zustand; show roulette UI.
-- Submitting → Error: API error body → UI-105 variant.
+- Authenticated → In pool: Backend reports membership → show EL-102-05 + roulette.
+- Pool → Error: API error body → UI-105 variant.
 
 ### Constraints & Notes
 
-- Channel Points redeem provides **`TwitchTransactionId`** for idempotency.
-- Debounce per **`docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`**.
+- **Enrollment** is **`!twgold <CharacterName>`** in **broadcast chat**; Backend ingests (`docs/SPEC.md` §5).
+- Debounce only applies to **optional** Dev Rig claim button, not chat.
 
 ---
 
@@ -196,7 +181,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 ### States
 
 - **Spinning:** EL-103-01 animates; suspense ~ UX-defined duration synced to Backend.
-- **Verifying:** EL-103-02 visible if API exposes `who_pending` state (`docs/SPEC.md` §11).
+- **Verifying:** EL-103-02 visible when **`spinPhase`** is **`verification`** (`docs/SPEC.md` §5.1, §11).
 - **Idle between spins:** EL-103-01 static; countdown in UI-106.
 
 ### ASCII Visualization
@@ -215,7 +200,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 
 ### Transitions
 
-- Spinning → Verifying: Backend broadcasts phase change (TBD API).
+- Spinning → Verifying: **`GET /api/roulette/state`** exposes **`spinPhase`** (`verification`, etc.; `docs/SPEC.md` §5.1).
 - Verifying → Winner / No-op: re-draw if offline per spec → return to idle + toast (DECISION: inline message "Redraw—winner offline").
 
 ### Constraints & Notes
@@ -236,13 +221,13 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 | ID     | Element Type | Label/Placeholder | State variants | Action on interact |
 |--------|--------------|-------------------|----------------|---------------------|
 | EL-104-01 | Banner | "YOU WON!" | pulse / static | none |
-| EL-104-02 | Static text | `!twgold` instruction block | default | selectable copy |
+| EL-104-02 | Static text | In **WoW**, reply to the streamer’s whisper with **`!twgold`** (exact) to consent | default | selectable copy |
 | EL-104-03 | Status chip | Pending / In progress / Sent | colors | poll-driven |
 | EL-104-04 | Static text | Explainer for Sent | default | none |
 
 ### States
 
-- **Won — Pending:** After notification; waiting streamer + viewer WoW **`!twgold`**.
+- **Won — Pending:** After **in-game** notification whisper; waiting for viewer **`!twgold`** whisper reply (and streamer mail flow).
 - **In progress:** Desktop `InProgress`; mail prep.
 - **Sent:** Mail confirmed via `[MGM_CONF…]` — show **"Gold mailed — check your mailbox"** (not "instant gold" on enroll).
 
@@ -253,7 +238,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 ║  ┌────────────────────────────────────┐  ║
 ║  │   ★  YOU WON!  ★                   │  ║ ← EL-104-01
 ║  └────────────────────────────────────┘  ║
-║  Whisper the streamer in WoW:             ║
+║  In WoW, whisper back (confirm):       ║
 ║  ┌────────────────────────────────────┐  ║
 ║  │  !twgold     ← copy                │  ║ ← EL-104-02
 ║  └────────────────────────────────────┘  ║
@@ -274,7 +259,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 
 - Won → In progress: poll `my-last` status from Backend.
 - In progress → Sent: poll shows `Sent`.
-- Sent → (stay): show success summary; viewer remains in pool for future spins (`docs/SPEC.md`).
+- Sent → (stay): show success summary; **winner removed from pool** per `docs/SPEC.md` — rejoin with **`!twgold <CharacterName>`** in chat if they want another draw.
 
 ### Constraints & Notes
 
@@ -341,14 +326,11 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 
 | ID     | Element Type | Label/Placeholder | State variants | Action on interact |
 |--------|--------------|-------------------|----------------|---------------------|
-| EL-106-01 | Timer | `MM:SS` | running / instant-pending | none |
-| EL-106-02 | Button | [ Use instant spin reward ] | enabled if CP reward | deep-link / remind redeem |
-| EL-106-03 | Static text | "Instant spin queued" | after reward | none |
+| EL-106-01 | Timer | `MM:SS` | running | none |
 
 ### States
 
 - **Countdown:** Default 5:00 from Backend sync (`docs/SPEC.md`).
-- **Instant spin claimed:** EL-106-01 jumps or hides; EL-106-03 shows.
 
 ### ASCII Visualization
 
@@ -356,14 +338,12 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 ┌──────────────────────────────────────────┐
 │  Next spin in   04:32  ← EL-106-01        │
 │  ████████████░░░░░                      │
-│  [ Instant spin (Channel Points) ]       │ ← EL-106-02
 └──────────────────────────────────────────┘
 ```
 
 ### Transitions
 
 - Countdown → 00:00: trigger spin UX (UI-103).
-- Instant spin: Backend/EventSub signals early spin (DECISION: exact event name TBD).
 
 ### Constraints & Notes
 
@@ -406,7 +386,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 ║  ┌──────────────────────────────────────────────┐║
 ║  │ [x] Add Extension to panel                   │║
 ║  │ [ ] Install Desktop app + enter API key      │║
-║  │ [ ] Configure Channel Points rewards         │║
+║  │ [ ] Confirm chat bot / EventSub for !twgold    │║
 ║  └──────────────────────────────────────────────┘║
 ║  EBS status:  (●) OK     EL-201-03               ║
 ║  [ Open setup docs ]                             ║
@@ -679,7 +659,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 
 ### Transitions
 
-- Row status updates from poll + log watcher + IPC.
+- Row status updates from poll + **`WoWChatLog.txt`** watcher (**`MGM_ACCEPT`** / **`MGM_CONFIRM`**).
 
 ---
 
@@ -791,7 +771,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 ║  Event log                              [ Clear ]  ║
 ║  ┌──────────────────────────────────────────────┐ ║
 ║  │ 04:14:01  MGM_CONFIRM match a1b2c3d…         │ ║
-║  │ 04:13:40  confirm-acceptance Norinn          │ ║
+║  │ 04:13:40  MGM_ACCEPT match → confirm-accept │ ║
 ║  │ 04:13:05  PostMessage inject OK              │ ║
 ║  └──────────────────────────────────────────────┘ ║
 ╚════════════════════════════════════════════════════╝
@@ -1044,7 +1024,7 @@ UI-401 (icon/slash) ──→ UI-402 (side panel)
 | Gold amount display | `1,000g` | UI-104, UI-203, UI-304 |
 | Whisper command | `!twgold` (exact) | UI-104, instructional copy |
 | Confirm tag pattern | `[MGM_CONFIRM:<uuid>]` | UI-308 log lines, internal |
-| Debounce redeem | `2–3 s` | UI-102 (`docs/MimironsGoldOMatic.TwitchExtension`) |
+| Debounce join | `2–3 s` | UI-102 (`docs/MimironsGoldOMatic.TwitchExtension`) |
 | API poll default | `15 s` (DECISION) | UI-306 |
 | Font / theme | Twitch vs WPF vs WoW | Use Twitch purple only in Extension; **do not** assume WoW fonts match web |
 
@@ -1055,5 +1035,8 @@ UI-401 (icon/slash) ──→ UI-402 (side panel)
 | Version | Date | Notes |
 |---------|------|--------|
 | 1.0 | 2026-04-03 | Initial UI spec from `docs/SPEC.md` + component ReadMEs |
+| 1.1 | 2026-04-03 | Follow-gated pool; removed Channel Points + instant spin (aligned to `docs/SPEC.md`) |
+| 1.2 | 2026-04-03 | Subscribe + **`!twgold <CharacterName>`** chat enroll; **`!twgold`** acceptance; remove winner on `Sent` (`docs/SPEC.md`) |
+| 1.3 | 2026-04-03 | WoW **winner notification whisper** + whisper **`!twgold`** consent (`docs/SPEC.md` §9) |
 
 When **`docs/SPEC.md`** adds concrete **pool/spin** and **broadcaster** routes, update **EL-** bindings and **UI-201–204** without changing IDs where possible.

@@ -12,7 +12,9 @@
 - **Persistence model (MVP):**
   - Write-side source of truth: Marten Event Store in PostgreSQL.
   - Read-side query model: projections/read tables (EF Core optional for mapping/querying projections).
-- **Idempotency:** `TwitchTransactionId` is stored and enforced unique for **redemptions / pool enrollment**.
+- **Chat ingestion (MVP):** **EventSub** `channel.chat.message` — ingest **`!twgold <CharacterName>`** only (enroll / **replace** name for same user per `docs/SPEC.md` §5). **Subscriber** + **unique** name among others; non-subscribers: **log only** (no chat reply). Dedupe by Twitch **`message_id`**. **Acceptance** is **`POST .../confirm-acceptance`** after **`[MGM_ACCEPT:UUID]`** in **`WoWChatLog.txt`** (see `docs/SPEC.md` §9–10).
+- **Roulette `/who`:** Desktop forwards **file-bridge** JSON → **`POST /api/roulette/verify-candidate`**; Backend **authoritatively** creates **`Pending`** or **no winner** (no re-draw same cycle; `docs/SPEC.md` §5, §8).
+- **Idempotency / pool:** **Unique `CharacterName`** in active pool; optional **`EnrollmentRequestId`** for Extension **`POST /api/payouts/claim`**.
 - **Abuse prevention (MVP):**
   - Fixed 1,000g per **winning** payout (after a spin selects a winner).
   - Max 10,000g lifetime total per Twitch user.
@@ -20,24 +22,23 @@
   - Rate limiting (e.g. ~5 req/min per IP/user).
 - **Roulette (MVP):**
   - **Visual roulette** cadence: default **every 5 minutes**; **minimum 1** participant.
-  - **Non-winners remain in the pool** after each spin.
+  - **Non-winners remain in the pool** after each spin; **winners are removed when `Sent`** (may re-enroll via chat).
   - **Online gate:** spin resolution **must** use **`/who <Winner_InGame_Nickname>`** before **`Pending` payout**; offline candidates invalid (re-draw policy per `docs/SPEC.md`).
-  - **Winner notification:** API/state so the **Twitch Extension** can show **“You won”** and instruct **whisper `!twgold`** to receive gold mail.
-  - Channel Points reward **“Switch to instant spin”** triggers the **next** spin early (skips the wait for the current window).
+  - **Winner notification:** API/state so the **Twitch Extension** can show **“You won”**; **in-game** whisper flow per **`docs/SPEC.md` §9** (Russian text + reply **`!twgold`**).
 - **Acceptance vs sent:**
-  - Record **willingness to accept** gold when Desktop reports the winner’s **`!twgold`** whisper.
-  - Set **`Sent`** only when Desktop reports **`[MGM_CONFIRM:UUID]`** observed in **`WoWChatLog.txt`** (mail actually sent).
+  - Record **willingness to accept** when Desktop calls **`confirm-acceptance`** after observing **`[MGM_ACCEPT:UUID]`** in **`WoWChatLog.txt`** (addon printed after Lua whisper **`!twgold`** match; `docs/SPEC.md` §9–10).
+  - Set **`Sent`** only when Desktop reports **`[MGM_CONFIRM:UUID]`** observed in **`WoWChatLog.txt`** (mail actually sent); then **remove winner from pool**.
 - **Expiration:** Hourly background job marks `Pending`/`InProgress` older than 24 hours as `Expired` (no reactivation).
 
 ## API Endpoints
 
-- **POST** `/api/payouts/claim`: Receives redemptions from Twitch. Validates inputs and **adds the viewer to the participant pool** (does **not** create an instant payable payout by itself; see `docs/SPEC.md`).
+- **POST** `/api/payouts/claim` (optional): Extension/Dev Rig enrollment; same rules as **`!twgold <CharacterName>`** (**subscriber**, **unique** name). Primary enrollment is **Twitch chat** (see `docs/SPEC.md`).
 - **GET** `/api/payouts/pending`: Fetched by the Desktop App. Returns **winner** payouts available for sync/injection (primarily `Pending`).
 - **PATCH** `/api/payouts/{id}/status`: Updates payout status where allowed (Desktop), including **`Sent`** after mail-send confirmation.
 - **POST** `/api/payouts/{id}/confirm-acceptance` (recommended): Desktop reports **`!twgold`** matched the winner → record **acceptance** (not **`Sent`**).
 - **GET** `/api/payouts/my-last`: Used by the Twitch Extension (pull model) to show the viewer their latest payout status.
   - Returns `404 Not Found` when no payout exists for caller.
-- **Pool / spin endpoints:** Additional routes for pool state, spin scheduling, and instant spin (see `docs/SPEC.md`; finalized during implementation).
+- **Pool / spin endpoints (MVP):** **`GET /api/roulette/state`**, **`GET /api/pool/me`** (Extension **JWT-only**); **`POST /api/roulette/verify-candidate`** (Desktop **ApiKey**) — see `docs/SPEC.md` §5–5.1.
 
 ## Additional Libraries
 
@@ -48,10 +49,9 @@
 
 ## Architecture & Patterns
 - **Idempotency Pattern:**
-  Use `TwitchTransactionId` as the idempotency key. If a network lag causes the extension to send the same request twice, the backend must return the existing record instead of creating a duplicate or consuming limits.
+  Use `EnrollmentRequestId` as the idempotency key. If a network lag causes the extension to send the same request twice, the backend must return the existing record instead of creating a duplicate or consuming limits.
   
-- **Outbox Pattern:**
-  For any external notifications (Discord, logging), save them to an `Outbox` table within the same transaction as the payout. Use a background worker to process them. This ensures data consistency even if external services are down.
+- **Outbox Pattern:** **Do not** add an Outbox table in MVP **until** the first external notification integration ships; then use the pattern in `docs/SPEC.md` §6 (same transaction as domain events + dispatcher).
 
 - **Specification Pattern (Business Rules):**
   Encapsulate business logic in Specification classes:

@@ -8,16 +8,15 @@ Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.
 
 ## MVP Specification (final)
 
-- **Participant pool**: redeeming adds the viewer to a **pool**; **no instant payout**.
-- **Roulette**: **visual roulette**; default **every 5 minutes** selects **one winner**. **Non-winners stay in the pool.** Minimum pool size **1**. Each finalized winner **must** be **online-verified** via **`/who <Winner_InGame_Nickname>`** before **`Pending` payout** / notification.
-- **Winner notification**: winners **must** be notified (e.g. Extension **“You won”**) and told to **whisper `!twgold`** privately **to get the gold mail**.
-- **Instant spin**: Channel Points reward **“Switch to instant spin”** skips the wait until the next scheduled spin.
+- **Participant pool**: the viewer **must subscribe**, then enroll by **`!twgold <CharacterName>`** in **broadcast Twitch chat** (monitored by the Backend; **`!twgold`** prefix **case-insensitive**). **`CharacterName`** must be **unique** among active pool entries. Channel Points are **not** part of MVP.
+- **Roulette**: **visual roulette**; **every 5 minutes** selects **one winner** (no early/off-schedule spins). **Spin schedule** is **server-authoritative**; Extension **countdown** uses **`GET /api/roulette/state`** (`docs/SPEC.md` §5.1). **Non-winners stay in the pool.** **Winners are removed when payout is `Sent`**; they may **re-enter** via **`!twgold <CharacterName>`** in chat. Minimum pool size **1**. Each finalized winner **must** be **online-verified** via **`/who <Winner_InGame_Nickname>`** before **`Pending` payout** / notification.
+- **Winner notification**: Extension **“You won”** plus **in-game** flow: addon sends **`/whisper <Winner_Name> …`** (Russian text, `docs/SPEC.md` §9); winner replies with **`!twgold`** in WoW (**case-insensitive**). Character **existence/online** at win time is verified with **in-game `/who`** (no external realm API in MVP).
 - **Gold per winning payout**: fixed **1,000g** (when a spin produces a payable winner).
 - **Anti-abuse**:
   - **Lifetime cap**: max **10,000g total** per Twitch user.
   - **Concurrency**: **one active payout per Twitch user** at a time (when a payout row exists for that user).
   - **Rate limiting**: standard ASP.NET Core rate limiting (e.g. ~5 req/min per IP/user).
-- **Idempotency**: `TwitchTransactionId` (Twitch redemption unique id) is persisted and enforced unique in the database for redemptions/enrollment.
+- **Idempotency / uniqueness**: chat message dedupe + **unique character name** in pool; optional **`EnrollmentRequestId`** for Extension **`POST /api/payouts/claim`**.
 - **Identity fields**:
   - `TwitchUserId` (logic, limits, concurrency)
   - `TwitchDisplayName` (WPF UX)
@@ -28,16 +27,16 @@ Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.
   - Desktop-to-Backend uses a pre-shared `ApiKey` (locally trusted Desktop app).
 - **WoW targeting (MVP)**: Desktop targets the **foreground** `WoW.exe` process; process picker is roadmap.
 - **Confirmation**:
-  - **Acceptance (willing to receive gold)**: After **winner notification**, the winner **replies** with a **private message** exactly **`!twgold`** (**required** to receive the gold mail); the **addon intercepts** it and notifies the **Desktop utility**, which calls the **Backend** to record acceptance (not **`Sent`**).
+  - **Acceptance (willing to receive gold)**: After the **winner notification whisper**, the winner whispers **`!twgold`** in WoW → addon prints **`[MGM_ACCEPT:UUID]`** → **`WoWChatLog.txt`** → Desktop → **Backend** **`confirm-acceptance`** (not **`Sent`**).
   - **Mail sent (required for `Sent`)**: **`[MGM_CONFIRM:UUID]`** in **`Logs\WoWChatLog.txt`**; Desktop **must** parse it and then set **`Sent`** on the **Backend** (see `docs/SPEC.md`).
   - **Fallback**: Desktop manual **Mark as Sent** if policy allows.
 
 ## Primary Data Flow (conceptual)
-1. Twitch Extension collects a player/character input and submits a redemption to the ASP.NET Core API; the viewer is **added to the participant pool** (and Extension shows **roulette / pool** UX).
-2. On each spin (scheduled **5 minutes** or **instant spin** reward), the system picks a candidate and **verifies online** with **`/who <Winner_InGame_Nickname>`**; when valid, the Backend creates **payout state** and the winner is **notified** to whisper **`!twgold`** for the mail.
+1. **Subscribers** type **`!twgold <CharacterName>`** in **broadcast chat**; Backend ingests messages and **adds** the viewer to the **participant pool** (unique name). Extension shows **roulette / pool** UX (polls Backend).
+2. On each spin (scheduled **5 minutes** only), the system picks a candidate and **verifies online** with **`/who <Winner_InGame_Nickname>`**; when valid, the Backend creates **payout state**; **addon** sends **winner notification whisper** (§9); winner replies **`!twgold`** in WoW before mail.
 3. The WPF app syncs **winner** payouts into WoW 3.3.5a Lua instructions, then focuses/communicates with the running game process using WinAPI/PostMessage.
 4. The WoW addon receives payload data via hooked mail UI events and fills mail recipient/subject/money fields from a queued instruction string.
-5. The **winner** (after notification) **replies** with whisper **`!twgold`** → **server** records **acceptance**; the streamer sends mail; the addon emits **`[MGM_CONFIRM:UUID]`**; Desktop reads **`WoWChatLog.txt`** → **server marks `Sent`**.
+5. The **winner** confirms with **WoW whisper `!twgold`** → **server** records **acceptance**; the streamer sends mail; the addon emits **`[MGM_CONFIRM:UUID]`**; Desktop reads **`WoWChatLog.txt`** → **server marks `Sent`** → **winner removed from pool** (may re-enroll via Twitch chat).
 
 ## Data & Artifacts
 - Shared contracts (DTOs/enums) live in `MimironsGoldOMatic.Shared` so all modules agree on the payout payload.

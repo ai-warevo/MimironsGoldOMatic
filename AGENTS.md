@@ -71,8 +71,9 @@ This repository uses multiple AI specialist “roles” for implementation consi
 ### [Backend/API Expert]
 
 Responsibilities:
-- Design ASP.NET Core API endpoints for **participant pool / roulette spins** (including **`/who`‑gated** winner finalization), **winner notification** state for the Extension, **payouts** (validation, auth, status updates), **acceptance** via **`!twgold`** reply (willing to receive gold), and **`Sent`** after **`[MGM_CONFIRM:UUID]`** from the Desktop log watcher.
-- Implement PostgreSQL persistence using EF Core.
+- Design ASP.NET Core API endpoints for **participant pool / roulette spins** (including **`/who`‑gated** winner finalization), **Twitch chat ingestion** for **`!twgold <CharacterName>`** (enroll) only, **`confirm-acceptance`** from Desktop after **WoW whisper `!twgold`**, **winner notification** state for the Extension, **payouts** (validation, auth, status updates), **pool removal** when **`Sent`**, and **`Sent`** after **`[MGM_CONFIRM:UUID]`** from the Desktop log watcher.
+- Persist the **write model** with **Marten Event Store on PostgreSQL** (canonical source of truth): **one stream per payout id**; **separate** **Pool** vs **Payout** aggregates (see `docs/SPEC.md` §6). **EF Core** is **optional** and **read-model / projections only**. **Outbox** only when the first external side-effect integration is added (`docs/SPEC.md` §6).
+- **Chat:** **EventSub** `channel.chat.message` for enrollment; **`POST /api/roulette/verify-candidate`** for **`/who`** file-bridge results; **single broadcaster** MVP (`docs/SPEC.md` deployment scope).
 - Define shared DTOs/enums and ensure backward-compatible API contracts.
 - Integrate JWT auth for the Twitch Extension flow.
 
@@ -81,7 +82,7 @@ Responsibilities:
 Responsibilities:
 - Implement the WPF MVVM client UI and view models.
 - Handle Win32 integration for WoW 3.3.5a (process discovery, window focus, and message/posting).
-- Bridge **addon-originated `!twgold` acceptance** to the Backend; coordinate **`/who`** verification for roulette; tail **`WoWChatLog.txt`** for **`[MGM_CONFIRM:UUID]`** and transition **`Sent`** (local IPC + log watcher → HTTP to API).
+- Bridge **addon-originated `!twgold` acceptance** to the Backend: tail **`WoWChatLog.txt`** (default + override path) for **`[MGM_ACCEPT:UUID]`** → **`POST .../confirm-acceptance`**; tail the **same** log for **`[MGM_CONFIRM:UUID]`** → **`Sent`**; watch **file-bridge** for **`/who`** → **`POST /api/roulette/verify-candidate`** (see `docs/SPEC.md` §8–10).
 - Ensure payload conversion into WoW-compatible command strings (including 255-char chunking).
 - Document WinAPI behaviors/timing and provide reliability notes specific to 3.3.5a.
 
@@ -90,8 +91,8 @@ Responsibilities:
 Responsibilities:
 - Implement WoW 3.3.5a addon scaffolding (`.toc` + Lua).
 - Hook into the mail interface (event hooking / frame integration) to receive queued payout payloads.
-- Intercept **whisper/private messages** where the body is exactly **`!twgold`** and forward **willingness to accept** gold to the Desktop utility (after **winner notification**; **`Sent`** still requires **`[MGM_CONFIRM:UUID]`** in the chat log).
-- Support **`/who <Winner_InGame_Nickname>`** as needed for **roulette online verification** (with Desktop).
+- Send the **winner notification whisper** per `docs/SPEC.md` §9 (`/whisper <Winner_InGame_Nickname> …` Russian text); intercept **whisper/private messages** where the body matches **`!twgold`** (**case-insensitive**, no extra text) and **print `[MGM_ACCEPT:UUID]`** to chat so Desktop can read **`WoWChatLog.txt`** (**`Sent`** still requires **`[MGM_CONFIRM:UUID]`** per `docs/SPEC.md` §9–10).
+- Run **`/who`**, parse **3.3.5a**, write **file-bridge** JSON for Desktop/**Backend** (`docs/SPEC.md` §8); support mail flow as before.
 - Provide a robust mail queue processor and UI population logic.
 - Keep code compatible with FrameXML and the 3.3.5a Lua environment constraints.
 
@@ -99,7 +100,7 @@ Responsibilities:
 
 Responsibilities:
 - Scaffold the Twitch Extension UI using React + Vite + TypeScript.
-- Implement redemption that **joins the participant pool** (not instant payout) and the **visual roulette** (default **5-minute** spin cadence; **instant spin** via **“Switch to instant spin”** Channel Points reward); **“You won”** UX and **whisper `!twgold`** instructions (**required** to receive gold mail).
+- Implement **visual roulette** (fixed **5-minute** spin; **no** early spins) and copy that directs viewers to **`!twgold <CharacterName>`** in **stream chat** (subscriber); show a **countdown to the next spin** using **server-authoritative** schedule fields from the API (`docs/SPEC.md` §5, §11). **“You won”** UX and instructions that **in-game whisper reply `!twgold`** (case-insensitive) is **required** for consent before gold mail (`docs/SPEC.md` §9–11).
 - Integrate with the expected Twitch auth/token mechanism for the API.
 - Align client-side types with shared DTOs produced/consumed by the backend.
 
