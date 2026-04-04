@@ -11,7 +11,7 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 
 ## Implementation status
 
-Normative contracts are **document-complete** for the approved MVP (`docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md`, `docs/INTERACTION_SCENARIOS.md`). The **product** is still in early scaffolding: see **`docs/IMPLEMENTATION_READINESS.md`** (*Source code parity*) for per-project progress (Backend template API, default Extension/WPF UIs, minimal addon Lua, partial `MimironsGoldOMatic.Shared`).
+Normative contracts are **document-complete** for the approved MVP (`docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md`, `docs/INTERACTION_SCENARIOS.md`). See **`docs/IMPLEMENTATION_READINESS.md`** (*Source code parity*) for per-project progress (Backend MVP-2, WoW addon MVP-3, default Extension/WPF UIs still scaffold-heavy).
 
 ## MVP Specification (final)
 
