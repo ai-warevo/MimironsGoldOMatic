@@ -35,21 +35,36 @@ description: Generates a conventional git commit command based on all local chan
 6. **Rules**:
    - **Language**: English only.
    - **Mood**: Imperative (e.g., "add").
-   - **Footer**: After a blank line following the description, end with **one** trailer line only:
-     
-     `Co-authored-by: Cursor Agent <cursoragent@cursor.com>`
-     
-     **Do not** add `Made-with: Cursor` inside agent-composed messages (see `.cursor/rules/git-commit-footer.mdc`) — Cursor or other tooling may add `Made-with` separately; duplicating it breaks the footer.
+   - **Footer**: After a blank line following the optional body, end with **`Made-with: Cursor`**, a blank line, then **`Co-authored-by: Cursor Agent <cursoragent@cursor.com>`** (see `.cursor/rules/git-commit-footer.mdc`). Same order and spacing every time.
 7. **Multi-commit Logic**: If changes are too large or cover unrelated topics, suggest splitting them into multiple commands.
 8. **Workflow**:
    - Generate and run `git add .` first.
-   - Then output a single `git commit` using `-F` with a file **or** one heredoc-style message so the body and footer are not split across multiple `-m` flags (which can duplicate lines or add stray blank paragraphs).
-   - Example shape (subject, blank line, body, blank line, `Co-authored-by` only):
+   - Output **one** full message via `git commit -F <file>` or a **single** heredoc. Do **not** assemble the footer from multiple `-m` arguments (that often duplicates `Made-with` or inserts extra blank paragraphs).
 
-     `git commit -F - <<'EOF'
-     <type>(<scope>): <description>
+### Full message template
 
-     <optional body paragraph>
+```text
+<type>(<scope>): <description>
 
-     Co-authored-by: Cursor Agent <cursoragent@cursor.com>
-     EOF`
+<optional body paragraph>
+
+Made-with: Cursor
+
+Co-authored-by: Cursor Agent <cursoragent@cursor.com>
+```
+
+### Shell example (heredoc)
+
+```bash
+git commit -F - <<'EOF'
+<type>(<scope>): <description>
+
+<optional body paragraph>
+
+Made-with: Cursor
+
+Co-authored-by: Cursor Agent <cursoragent@cursor.com>
+EOF
+```
+
+On Windows PowerShell, write the same text to a UTF-8 file and run `git commit -F path\to\msg.txt` (heredoc above is for Git Bash / Unix shells).

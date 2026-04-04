@@ -1,20 +1,22 @@
 ---
 description: >-
-  Git commit messages from the agent must not include a Made-with line; use a single
-  Co-authored-by trailer only to avoid duplicate footers.
+  Git commit messages must end with Made-with then Co-authored-by in a fixed layout;
+  compose the full message once to avoid duplicate footers.
 alwaysApply: true
 ---
 
-# Git commit footers (agent-authored messages)
+# Git commit footers (this repo)
 
-When you propose, compose, or run `git commit` messages for this repo:
+When you propose, compose, or run `git commit` messages here:
 
-1. **Do not** add a line `Made-with: Cursor` (or any `Made-with:` line). The editor or other tooling may append that trailer on its own; adding it in the message body often produces **duplicate** `Made-with` lines.
+1. **Footer block** — After the subject (and optional body), use **exactly** this layout, including blank lines:
 
-2. **Do** end the message with a **blank line** after the subject/body, then **exactly one** trailer line:
+   - One blank line after the subject line (and before the body if you include a body).
+   - After the optional body paragraph: one blank line, then **`Made-with: Cursor`**, then one blank line, then **`Co-authored-by: Cursor Agent <cursoragent@cursor.com>`**.
+   - **No** extra lines after the `Co-authored-by` line.
 
-   `Co-authored-by: Cursor Agent <cursoragent@cursor.com>`
+2. **Order** — `Made-with: Cursor` **always** comes **before** `Co-authored-by: Cursor Agent <cursoragent@cursor.com>`.
 
-   Use that spelling (`Co-authored-by`, hyphenated, lowercase `by`) so it matches Git’s trailer convention.
+3. **Spelling** — Use `Made-with:` (hyphen, not “Made with”). Use `Co-authored-by:` (hyphenated, lowercase `by`) as in Git trailers.
 
-3. Do not add extra blank lines after the `Co-authored-by` line.
+4. **One composed message** — Write the full message in a **single** `-F` file or one heredoc. **Do not** build the footer by chaining several `git commit -m` flags for different lines; that often creates **duplicate** `Made-with` lines or stray blank paragraphs.
