@@ -15,7 +15,13 @@
  *
  *   node .cursor/skills/amend-commit/scripts/amend_commit_meta_wrap.mjs run --mode all --base origin/main --made-with "X" --co-authored-by "Y <y@example.com>" --author-name "A" --author-email "a@example.com" --committer-name "C" --committer-email "c@example.com"
  *
- *   node .cursor/skills/amend-commit/scripts/amend_commit_meta_wrap.mjs run --mode all --base origin/main --made-with "Cursor" --co-authored-by "Cursor Agent <cursoragent@cursor.com>" --author-name "Anatoly Ivanov" --author-email "ai.vibeqodez@vk.com" --committer-name "Anatoly Ivanov" --committer-email "ai.vibeqodez@vk.com"
+ *   node .cursor/skills/amend-commit/scripts/amend_commit_meta_wrap.mjs run --mode all --full-branch --base origin/main --made-with "Cursor" --co-authored-by "Cursor Agent <cursoragent@cursor.com>" --author-name "Anatoly Ivanov" --author-email "ai.vibeqodez@vk.com" --committer-name "Anatoly Ivanov" --committer-email "ai.vibeqodez@vk.com"
+ *
+ * If merge-base(base, HEAD) equals your branch tip, --mode all rewrites the full history reachable
+ * from the branch (see amend_commit_meta.mjs) instead of stopping with an empty range.
+ *
+ * To always rewrite every commit on the branch (including those also on main), add --full-branch:
+ *   ... run --mode all --full-branch --made-with "Cursor" ...
  */
 
 import { spawnSync } from "node:child_process";

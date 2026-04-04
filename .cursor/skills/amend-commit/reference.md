@@ -26,7 +26,7 @@ Existing trailing `Made-with` blocks (from the last `\n\nMade-with:` onward) are
 
 | Mode | Revision range | Trailers (always via `--msg-filter` when in range) | Author / committer |
 |------|----------------|---------------------------------------------------|---------------------|
-| `all` | `merge-base(base, current)..current` | Every commit in range | If **`--message-only`**: unchanged from originals. If **not**: set via **`--env-filter`** to the four CLI identity fields for each commit in range. |
+| `all` | Default: **`merge-base(base, current)..current`**; if that range is empty, **all commits reachable from the branch**. With **`--full-branch`**: always **full ancestry** of the checked-out branch (same objects as `git rev-list <branch>`). | Every commit in range | If **`--message-only`**: unchanged from originals. If **not**: set via **`--env-filter`** to the four CLI identity fields for each commit in range. |
 | `single` | `commit^..current` | Only the targeted original `GIT_COMMIT`; others pass through unchanged | If **`--message-only`**: unchanged. If **not**: only the targeted commit gets **`GIT_AUTHOR_*` / `GIT_COMMITTER_*`** overrides; others keep originals. |
 
 `single` still **replays** descendants (new hashes) on **current** only.
@@ -42,10 +42,11 @@ They are **optional** knobs, not “pick any repo/branch”:
 
 - **`--repo`**: **`git -C`** path; **must** be the **same** repository root as cwd’s Git work tree (enforced).
 - **`--head`**: Optional; must be **`HEAD`** or the **current** branch name if set — used for validation / symmetry with scripts, **not** to choose a different branch.
-- **`--base`**: **`mode=all` only**; **read-only** input to **`merge-base`** to define the range; **not** the branch being rewritten.
+- **`--base`**: **`mode=all` only**; **read-only** input to **`merge-base`** to define the exclusive range; **ignored** when **`--full-branch`** is set. **Not** the branch being rewritten.
 
 ## History rewrite safety
 
+- **Clean index/worktree (tracked files):** **`git filter-branch`** aborts with *You have unstaged changes* if tracked files differ from **`HEAD`** (staged or unstaged). Commit, **`git stash`**, or discard, then rerun. Untracked files alone are usually fine.
 - **Publishing:** Updating a **remote** is **outside** this script; the user runs **`git push --force-with-lease`** (or equivalent) manually if they choose.
 - **Backup refs:** `git filter-branch` leaves `refs/original/`. After verifying the result, remove them (Bash):
 
@@ -62,4 +63,4 @@ They are **optional** knobs, not “pick any repo/branch”:
 ## Edge cases
 
 - **Root commit** (`single` on the first commit): `commit^` is invalid — use `all` from an empty tree or edit manually.
-- **Empty range:** If there are no commits in the range, the script exits without calling `filter-branch`.
+- **Empty `merge-base..HEAD`:** If the branch tip is exactly the merge-base with `--base` (e.g. same commit as `main`), the exclusive range is empty; the script **falls back** to rewriting the **full ancestry** of the checked-out branch and prints a note to stderr. If that count is still zero, the script exits with code **1** (nothing to rewrite).

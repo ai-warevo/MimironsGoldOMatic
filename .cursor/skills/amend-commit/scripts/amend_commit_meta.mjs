@@ -31,6 +31,35 @@ function git(repo, ...gitArgs) {
   return (r.stdout || "").trim();
 }
 
+/** `git filter-branch` refuses to run if the worktree or index differs from HEAD. */
+function assertCleanWorktreeForFilterBranch(repo) {
+  const r = spawnSync("git", ["-C", repo, "status", "--porcelain"], {
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  if (r.error) throw r.error;
+  if (r.status !== 0) {
+    console.error((r.stderr || "").trim() || `git status exited ${r.status}`);
+    process.exit(1);
+  }
+  const lines = (r.stdout || "")
+    .split(/\r?\n/)
+    .map((l) => l.trimEnd())
+    .filter((l) => l.length > 0);
+  const dirty = lines.filter((l) => {
+    if (l.startsWith("##")) return false;
+    if (l.startsWith("??")) return false; // untracked only — git filter-branch still allows this
+    return true;
+  });
+  if (dirty.length > 0) {
+    console.error(
+      "Cannot rewrite history: staged or unstaged changes to tracked files (git filter-branch requirement).",
+    );
+    console.error("Commit, stash, or discard those changes, then rerun. Example: git stash push -m \"pre-amend-commit\"");
+    process.exit(1);
+  }
+}
+
 function resolveFullSha(repo, rev) {
   return git(repo, "rev-parse", "--verify", rev);
 }
@@ -274,11 +303,16 @@ function parseRunArgs(argv) {
     committerName: "",
     committerEmail: "",
     messageOnly: false,
+    fullBranch: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--message-only") {
       o.messageOnly = true;
+      continue;
+    }
+    if (a === "--full-branch") {
+      o.fullBranch = true;
       continue;
     }
     if (!a.startsWith("--")) {
@@ -394,11 +428,37 @@ function cmdRun(argv) {
   let onlyCommit = null;
 
   if (args.mode === "all") {
-    const baseRef = args.base || defaultBaseRef(repo);
-    const baseSha = resolveFullSha(repo, baseRef);
-    const headSha = resolveFullSha(repo, headRefSym);
-    const mb = mergeBase(repo, baseSha, headSha);
-    revList = `${mb}..${headRefSym}`;
+    if (args.fullBranch) {
+      revList = headRefSym;
+      console.error(
+        `Note: --full-branch — rewriting every commit reachable from ${headRefSym} (not just merge-base..HEAD). ` +
+          `Refs like main that still point at old SHAs are unchanged until you update them.`,
+      );
+    } else {
+      const baseRef = args.base || defaultBaseRef(repo);
+      const baseSha = resolveFullSha(repo, baseRef);
+      const headSha = resolveFullSha(repo, headRefSym);
+      const mb = mergeBase(repo, baseSha, headSha);
+      revList = `${mb}..${headRefSym}`;
+      // When the branch tip equals merge-base(base, HEAD), `mb..HEAD` is empty (no commits "only"
+      // on this branch vs base). Users still expect --mode all to rewrite commits reachable from
+      // the checked-out branch tip — use the branch ref alone so filter-branch walks full ancestry.
+      let nExclusive = 0;
+      try {
+        nExclusive = Number.parseInt(git(repo, "rev-list", "--count", revList), 10);
+      } catch {
+        nExclusive = 0;
+      }
+      if (!Number.isFinite(nExclusive) || nExclusive <= 0) {
+        const baseLabel = args.base ?? "default upstream (origin/main, main, …)";
+        console.error(
+          `Note: empty range ${mb.slice(0, 7)}..${headRefSym} vs merge-base with ${baseLabel} — ` +
+            `rewriting all commits reachable from ${headRefSym}. ` +
+            `Other refs that pointed at the same commits are not moved; only this branch updates.`,
+        );
+        revList = headRefSym;
+      }
+    }
   } else if (args.mode === "single") {
     if (!args.commit) {
       console.error("mode=single requires --commit");
@@ -415,6 +475,11 @@ function cmdRun(argv) {
     onlyCommit = commit;
   } else {
     console.error("--mode must be all or single");
+    process.exit(1);
+  }
+
+  if (args.fullBranch && args.mode !== "all") {
+    console.error("--full-branch is only valid with --mode all");
     process.exit(1);
   }
 
@@ -443,10 +508,13 @@ function cmdRun(argv) {
   }
   if (!Number.isFinite(n) || n <= 0) {
     console.error(
-      `No commits in range ${JSON.stringify(revList)}; nothing to rewrite. Try a different --base, branch, or --commit.`,
+      `No commits in range ${JSON.stringify(revList)}; nothing to rewrite. ` +
+        `Try --mode single --commit <hash>, or --base pointing to an ancestor of your branch tip.`,
     );
-    return;
+    process.exit(1);
   }
+
+  assertCleanWorktreeForFilterBranch(repo);
 
   runFilterBranch(
     repo,
@@ -473,7 +541,11 @@ Options:
   --repo <path>              Must resolve to the same repo as cwd (default: .)
   --head <ref>               Optional; must be HEAD or the current branch name
   --mode all|single          Revision scope
-  --base <ref>               For mode=all (read-only; default: origin/main, main, …)
+  --full-branch              With mode=all: rewrite every commit reachable from the branch tip
+                             (full history). Default without this flag: merge-base(base,HEAD)..HEAD
+                             only (commits not already on the integration base).
+  --base <ref>               For mode=all (read-only; default: origin/main, main, …). Ignored if
+                             --full-branch. If the exclusive range is empty, full ancestry is used.
   --commit <hash>            For mode=single; must be on current branch history
   --made-with <text>
   --co-authored-by <text>

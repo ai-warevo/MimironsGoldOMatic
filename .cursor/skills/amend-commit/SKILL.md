@@ -118,7 +118,7 @@ node .cursor/skills/amend-commit/scripts/amend_commit_meta.mjs run \
 
 | `--mode` | Revision range | Branch ref updated |
 |----------|----------------|--------------------|
-| `all` | `merge-base(base, current)..current` | **Checked-out** branch only (`--base` is read-only) |
+| `all` | Default: `merge-base..current`; **if empty**, full ancestry. **`--full-branch`**: always full ancestry of the branch (every commit reachable from the tip). | **Checked-out** branch only (`--base` is read-only; ignored with `--full-branch`) |
 | `single` | `commit^..current` | **Checked-out** branch only; **`commit` on this branch** |
 
 **Symbolic ref:** `filter-branch` still needs a branch **name**; the script always uses the **current branch** short name (not a peeled SHA) for the positive ref (Git for Windows).
