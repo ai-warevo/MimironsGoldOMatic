@@ -12,13 +12,22 @@ Canonical implementation contracts live in:
 
 **Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today (solution file, scaffolds, partial Shared library), see [`docs/IMPLEMENTATION_READINESS.md`](IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*.
 
-**Payout model note:** **Subscribers** join by **`!twgold <CharacterName>`** in **broadcast Twitch chat** (monitored by Backend); **character names** are **unique** in the pool. Gold is **not** paid instantly. A **visual roulette** (**every 5 minutes**, minimum **1** participant) picks **one winner**; **non-winners stay**; **winners are removed from the pool when `Sent`**, and may **re-enter** via chat. **Consent** is **WoW whisper `!twgold`** after the **winner notification whisper** (`docs/SPEC.md` §9). **`Sent`** only after **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
+### Mandatory checklist (every roadmap step)
+
+Each step is executed with a checklist supplied by the project owner (often inline in the prompt). Agents **must**:
+
+- Read the cited **`docs/SPEC.md`** sections (§…).
+- Read the cited **`docs/INTERACTION_SCENARIOS.md`** test cases (TC-…) when listed.
+- **Not** add HTTP endpoints, DTOs, or product behaviors absent from **`docs/SPEC.md`**.
+- **Not** implement **`docs/INTERACTION_SCENARIOS.md`** scenarios marked **future / not MVP** or **placeholder** unless **`docs/SPEC.md`** explicitly adds the behavior (no speculative APIs — e.g. retry tokens, pause endpoints).
+
+**Payout model note:** **Subscribers** join by **`!twgold <CharacterName>`** in **broadcast Twitch chat** (monitored by the **EBS**); **character names** are **unique** in the pool. Gold is **not** paid instantly. A **visual roulette** (**every 5 minutes**, minimum **1** participant) picks **one winner**; **non-winners stay**; **winners are removed from the pool when `Sent`**, and may **re-enter** via chat. **Consent** is **WoW whisper `!twgold`** after the **winner notification whisper** (`docs/SPEC.md` §9). **`Sent`** only after **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
 
 ## MVP (End-to-end happy path)
 
 ### MVP-0: Repo skeleton
 
-- Create `src/MimironsGoldOMatic.sln` (not yet present in the repo; projects currently live as loose folders under `src/`)
+- Solution file: `src/MimironsGoldOMatic.slnx` (includes Shared, Backend, Desktop; extend for remaining projects in MVP-0)
 - Add projects under `src/`:
   - `MimironsGoldOMatic.Shared`
   - `MimironsGoldOMatic.Backend`
@@ -45,7 +54,7 @@ Spec links:
 
 #### Step-by-step prompt (MVP-1)
 
-Acting as **[Backend/API Expert]**:
+Acting as **[EBS/API Expert]**:
 
 - Read `docs/SPEC.md` and `docs/MimironsGoldOMatic.Shared/ReadME.md`.
 - Initialize the .NET 10 Class Library project `MimironsGoldOMatic.Shared` inside `/src`.
@@ -55,7 +64,7 @@ Acting as **[Backend/API Expert]**:
   - `CreatePayoutRequest` record including: `CharacterName`, `EnrollmentRequestId`
 - Ensure the namespace is `MimironsGoldOMatic.Shared`.
 
-### MVP-2: Backend API + persistence (`MimironsGoldOMatic.Backend`)
+### MVP-2: EBS API + persistence (`MimironsGoldOMatic.Backend`)
 
 - PostgreSQL + Marten (Event Store) + CQRS read projections
 - Persistence rules:
@@ -77,12 +86,12 @@ Acting as **[Backend/API Expert]**:
   - `GET /api/payouts/my-last` (`404` when none exists)
   - `GET /api/roulette/state` — server-authoritative **`nextSpinAt`** / **`serverNow`** + pool count + spin phase (`docs/SPEC.md` §5.1)
   - `GET /api/pool/me` — viewer enrollment hint for Extension (`docs/SPEC.md` §5.1)
-  - `POST /api/roulette/verify-candidate` — Desktop submits **`/who`** result (parsed from **`[MGM_WHO]`** in **`WoWChatLog.txt`**); Backend creates **`Pending`** or **no winner** (`docs/SPEC.md` §5, §8)
+  - `POST /api/roulette/verify-candidate` — Desktop submits **`/who`** result (parsed from **`[MGM_WHO]`** in **`WoWChatLog.txt`**); **EBS** creates **`Pending`** or **no winner** (`docs/SPEC.md` §5, §8)
 - Background job:
   - Hourly: mark `Pending`/`InProgress` older than 24h as `Expired` (terminal, no reactivation)
 - Auth/security (MVP):
   - Dev Rig-first for Twitch Extension auth (production JWT validation deferred)
-  - Desktop uses a pre-shared `ApiKey` (global static key in backend config)
+  - Desktop uses a pre-shared `ApiKey` (global static key in EBS config)
 
 Spec links:
 
@@ -94,7 +103,7 @@ Spec links:
 
 #### Step-by-step prompt (MVP-2)
 
-Acting as **[Backend/API Expert]**:
+Acting as **[EBS/API Expert]**:
 
 - Read `docs/SPEC.md`, `docs/MimironsGoldOMatic.Backend/ReadME.md`, and reference `MimironsGoldOMatic.Shared`.
 - Create the ASP.NET Core (.NET 10) Web API project `MimironsGoldOMatic.Backend` in `/src`.
@@ -109,6 +118,7 @@ Acting as **[Backend/API Expert]**:
   - `PATCH /api/payouts/{id}/status`
   - `POST /api/payouts/{id}/confirm-acceptance` after **`!twgold`**; **`Sent`** when log shows **`[MGM_CONFIRM:UUID]`**
   - `GET /api/payouts/my-last` (return `404` when none exists)
+  - **§11 Helix:** On transition to **`Sent`**, **`Send Chat Message`** per **`docs/SPEC.md`** (inline **3** retries, **no** Outbox, **no** rollback on Helix failure, **once** per payout id)
 - Implement expiration job:
   - Hourly background process transitions `Pending/InProgress` older than 24h to `Expired`
 - Implement MVP auth posture:
@@ -121,8 +131,8 @@ Acting as **[Backend/API Expert]**:
 - Hook `MAIL_SHOW` and provide a side panel UI
 - Implement “Prepare Mail” auto-fill:
   - `SendMailNameEditBox`, subject, gold-to-copper via `MoneyInputFrame_SetCopper`
-- Support **roulette `/who`** flow if implemented in-client: execute or surface **`/who <Winner_InGame_Nickname>`** results for Desktop/Backend (normative behavior in `docs/SPEC.md`)
-- Intercept **whispers** to the streamer where the message is exactly **`!twgold`** and notify the Desktop utility (Backend **acceptance**); winner **must** have been **notified** first per product flow
+- Support **roulette `/who`** flow if implemented in-client: execute or surface **`/who <Winner_InGame_Nickname>`** results for Desktop/EBS (normative behavior in `docs/SPEC.md`)
+- Intercept **whispers** to the streamer where the message is exactly **`!twgold`** and notify the Desktop utility (**EBS** **acceptance** via Desktop); winner **must** have been **notified** first per product flow
 - **Required:** after mail is sent, print **`[MGM_CONFIRM:UUID]`** to chat (UUID is payout id) for **`WoWChatLog.txt`** / **`Sent`**
 
 Spec links:
@@ -156,7 +166,7 @@ Acting as **[WoW Addon/Lua Expert]**:
   - Inject **`/run NotifyWinnerWhisper(...)`** and **`/run ReceiveGold("...")`** with <255 char chunking
   - Use `PostMessage` as primary strategy with `SendInput` fallback
 - Feedback loop:
-  - Receive **`!twgold`** from addon → call Backend **acceptance** endpoint (not **`Sent`**)
+  - Receive **`!twgold`** from addon → call **EBS** **acceptance** endpoint (not **`Sent`**)
   - **Required:** tail `Logs\WoWChatLog.txt` for **`[MGM_CONFIRM:UUID]`** → mark **`Sent`**
   - Manual overrides in UI:
     - **Mark as Sent**
@@ -185,15 +195,15 @@ Acting as **[WPF/WinAPI Expert]**:
   - Implement <255 char chunking for injected `/run` commands
   - Add `SendInput` fallback strategy for blocked/unreliable primary injection
 - Implement confirmation loop:
-  - **Single** log tail **`Logs\WoWChatLog.txt`**: **`[MGM_WHO]`** → **`POST /api/roulette/verify-candidate`**; **`[MGM_ACCEPT:UUID]`** → Backend **acceptance**; **`[MGM_CONFIRM:UUID]`** → Backend **`Sent`**; configurable log path (**§10**)
+  - **Single** log tail **`Logs\WoWChatLog.txt`**: **`[MGM_WHO]`** → **`POST /api/roulette/verify-candidate`**; **`[MGM_ACCEPT:UUID]`** → **EBS** **acceptance**; **`[MGM_CONFIRM:UUID]`** → **EBS** **`Sent`**; configurable log path (**§10**)
   - Allow **`PATCH` `InProgress` → `Pending`** per **`docs/SPEC.md` §3**
   - Provide manual overrides: **Mark as Sent**, **Fail**, **Cancel**
-- Use the pre-shared Desktop `ApiKey` when calling Backend endpoints.
+- Use the pre-shared Desktop `ApiKey` when calling **EBS** endpoints.
 
 ### MVP-5: Twitch Extension (`MimironsGoldOMatic.TwitchExtension`)
 
 - Dev Rig-focused integration
-- **Enrollment** is **not** form-primary: viewers use **`!twgold <CharacterName>`** in **stream chat** (see `docs/SPEC.md`). Extension shows **instructions + status** (poll Backend).
+- **Enrollment** is **not** form-primary: viewers use **`!twgold <CharacterName>`** in **stream chat** (see `docs/SPEC.md`). Extension shows **instructions + status** (poll the **EBS**).
   - Optional Dev Rig: **`POST /api/payouts/claim`** with `EnrollmentRequestId` for testing
 - **Visual roulette** UI:
   - Spin every **5 minutes**; **minimum 1** participant
@@ -216,16 +226,16 @@ Acting as **[Frontend/Twitch Expert]**:
 - Scaffold `src/MimironsGoldOMatic.TwitchExtension` using Vite + React + TypeScript.
 - Build **instructional** UI (chat commands) and status polling — **not** the sole enrollment path.
 - Integrate with Twitch Extension helper (`window.Twitch.ext`); optional **`POST /api/payouts/claim`** for Dev Rig with `EnrollmentRequestId`
-- Implement **visual roulette** + **5-minute** countdown (aligned with Backend; **no** early spin).
+- Implement **visual roulette** + **5-minute** countdown (aligned with the **EBS**; **no** early spin).
 - Implement pull status UX:
   - Call `GET /api/payouts/my-last` (and any pool APIs)
-- **MVP-5 scope (locked):** **viewer panel only** (`docs/UI_SPEC.md` **UI-101–106**). **Do not** implement broadcaster dashboard panels **UI-201–204** in MVP-5 (post-MVP / when Backend adds broadcaster JWT routes).
+- **MVP-5 scope (locked):** **viewer panel only** (`docs/UI_SPEC.md` **UI-101–106**). **Do not** implement broadcaster dashboard panels **UI-201–204** in MVP-5 (post-MVP / when the **EBS** adds broadcaster JWT routes).
 - Ensure alignment with Twitch Dev Rig for MVP debugging (**real** Extension JWTs per `docs/SPEC.md`).
 
 ### MVP-6: End-to-end demo & verification
 
-- Demo scenario: **`!twgold <CharacterName>`** in **chat** → **roulette spin** (random candidate) → **`/who`** online OK → Desktop **`NotifyWinnerWhisper`** → **winner notification whisper** (§9) → winner **`!twgold`** in **WoW** → **confirm-acceptance** → desktop **`ReceiveGold`** inject → streamer sends mail → **`[MGM_CONFIRM:UUID]`** in log → backend **`Sent`** → **winner removed from pool**
-- Add minimal backend tests for:
+- Demo scenario: **`!twgold <CharacterName>`** in **chat** → **roulette spin** (random candidate) → **`/who`** online OK → Desktop **`NotifyWinnerWhisper`** → **winner notification whisper** (§9) → winner **`!twgold`** in **WoW** → **confirm-acceptance** → desktop **`ReceiveGold`** inject → streamer sends mail → **`[MGM_CONFIRM:UUID]`** in log → **EBS** **`Sent`** → **winner removed from pool**
+- Add minimal **EBS** / API tests for:
   - idempotency (`EnrollmentRequestId`)
   - one-active-per-user
   - lifetime cap (10k)
@@ -241,10 +251,10 @@ Spec links:
 Acting as **[Senior Architect]**:
 
 - Review `docs/SPEC.md` and `docs/ROADMAP.md` for end-to-end consistency.
-- Ensure all projects are included in `src/MimironsGoldOMatic.sln`.
+- Ensure all projects are included in `src/MimironsGoldOMatic.slnx`.
 - Synchronize component behavior and verify the full data flow:
   - **Chat** enrollment + Extension status/roulette UX
-  - **`/who`** validates winner online -> notify winner -> Backend **winner payout** `Pending`
+  - **`/who`** validates winner online -> notify winner -> **EBS** **winner payout** `Pending`
   - Desktop explicit claim + inject -> Addon queue
   - **WoW whisper `!twgold`** → acceptance; **`[MGM_CONFIRM:UUID]`** → `Sent` → pool removal
 - Finalize setup notes in root docs as needed.

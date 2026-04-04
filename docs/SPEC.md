@@ -6,15 +6,29 @@ This document is the **canonical implementation contract** for the MVP.
 
 **Implementation parity:** For gaps between **this specification** and the **current** `src/` tree (scaffolds, partial Shared library, missing solution file), see `docs/IMPLEMENTATION_READINESS.md`.
 
+### EBS — Extension Backend Service (normative, MVP)
+
+- **Definition:** **`MimironsGoldOMatic.Backend`** is the **EBS** — the server that implements Extension-facing APIs, **Twitch Extension JWT** validation (**§5.1**, Bearer), and integrations that require broadcaster/Twitch credentials.
+- **Helix:** The EBS **owns** Twitch **Helix** API credentials (client id/secret, broadcaster user access where required) used for **`Send Chat Message`** (§11 reward-sent line) and other Helix calls tied to this product.
+- **EventSub:** The EBS **hosts** the **Twitch EventSub** subscription lifecycle and **consumes** **`channel.chat.message`** events for **`!twgold <CharacterName>`** enrollment (**§1** glossary, **§5**). Chat messages do not POST directly to the EBS HTTP surface; **EventSub** is the **transport** from Twitch to the EBS.
+- **Enrollment — subscriber flag (MVP, locked):** For **`!twgold`** pool enrollment, the EBS **must** trust the **subscriber / badges** data supplied on the **`channel.chat.message`** EventSub notification only. **Do not** perform secondary **Helix** lookups to verify subscription during enrollment (saves API quota; Twitch is authoritative for the event payload).
+
+### Helix §11 reward-sent delivery (MVP, locked)
+
+- **No Outbox table** and **no** dedicated background worker for this path in MVP.
+- **Inline try + retry:** Immediately **after** the database transaction that commits payout status **`Sent`**, the EBS **must** call **Helix** **`Send Chat Message`** with the §11 template (**3** attempts, simple retry policy — e.g. Polly or equivalent).
+- **Failure handling:** If Helix still fails after **3** retries, **do not** rollback **`Sent`** (in-game gold is already committed; chat is **best-effort**). **Log** the failure at error level for operations.
+- **Strictly once per payout:** The Helix announcement **must** run **at most once** per **`PayoutId`** — e.g. boolean **`IsRewardSentAnnouncedToChat`** on the payout read model / entity, or trigger Helix only on transition **into** **`Sent`** from a non-terminal state (idempotent **`PATCH`** must not re-post).
+
 ### MVP deployment scope (normative)
 
-- **Single broadcaster** for MVP: one configured Twitch **channel / broadcaster** per Backend deployment. Extension JWT and chat ingest target that channel only. Multi-channel support is **out of scope** for MVP unless added later.
-- **Auth (MVP, locked):** **Twitch Dev Rig** and **production** both use **real Twitch-issued Extension JWTs** (Bearer); the Backend **must** validate them per Twitch (no long-term “mock JWT” bypass for the first deploy). Pool/roulette/payout-read routes that require JWT (**§5.1**) remain **JWT-only** as specified.
+- **Single broadcaster** for MVP: one configured Twitch **channel / broadcaster** per EBS deployment. Extension JWT, EventSub, and Helix calls target that channel only. Multi-channel support is **out of scope** for MVP unless added later.
+- **Auth (MVP, locked):** **Twitch Dev Rig** and **production** both use **real Twitch-issued Extension JWTs** (Bearer); the **EBS** **must** validate them per Twitch (no long-term “mock JWT” bypass for the first deploy). Pool/roulette/payout-read routes that require JWT (**§5.1**) remain **JWT-only** as specified.
 - **Pause / resume distribution:** **not** in MVP — no API or Desktop “pause mode”; streamers stop by not running Desktop or by operator workflow only.
 
 ## 1) Glossary
 
-- **Subscription requirement**: the viewer **must be a subscriber** to the broadcaster’s channel (Twitch subs) to use **`!twgold`** chat commands for this product. Subscription is verified server-side (Helix / EventSub context — implementation detail).
+- **Subscription requirement**: the viewer **must be a subscriber** to the broadcaster’s channel (Twitch subs) to use **`!twgold`** chat commands for this product. **MVP (locked):** at enrollment, use the subscriber indication from the **`channel.chat.message`** EventSub payload only — **no** secondary Helix subscriber lookups for enrollment (see **EBS** section above, **§5**).
 - **Twitch chat monitoring (normative)**: the system **must** ingest **broadcast** (channel) chat messages on the live stream to detect **enrollment** commands (`!twgold <CharacterName>`) only. **MVP:** use **EventSub** `channel.chat.message` (required). IRC/bot-only paths are **not** part of the MVP contract unless explicitly added later.
 - **Enrollment command**: **`!twgold <CharacterName>`** typed in **broadcast Twitch chat**, where **`CharacterName`** is the viewer’s **server / in-game nickname** used for the roulette pool. The **`!twgold`** prefix is **case-insensitive** (e.g. `!TWGold Name` counts); whitespace-separated; **`CharacterName`** must satisfy the same validation rules as **`CharacterName`** elsewhere in this spec.
 - **Character uniqueness (pool)**: at any time, each **`CharacterName`** may appear **at most once** among **active** pool entries (no two different viewers holding the same name in the pool simultaneously). A second viewer (or the same viewer) attempting to enroll the same name while it is already taken must receive a clear error (e.g. `character_name_taken_in_pool`).
@@ -91,7 +105,7 @@ Implement with **FluentValidation** in **`MimironsGoldOMatic.Shared`** (same rul
 
 - **Chat-enrolled pool entries:** dedupe **retries** using the Twitch **`message_id`** (or equivalent) for the same **`!twgold <CharacterName>`** message; ignore duplicate chat deliveries.
 - **Optional Extension/API path:** `EnrollmentRequestId` is a unique identifier for a single **`POST /api/payouts/claim`** (client-generated UUID recommended) when that path is used.
-- Backend MUST enforce **pool uniqueness** on **`CharacterName`** among active pool rows (see glossary).
+- The **EBS** MUST enforce **pool uniqueness** on **`CharacterName`** among active pool rows (see glossary).
 
 **MVP behavior on duplicate `EnrollmentRequestId` (Extension only):**
 
@@ -105,11 +119,11 @@ This section defines the MVP endpoints and semantics. **`GET /api/roulette/state
 
 - **Desktop ApiKey**: `X-MGM-ApiKey: <value>`
   - Required for Desktop endpoints (pool sync, status updates, spin triggers if server-authoritative, whisper-forward).
-  - The backend stores the key in configuration (global static key for MVP).
+  - The **EBS** stores the key in configuration (global static key for MVP).
 
 ### Participant pool & roulette (normative behavior)
 
-- **Enrollment (primary):** When a **subscriber** sends **`!twgold <CharacterName>`** in **broadcast Twitch chat** (prefix **case-insensitive**), and **`CharacterName`** is valid and **not already held** by another active pool entry, **add** or **update** that viewer’s pool row (**§1** glossary: same **`TwitchUserId`** may **replace** their previous **`CharacterName`**). **No payout** is created at this step. If they are **not** a subscriber: **do not** add to pool; **log server-side only** (no chat bot reply required). If the name is taken by **another** viewer, reject (`character_name_taken_in_pool` or equivalent).
+- **Enrollment (primary):** When EventSub indicates a **subscriber** and they send **`!twgold <CharacterName>`** in **broadcast Twitch chat** (prefix **case-insensitive**), and **`CharacterName`** is valid and **not already held** by another active pool entry, **add** or **update** that viewer’s pool row (**§1** glossary: same **`TwitchUserId`** may **replace** their previous **`CharacterName`**). **No payout** is created at this step. **MVP:** subscriber eligibility comes from the **`channel.chat.message`** EventSub payload only (no Helix lookup). If they are **not** a subscriber per that payload: **do not** add to pool; **log server-side only** (no chat bot reply required). If the name is taken by **another** viewer, reject (`character_name_taken_in_pool` or equivalent).
 - **Winner contact & acceptance (after win, WoW):** After **`Pending`** payout and **winner notification whisper** (§9), the winner **must** reply in-game with **`!twgold`** (case-insensitive; §9). The **addon** forwards to Desktop → **`POST .../confirm-acceptance`**. The streamer **should** send in-game mail only after acceptance is recorded (§9).
 - **Optional Extension enrollment:** A **`POST /api/payouts/claim`** (§5) may still add a subscriber to the pool for Dev Rig / Extension-only flows; behavior must match chat enrollment rules (subscription + unique **`CharacterName`**).
 - On each **spin** (scheduled every **5 minutes** only), the system selects **one candidate** from the pool (**uniform random** among active pool rows — see glossary). **Losers of that spin (non-winners) stay in the pool.**
@@ -328,7 +342,7 @@ For MVP, the source of truth is Event Sourcing:
 - Read queries are served from read-model projections.
 - EF Core MAY be used for read-model tables only, not as the write-side source of truth.
 
-**Outbox:** **Do not** create an **Outbox** table in MVP **until** the first external side-effect integration is implemented (e.g. Discord). When added, use the **Outbox** pattern as in `docs/MimironsGoldOMatic.Backend/ReadME.md` (same transaction as domain events + background dispatcher).
+**Outbox:** **Do not** create an **Outbox** table in MVP. **Helix** **`Send Chat Message`** for §11 is **inline try + retry** after the **`Sent`** commit (see **EBS** — Helix §11 reward-sent delivery); **not** Outbox-driven. A future **Outbox** (e.g. Discord or other channels) may be added **post-MVP** when a second external side-effect class is integrated; follow **Outbox** as in `docs/MimironsGoldOMatic.Backend/ReadME.md` (same transaction as domain events + background dispatcher) **only** when explicitly added to the roadmap.
 
 Minimum recommended fields for payout read model (`PayoutsReadModel`):
 
@@ -342,6 +356,7 @@ Minimum recommended fields for payout read model (`PayoutsReadModel`):
 - `CreatedAt` (timestamp; indexed with status for expiration sweep)
 - (Optional but recommended) `UpdatedAt` (timestamp)
 - (Recommended) `WinnerAcceptedWillingToReceiveAt` (timestamp nullable): set when Desktop reports **`!twgold`** for this payout (acceptance to receive gold).
+- **`IsRewardSentAnnouncedToChat`** (boolean): set **`true`** only after **Helix** **`Send Chat Message`** **succeeds** for §11; while **`false`**, transitioning to **`Sent`** may trigger the inline retry loop; once **`true`**, **do not** call Helix again for that **`PayoutId`** (idempotent **`PATCH`**). If all **3** attempts fail, leave **`false`**, **log**, and **do not** rollback **`Sent`** (see **EBS** — Helix §11 reward-sent delivery).
 
 Additional read models (pool membership, spin schedule, last spin id) are **required** by the roulette feature; define in implementation.
 
@@ -541,13 +556,13 @@ Behavior notes:
 - Present the **winner** to the streamer and **all viewers**. For the **winning viewer**, show **“You won”** as soon as the Backend reports their win (after online verification and **`Pending` payout** if applicable).
 - **Winner-facing** instructions **must** say: you will receive an **in-game whisper** (Russian text per §9) from the streamer’s character; **reply** to that whisper with **`!twgold`** (case-insensitive) to **consent**; then the streamer sends gold mail; **`Sent`** follows **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
 - After **`Sent`**, the winner is **removed** from the pool; they can **re-enter** with **`!twgold <CharacterName>`** in chat again.
-- **Twitch chat — reward sent announcement (normative copy):** All viewers **should** see one line in **broadcast stream chat** when a winning payout becomes **`Sent`** (gold mail confirmed). The **exact** template is ( **`WINNER_NAME`** = enrolled **`CharacterName`** for that payout):
+- **Twitch chat — reward sent announcement (normative copy):** When a winning payout becomes **`Sent`** (gold mail confirmed), the **EBS** **MUST** **attempt** to post the confirmation line to **broadcast stream chat** if **Helix** is available — **best-effort** after **3** inline retries (see **EBS** — Helix §11 reward-sent delivery; failure to post **does not** undo **`Sent`**). The **exact** template is ( **`WINNER_NAME`** = enrolled **`CharacterName`** for that payout):
 
   `Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`
 
-  **Extension:** keep this string **hardcoded** in the Twitch Extension source (e.g. a small template helper) so in-panel copy and any client-triggered announcement stay aligned with **`docs/SPEC.md`**.
+  **Extension:** keep this string **hardcoded** in the Twitch Extension source (e.g. a small template helper) so in-panel copy stays aligned with the **same** template the **EBS** posts to broadcast chat.
 
-  **Delivery (MVP options, pick one consistent stack):** (a) **Backend** posts the line via **Twitch Helix** `Send Chat Message` (or IRC) when it applies **`Sent`**, using the same template and **`CharacterName`** from the payout; Extension only mirrors the text in UI, **or** (b) Extension detects **`Sent`** via **`GET /api/payouts/my-last`** and calls a **Backend** endpoint that validates the caller and posts the same line. The chat line **must not** rely on the WoW addon (Twitch chat is outside the game client).
+  **Delivery (MVP, locked):** The **EBS** **must** invoke **Twitch Helix** `Send Chat Message` **immediately** after the authoritative **`Sent`** commit, with **3** retry attempts. Use the template above with **`CharacterName`** from the payout. **At-most-once** per **`PayoutId`** (see **`IsRewardSentAnnouncedToChat`**, **§6**). The Extension **does not** trigger chat delivery; it may only reflect **`Sent`** in UI via existing read APIs. The chat line **must not** rely on the WoW addon (Twitch chat is outside the game client).
 
   **Winner panel:** the winning viewer’s Extension UI **must** show equivalent confirmation (can reuse the same Russian template with **`WINNER_NAME`** = self).
 

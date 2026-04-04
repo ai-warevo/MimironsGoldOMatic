@@ -1,16 +1,16 @@
 ## MimironsGoldOMatic.Shared (.NET 10)
 
-- **Role:** Single source of truth for data structures used by both the Backend and the Desktop App.
+- **Role:** Single source of truth for data structures used by both the **EBS** (`MimironsGoldOMatic.Backend`) and the Desktop app.
 - **Stack:** .NET 10 Class Library.
 
 ## High-Level Patterns
 - **DDD (Domain-Driven Design):** The core logic, limits (10k gold), and state transitions must be encapsulated within the Domain layer (Aggregates/Value Objects).
-- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching **in `MimironsGoldOMatic.Backend` only** — **not** in Shared. This project (`Shared`) holds **DTOs, validation, shared types**; **handlers/pipelines** live in the Backend.
+- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching **in `MimironsGoldOMatic.Backend` (EBS) only** — **not** in Shared. This project (`Shared`) holds **DTOs, validation, shared types**; **handlers/pipelines** live in the **EBS**.
 - **Event Sourcing (ES):** The system of record should be an Event Store (using **Marten** with PostgreSQL). Every change to a payout must be a persisted event for 100% auditability.
 - **Audit & Scalability:** Design for high availability and full transparency. A streamer should be able to see exactly when and why a payout failed or was delayed.
 
 ## Low-level Patterns
-- **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across Backend and Desktop.
+- **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across **EBS** and Desktop.
 - **Primary Constructors:** Use C# 14 / .NET 10 primary constructors for all DTOs and Records.
 - **Result Pattern:** Use `FluentResults` for domain and service layer responses instead of throwing exceptions.
 

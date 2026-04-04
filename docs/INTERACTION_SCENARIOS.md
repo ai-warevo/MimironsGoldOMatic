@@ -1,14 +1,16 @@
 # Mimiron's Gold-o-Matic — Interaction Scenarios & Test Cases
 
-This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** **subscribers** join via **`!twgold <CharacterName>`** in **broadcast chat**; a **roulette** selects an **online-verified** winner; **WoW whisper reply `!twgold`** (after the **winner notification whisper**, `docs/SPEC.md` §9) leads the addon to print **`[MGM_ACCEPT:UUID]`** → Desktop **`confirm-acceptance`**; on **MGM-armed** mail **`MAIL_SEND_SUCCESS`**, the addon prints **`[MGM_CONFIRM:UUID]`** (→ **`Sent`**, pool removal) and whispers the winner the **mail-completion** Russian line; **Twitch chat** may announce delivery per **`docs/SPEC.md` §11** (Extension template).
+This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** **subscribers** join via **`!twgold <CharacterName>`** in **broadcast chat**; a **roulette** selects an **online-verified** winner; **WoW whisper reply `!twgold`** (after the **winner notification whisper**, `docs/SPEC.md` §9) leads the addon to print **`[MGM_ACCEPT:UUID]`** → Desktop **`confirm-acceptance`**; on **MGM-armed** mail **`MAIL_SEND_SUCCESS`**, the addon prints **`[MGM_CONFIRM:UUID]`** (→ **`Sent`**, pool removal) and whispers the winner the **mail-completion** Russian line; the **EBS** **must** **attempt** the §11 Twitch broadcast line via **Helix** after **`Sent`** (Extension hardcoded template matches).
 
 **References:** `README.md`, `CONTEXT.md`, `AGENTS.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md` (screen-level UX aligned to these flows), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
+
+**Implementation scope (roadmap phases):** Treat **`docs/SPEC.md`** as the only normative contract for **what to build**. Scenarios in this file marked **future / not MVP**, **placeholder**, or **open** (e.g. SC-020 pause/resume, SC-022 retry-token speculation) **must not** be implemented — **no** speculative endpoints (retry tokens, pause APIs, etc.) unless/until **`docs/SPEC.md`** adds them. Each roadmap step should follow the **mandatory checklist** the owner supplies (SPEC § references, TC ids, **no endpoints outside SPEC**).
 
 ### How to use Part 2 (test cases)
 
 - **TC-xxx** rows are **verification targets** derived from `docs/SPEC.md` and related docs. They are **not** bound to existing automated tests until those suites exist.
-- **When to run:** after the relevant MVP slice ships (e.g. Backend routes for TC-003+; Desktop WinAPI for TC-005+; addon mail path for TC-007+).
-- **Automation:** once `src/MimironsGoldOMatic.sln` exists, prefer `dotnet test` for Backend/Desktop/Shared integration tests; Extension and WoW flows may remain manual or harness-driven until dedicated test projects exist.
+- **When to run:** after the relevant MVP slice ships (e.g. **EBS** routes for TC-003+; Desktop WinAPI for TC-005+; addon mail path for TC-007+).
+- **Automation:** once `src/MimironsGoldOMatic.slnx` exists, prefer `dotnet test` for **EBS**/Desktop/Shared integration tests; Extension and WoW flows may remain manual or harness-driven until dedicated test projects exist.
 - **Auth notes:** `docs/SPEC.md` requires **real Twitch-issued Extension JWTs** (Dev Rig and production). Tests must not rely on a long-term “mock JWT” bypass unless explicitly labeled as **temporary harness** and called out in test code.
 
 ---
@@ -268,7 +270,9 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ---
 
-### SC-020: Streamer pauses/resumes gold distribution
+### SC-020: Streamer pauses/resumes gold distribution *(future / not MVP)*
+
+**Status:** **Placeholder scenario** — documents a possible future control; **do not** implement or test as current product behavior. **`docs/SPEC.md`** — **pause/resume** is **not** in MVP.
 
 **Trigger:** Streamer wants to temporarily stop processing payouts.
 
@@ -278,9 +282,9 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Flow:**
 
-> **Resolved for MVP:** `docs/SPEC.md` — **pause/resume** is **not** in MVP; streamer stops by workflow only.
+> **Resolved for MVP:** no pause flag; streamer stops processing only by **operational** means (e.g. not running Desktop, not confirming mail, or cancelling payouts per other scenarios).
 
-**Postconditions (conceptual):** Future spec may add a pause flag; until then, operator-only.
+**Postconditions (conceptual):** A later spec may add a pause flag; until then, operator-only workarounds.
 
 
 **Failure exits:** N/A until specified.
@@ -305,7 +309,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ---
 
-### SC-022: System retries a failed delivery attempt
+### SC-022: System retries a failed delivery attempt *(operational / not a separate API in MVP)*
 
 **Trigger:** First injection or mail attempt failed; streamer retries.
 
@@ -321,7 +325,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Failure exits:** double payout if state machine buggy (mitigated by single active payout rule).
 
-> ⚠️ **OPEN QUESTION:** Whether Backend supports explicit “retry token” or only operator-driven re-inject is not specified; tests assume **idempotent inject** for same payout id on client side.
+> **MVP (locked):** **Do not** implement **retry tokens**, **retry endpoints**, or other speculative Backend APIs for this scenario. Recovery is **operator-driven** re-inject / same payout id (**idempotent** client behavior per **`docs/SPEC.md`**). A future spec may add machinery; until then, **ignore** this scenario for new API surface.
 
 ---
 
@@ -1078,7 +1082,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Expected Side Effects:** None.
 
-**Notes:** SC-020 open question.
+**Notes:** Align with SC-020 *(future / not MVP)* — no pause in spec until added.
 
 ---
 
@@ -1209,16 +1213,28 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 Summary of **documented** boundaries. Pool/spin polling routes are defined in **`docs/SPEC.md` §5.1**.
 
+**MVP boundary:** **Twitch Extension** and **WPF Desktop** have **no direct** integration (no shared socket, no peer channel). Viewers use the Extension plus **broadcast chat**; the streamer uses Desktop plus **WoW**; both sides coordinate through **HTTP** to the **EBS** / Desktop paths (**Twitch Extension JWT** vs `X-MGM-ApiKey`, **`docs/SPEC.md`**), and mail completion uses the **WoW chat log** bridge per **`docs/SPEC.md` §8–10**.
+
 ### Twitch Extension → ASP.NET Core API
 
 | Direction | Message/Endpoint | Payload shape | Success response | Failure response |
 |-----------|------------------|---------------|------------------|------------------|
 | Extension → API | `POST /api/payouts/claim` (optional) | `{ "characterName": string, "enrollmentRequestId": string }` + Twitch JWT (subscriber verified server-side) | `201 Created` (new enroll) or `200 OK` (idempotent) | `400` `invalid_character_name`; `401` `unauthorized`; `403`/`400` if not subscribed; `409`/`400` `character_name_taken_in_pool`; `429` rate limit; cap errors e.g. `lifetime_cap_reached` |
-| Chat → Backend | `!twgold <CharacterName>` | **EventSub** `channel.chat.message` (MVP) | pool enroll / replace per `docs/SPEC.md` §5 | domain errors per `docs/SPEC.md` §5 |
+| Chat → EBS (Backend) | **Twitch EventSub** transport → `channel.chat.message` | Enrollment text **`!twgold <CharacterName>`** parsed from event payload (`docs/SPEC.md` §5; **EBS** / EventSub in SPEC) | pool enroll / replace per `docs/SPEC.md` §5 | domain errors per `docs/SPEC.md` §5 |
 | Extension → API | `GET /api/payouts/my-last` | Twitch Extension **JWT** (Bearer) | `200` + **`PayoutDto`** | **`404`** when no winner payout |
 | Extension → API | `GET /api/roulette/state` | Twitch Extension **JWT** | `200` + schedule + **`spinPhase`** enum + optional **`currentSpinCycleId`** (`docs/SPEC.md` §5.1) | `401`, `429`, domain errors |
 | Extension → API | `GET /api/pool/me` | Twitch Extension **JWT** | `200` + enrollment hint | `401`, `429` |
 | API → Extension | (pull only in MVP) | — | Extension polls for **winner notification** / status | Error boundary UI per TwitchExtension ReadME |
+
+### EBS (ASP.NET Core API) → Twitch broadcast chat
+
+Normative copy and **Helix** delivery: **`docs/SPEC.md` §11** (reward-sent announcement when a payout becomes **`Sent`**; **EBS**-owned credentials).
+
+| Direction | Message/Endpoint | Payload shape | Success response | Failure response |
+|-----------|------------------|---------------|------------------|------------------|
+| EBS → Chat | **Twitch Helix** `Send Chat Message` **immediately** on transition to **`Sent`** (MVP locked) | One line: `Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!` (`WINNER_NAME` = enrolled **`CharacterName`**) | Message visible in **broadcast** chat | Helix/auth errors (`401`/`403`), rate limits; must **not** depend on WoW addon |
+
+> **Note:** The chat line is **not** a return path into Desktop or WoW; it is **broadcast-only** viewer notice aligned with Extension hardcoded copy.
 
 ### ASP.NET Core API → WPF Desktop App
 

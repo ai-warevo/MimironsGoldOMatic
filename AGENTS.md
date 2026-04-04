@@ -58,8 +58,8 @@ You are an expert software engineer agent. Your goal is to execute tasks with hi
 ```
 
 ## 6. Testing Guidance
-- When behavior/functionality changes, run the repo test suite **after** `src/MimironsGoldOMatic.sln` exists (`docs/ROADMAP.md` MVP-0, `docs/IMPLEMENTATION_READINESS.md`):
-  - `dotnet test src/MimironsGoldOMatic.sln`
+- When behavior/functionality changes, run the repo test suite **after** `src/MimironsGoldOMatic.slnx` exists (`docs/ROADMAP.md` MVP-0, `docs/IMPLEMENTATION_READINESS.md`):
+  - `dotnet test src/MimironsGoldOMatic.slnx`
 - Until then, run `dotnet test` / `dotnet build` on individual projects under `src/` as needed. Manual and integration checks for MVP flows are cataloged in `docs/INTERACTION_SCENARIOS.md` (Part 2, TC-xxx).
 
 ## 7. Tooling Preference

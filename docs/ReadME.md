@@ -6,7 +6,7 @@ Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/R
 
 ## High-Level Patterns
 - **DDD (Domain-Driven Design):** The core logic, limits (10k gold), and state transitions must be encapsulated within the Domain layer (Aggregates/Value Objects).
-- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching **in the Backend** (`docs/MimironsGoldOMatic.Shared/ReadME.md`).
+- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching **in the EBS** (`MimironsGoldOMatic.Backend`; `docs/MimironsGoldOMatic.Shared/ReadME.md`).
 - **Event Sourcing (ES):** The system of record should be an Event Store (using **Marten** with PostgreSQL). Every change to a payout must be a persisted event for 100% auditability.
 - **Audit & Scalability:** Design for high availability and full transparency. A streamer should be able to see exactly when and why a payout failed or was delayed.
 
@@ -15,15 +15,15 @@ Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/R
 - **EF Core scope in MVP:** read-model projections only (query side), not the canonical write store.
 
 ## MimironsGoldOMatic.Shared (.NET 10)
-- **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across Backend and Desktop.
+- **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across **EBS** and Desktop.
 - **Primary Constructors:** Use C# 14 / .NET 10 primary constructors for all DTOs and Records.
 - **Result Pattern:** Use `FluentResults` for domain and service layer responses instead of throwing exceptions.
 
 
 ## High-level Workflow
-1. **Subscribe + chat enroll:** A **subscriber** types **`!twgold <CharacterName>`** in **broadcast Twitch chat** (**`!twgold`** prefix **case-insensitive**); the Backend **monitors chat** and **adds** them to the **participant pool** if the name is **unique** in the pool. Channel Points are **not** used.
+1. **Subscribe + chat enroll:** A **subscriber** types **`!twgold <CharacterName>`** in **broadcast Twitch chat** (**`!twgold`** prefix **case-insensitive**); the **EBS** ingests via **EventSub** and **adds** them to the **participant pool** if the name is **unique** in the pool. Channel Points are **not** used.
 2. **Roulette:** A **visual roulette** runs on a **5-minute** cadence (minimum **1** participant); **next spin** time is **server-authoritative** (`GET /api/roulette/state`, `docs/SPEC.md` §5.1); Extension **countdown** uses that API. **Non-winners remain in the pool.** **Winners leave the pool when gold is `Sent`** and may **re-enter** with **`!twgold <CharacterName>`** again. **Online check:** **`/who <Winner_InGame_Nickname>`** before finalizing the winner.
-3. **Winner payout:** When a spin yields an **online-verified** winner, the Backend creates **payout** state; the **Extension** shows **“You won”**; **Desktop** injects **`NotifyWinnerWhisper`** and the **addon** sends the **winner notification whisper** (`docs/SPEC.md` §8–9); the winner **replies in WoW** with **`!twgold`** before mail.
+3. **Winner payout:** When a spin yields an **online-verified** winner, the **EBS** creates **payout** state; the **Extension** shows **“You won”**; **Desktop** injects **`NotifyWinnerWhisper`** and the **addon** sends the **winner notification whisper** (`docs/SPEC.md` §8–9); the winner **replies in WoW** with **`!twgold`** before mail.
 4. **Synchronization:** The streamer opens the Desktop WPF App, which fetches **pending winner payouts** via REST API.
 5. **Injection:** The Desktop App uses Win32 API (`PostMessage`) to send specialized Lua commands into the WoW client.
 6. **Execution:** The WoW Addon receives the commands, populates an internal queue, and provides mail UI helpers for sending gold.
@@ -37,11 +37,11 @@ Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/R
 - **Concurrency:** **one active payout** per Twitch user at a time (when a payout exists).
 - **Pool rules:** **Unique `CharacterName`** among active pool entries; chat dedupe by message id; optional **`EnrollmentRequestId`** for Extension enroll API.
 - **Statuses** (winner payout): `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired` (24h).
-- **Expiration:** Backend hourly job marks `Pending`/`InProgress` older than 24h as `Expired` (no reactivation).
-- **Confirmation:** **`/who`** online gate; **winner notification**; **`!twgold`** reply → acceptance on Backend; **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** → **`Sent`** (required for automation); manual **Mark as Sent** per `docs/SPEC.md`.
+- **Expiration:** **EBS** hourly job marks `Pending`/`InProgress` older than 24h as `Expired` (no reactivation).
+- **Confirmation:** **`/who`** online gate; **winner notification**; **`!twgold`** reply → acceptance on **EBS**; **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** → **`Sent`** (required for automation); §11 **Helix** line best-effort after **`Sent`**; manual **Mark as Sent** per `docs/SPEC.md`.
 - **Auth (MVP):**
   - Twitch Dev Rig first; production JWT validation is roadmap.
-  - Desktop uses a pre-shared `ApiKey` to call the Backend.
+  - Desktop uses a pre-shared `ApiKey` to call the **EBS**.
 
 ## Technical specification (canonical)
 
@@ -51,14 +51,17 @@ The canonical, implementation-guiding contracts live in:
 - `docs/UI_SPEC.md` (user-facing UI inventory, states, ASCII layouts, navigation flow, design tokens for Extension / Desktop / WoW addon)
 
 ## Core Components
+
+In MVP there is **no direct** link between the **Twitch Extension** and the **WPF Desktop** (no peer connection). Viewers interact via Extension + **broadcast chat**; the streamer uses Desktop + **WoW**; both sides use the **EBS** over HTTP, and gold **`Sent`** confirmation from the game follows **`docs/SPEC.md` §8–10** via **`WoWChatLog.txt`**.
+
 - **[Twitch Extension (Frontend)](MimironsGoldOMatic.TwitchExtension/ReadME.md):** Viewer-facing interface for claims.
-- **[Backend (API)](MimironsGoldOMatic.Backend/ReadME.md):** Source of truth for payout lifecycle + persistence + authentication.
-- **[Shared Library (Contracts)](MimironsGoldOMatic.Shared/ReadME.md):** DTOs/Enums shared between Backend and Desktop.
+- **[EBS / Backend (API)](MimironsGoldOMatic.Backend/ReadME.md):** **`MimironsGoldOMatic.Backend`** — source of truth for payout lifecycle + persistence + Twitch integrations.
+- **[Shared Library (Contracts)](MimironsGoldOMatic.Shared/ReadME.md):** DTOs/Enums shared between **EBS** and Desktop.
 - **[Desktop Utility (WPF)](MimironsGoldOMatic.Desktop/ReadME.md):** Bridge between the UI and the running WoW client (Win32 automation).
 - **[WoW Addon (Lua)](MimironsGoldOMatic.WoWAddon/ReadME.md):** Final in-game executor (mail hooks + UI helpers).
 
 ## Repo Layout (expected)
-This repository is organized as a monorepo so the contract (`Shared`) and implementations (`Backend`, `Desktop`) evolve together.
+This repository is organized as a monorepo so the contract (`Shared`) and implementations (**EBS** / `MimironsGoldOMatic.Backend`, `Desktop`) evolve together.
 
 ```text
 MimironsGoldOMatic/
