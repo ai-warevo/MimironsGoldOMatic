@@ -2,7 +2,7 @@
 
 ## High-Level Patterns
 - **DDD (Domain-Driven Design):** The core logic, limits (10k gold), and state transitions must be encapsulated within the Domain layer (Aggregates/Value Objects).
-- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching.
+- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching **in the Backend** (`docs/MimironsGoldOMatic.Shared/ReadME.md`).
 - **Event Sourcing (ES):** The system of record should be an Event Store (using **Marten** with PostgreSQL). Every change to a payout must be a persisted event for 100% auditability.
 - **Audit & Scalability:** Design for high availability and full transparency. A streamer should be able to see exactly when and why a payout failed or was delayed.
 
@@ -19,7 +19,7 @@
 ## High-level Workflow
 1. **Subscribe + chat enroll:** A **subscriber** types **`!twgold <CharacterName>`** in **broadcast Twitch chat** (**`!twgold`** prefix **case-insensitive**); the Backend **monitors chat** and **adds** them to the **participant pool** if the name is **unique** in the pool. Channel Points are **not** used.
 2. **Roulette:** A **visual roulette** runs on a **5-minute** cadence (minimum **1** participant); **next spin** time is **server-authoritative** (`GET /api/roulette/state`, `docs/SPEC.md` §5.1); Extension **countdown** uses that API. **Non-winners remain in the pool.** **Winners leave the pool when gold is `Sent`** and may **re-enter** with **`!twgold <CharacterName>`** again. **Online check:** **`/who <Winner_InGame_Nickname>`** before finalizing the winner.
-3. **Winner payout:** When a spin yields an **online-verified** winner, the Backend creates **payout** state; the **Extension** shows **“You won”**; the **addon** sends the **winner notification whisper** (`docs/SPEC.md` §9); the winner **replies in WoW** with **`!twgold`** before mail.
+3. **Winner payout:** When a spin yields an **online-verified** winner, the Backend creates **payout** state; the **Extension** shows **“You won”**; **Desktop** injects **`NotifyWinnerWhisper`** and the **addon** sends the **winner notification whisper** (`docs/SPEC.md` §8–9); the winner **replies in WoW** with **`!twgold`** before mail.
 4. **Synchronization:** The streamer opens the Desktop WPF App, which fetches **pending winner payouts** via REST API.
 5. **Injection:** The Desktop App uses Win32 API (`PostMessage`) to send specialized Lua commands into the WoW client.
 6. **Execution:** The WoW Addon receives the commands, populates an internal queue, and provides mail UI helpers for sending gold.

@@ -12,6 +12,7 @@
 
 ## Command Injection (WPF to Addon)
 
+- **Winner notification (before mail queue):** After Backend reports **`Pending`** for a winner, inject **`/run NotifyWinnerWhisper("<payoutId>","<CharacterName>")`** so the addon sends the §9 whisper (`docs/SPEC.md` §8–9). **Then** use **`ReceiveGold`** when the streamer syncs mail (**`InProgress`**).
 - Converts the list of payouts into a Lua-compatible string with canonical entry format:
   - `UUID:CharacterName:GoldCopper;`
   - Example: `/run ReceiveGold("2d2b7b2a-1111-2222-3333-444444444444:Somecharacter:10000000;")`

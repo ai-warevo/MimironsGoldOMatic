@@ -24,7 +24,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 4. [WoWAddon] → [WoW Client]: run **`/who Norinn`**; parse **3.3.5a** result → **`DEFAULT_CHAT_FRAME:AddMessage`** **`[MGM_WHO]{...json}`** → **`Logs\WoWChatLog.txt`** (`docs/SPEC.md` §8) | [Desktop] tails log → **`POST /api/roulette/verify-candidate`** (`X-MGM-ApiKey`)
 5. [Backend] → [Backend]: if **`online: true`**, create **payout** `Pending`; else **no winner** this cycle (**no** re-draw); expose state for Extension when **`Pending`** exists (**winner notification**)
 6. [TwitchExtension] → [Viewer]: **“You won”** + instruct **WoW whisper reply `!twgold`** (`docs/SPEC.md` §11)
-7. [WoWAddon] / [Desktop] → [WoW Client]: send **winner notification whisper** per **`docs/SPEC.md` §9** (`/whisper Norinn …`)
+7. [Desktop] → [WoW Client]: inject **`/run NotifyWinnerWhisper("<payoutId>","Norinn")`** (`docs/SPEC.md` §8–9) → [WoWAddon] sends **winner notification whisper** (`/whisper Norinn …` Russian text per §9; **addon-only** typing)
 8. [Viewer/WoW] → [Streamer/WoW]: whisper reply matching **`!twgold`** (**case-insensitive**)
 9. [WoWAddon] → [WoW Chat Log]: print `[MGM_ACCEPT:<uuid>]` → [Desktop] tails `WoWChatLog.txt` | [Desktop] → [Backend]: `POST /api/payouts/{id}/confirm-acceptance`
 10. [Desktop] → [Backend]: `GET /api/payouts/pending` → streamer **Sync/Inject**
@@ -183,11 +183,11 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ### SC-014: Twitch token validation fails on the API side
 
-**Trigger:** Extension calls Backend with missing/invalid/expired Twitch JWT (when JWT validation is enforced beyond Dev Rig).
+**Trigger:** Extension calls Backend with missing/invalid/expired Twitch JWT.
 
 **Actor:** Viewer
 
-**Preconditions:** Backend JWT middleware enabled (production milestone per README; MVP may be lax).
+**Preconditions:** Backend validates **real Twitch-issued** Extension JWTs (**Dev Rig** and deploy — `docs/SPEC.md` deployment scope).
 
 **Flow:**
 
@@ -197,8 +197,6 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 **Postconditions:** No pool write.
 
 **Failure exits:** clock skew; wrong extension secret; Dev Rig misconfiguration.
-
-> ⚠️ **OPEN QUESTION:** Exact MVP behavior in **Dev Rig-first** mode (mock auth) vs strict JWT is phased per README; tests should tag **Environment: DevRig** vs **ProductionJWT**.
 
 ---
 
@@ -239,7 +237,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Failure exits:** DDoS beyond app layer; DB overload not detailed in MVP docs.
 
-> ⚠️ **OPEN QUESTION:** `docs/SPEC.md` specifies ~5 req/min per IP/user but not global queue depth or **503** behavior; align implementation with hosting limits.
+**Resolution:** Global saturation may yield **`503`**; Extension backoff + Retry per **`docs/SPEC.md` §5** error model and **§5.1**. Per-user **`429`** remains ~5 req/min target.
 
 ---
 
@@ -272,9 +270,10 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Flow:**
 
-> ⚠️ **OPEN QUESTION:** `docs/SPEC.md` does **not** define a **pause/resume** API or Desktop mode. Scenario reserved for future spec.
+> **Resolved for MVP:** `docs/SPEC.md` — **pause/resume** is **not** in MVP; streamer stops by workflow only.
 
-**Postconditions (conceptual):** Implementation might map to “stop polling” / feature flag / manual operator only.
+**Postconditions (conceptual):** Future spec may add a pause flag; until then, operator-only.
+
 
 **Failure exits:** N/A until specified.
 
@@ -968,7 +967,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Expected Side Effects:** None.
 
-**Notes:** OPEN QUESTION on global 503—document host behavior.
+**Notes:** **`503`** / global saturation — `docs/SPEC.md` §5 error model + §5.1 Extension backoff.
 
 ---
 
@@ -1165,7 +1164,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Expected Side Effects:** Second WinAPI PostMessage.
 
-**Notes:** OPEN QUESTION on server-side retry idempotency.
+**Notes:** Backend **should** reject illegal transitions; duplicate **`MGM_CONFIRM`** → idempotent **`PATCH`** or stable error (`docs/SPEC.md` §3).
 
 ---
 
@@ -1226,7 +1225,7 @@ Summary of **documented** boundaries. Pool/spin polling routes are defined in **
 
 | Direction | Message/Endpoint | Payload shape | Success response | Failure response |
 |-----------|------------------|---------------|------------------|------------------|
-| Desktop → WoW | Win32 focus + **PostMessage** (primary) | Window handle + chat/input messages carrying **`/run ReceiveGold("…")`** or **`/who Name`** text | Game executes; addon/Lua runs | Wrong HWND; focus timing; anti-cheat block |
+| Desktop → WoW | Win32 focus + **PostMessage** (primary) | Window handle + chat/input messages carrying **`/run NotifyWinnerWhisper("uuid","Name")`**, **`/run ReceiveGold("…")`**, or **`/who Name`** text | Game executes; addon/Lua runs | Wrong HWND; focus timing; anti-cheat block |
 | Desktop → WoW | **SendInput** (fallback) | OS input synthesize | Same | User-configured fallback failures |
 | WoW → Desktop | (no direct callback) | — | — | — |
 
@@ -1234,6 +1233,7 @@ Summary of **documented** boundaries. Pool/spin polling routes are defined in **
 
 | Direction | Message/Endpoint | Payload shape | Success response | Failure response |
 |-----------|------------------|---------------|------------------|------------------|
+| Client → Addon | Global `NotifyWinnerWhisper(payoutId, characterName)` | via **`/run`** from Desktop (`docs/SPEC.md` §8–9) | §9 **`/whisper`** sent by addon | Bad args; WoW limits |
 | Client → Addon | Global `ReceiveGold(dataString)` | semicolon entries: `UUID:CharacterName:GoldCopper;` | Queued mail prep | Parse error; invalid delimiters |
 | Client → Addon | **MAIL_SHOW** (event) | (FrameXML) | Side panel + queue UX | Events not fired if wrong hook |
 | Client → Addon | Whisper events | sender + text matching **`!twgold`** (case-insensitive) | Print **`[MGM_ACCEPT:UUID]`** to chat | Wrong event registration on 3.3.5a |

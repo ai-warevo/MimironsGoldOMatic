@@ -83,13 +83,14 @@ Responsibilities:
 - Implement the WPF MVVM client UI and view models.
 - Handle Win32 integration for WoW 3.3.5a (process discovery, window focus, and message/posting).
 - Bridge **addon-originated `!twgold` acceptance** to the Backend: tail **`WoWChatLog.txt`** (default + override path) for **`[MGM_ACCEPT:UUID]`** → **`POST .../confirm-acceptance`**; tail the **same** log for **`[MGM_CONFIRM:UUID]`** → **`Sent`**; parse **`[MGM_WHO]`** lines from the **same** log → **`POST /api/roulette/verify-candidate`** (see `docs/SPEC.md` §8–10).
-- Ensure payload conversion into WoW-compatible command strings (including 255-char chunking).
+- Ensure payload conversion into WoW-compatible command strings (including 255-char chunking). After **`Pending`**, inject **`/run NotifyWinnerWhisper(...)`** per **`docs/SPEC.md` §8–9** before **`ReceiveGold`** mail flow.
 - Document WinAPI behaviors/timing and provide reliability notes specific to 3.3.5a.
 
 ### [WoW Addon/Lua Expert]
 
 Responsibilities:
 - Implement WoW 3.3.5a addon scaffolding (`.toc` + Lua).
+- Expose **`NotifyWinnerWhisper(payoutId, characterName)`** (global) for Desktop-injected **`/run`** per **`docs/SPEC.md` §8–9.
 - Hook into the mail interface (event hooking / frame integration) to receive queued payout payloads.
 - Send the **winner notification whisper** per `docs/SPEC.md` §9 (`/whisper <Winner_InGame_Nickname> …` Russian text); intercept **whisper/private messages** where the body matches **`!twgold`** (**case-insensitive**, no extra text) and **print `[MGM_ACCEPT:UUID]`** to chat so Desktop can read **`WoWChatLog.txt`** (**`Sent`** still requires **`[MGM_CONFIRM:UUID]`** per `docs/SPEC.md` §9–10).
 - Run **`/who`**, parse **3.3.5a**, emit **`[MGM_WHO]`** + JSON to the default chat frame so it appears in **`WoWChatLog.txt`** (`docs/SPEC.md` §8); support mail flow as before.

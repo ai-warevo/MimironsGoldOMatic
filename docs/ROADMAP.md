@@ -134,7 +134,8 @@ Acting as **[WoW Addon/Lua Expert]**:
 - Read `docs/SPEC.md` and `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`.
 - Create the `src/MimironsGoldOMatic.WoWAddon` folder.
 - Implement the 3.3.5a addon logic (Interface: 30300):
-  - `MimironsGoldOMatic.lua` with global `ReceiveGold(dataString)` to parse and enqueue payouts
+  - `MimironsGoldOMatic.lua` with global **`NotifyWinnerWhisper(payoutId, characterName)`** (Desktop **`/run`**) to send §9 **`/whisper`** (`docs/SPEC.md` §8–9)
+  - Global `ReceiveGold(dataString)` to parse and enqueue payouts
   - UI side panel that hooks into `MAIL_SHOW`
   - Auto-fill logic for `SendMailNameEditBox` and `MoneyInputFrame_SetCopper`
 - Implement **`!twgold`** whisper detection; print **`[MGM_ACCEPT:UUID]`** to chat for **`WoWChatLog.txt`** / Desktop (no HTTP from Lua)
@@ -146,11 +147,11 @@ Acting as **[WoW Addon/Lua Expert]**:
 - MVVM (CommunityToolkit.Mvvm)
 - Queue workflow (explicit claim) for **winner** payouts:
   - `GET /api/payouts/pending`
-  - On **Sync/Inject**: `PATCH /api/payouts/{id}/status` -> `InProgress`
-- **Roulette coordination:** inject or assist **`/who <Winner_InGame_Nickname>`** and report online status before Backend finalizes winners (see `docs/SPEC.md`)
+  - **`NotifyWinnerWhisper`** inject for each **`Pending`** winner (`docs/SPEC.md` §8–9), **then** **Sync/Inject** mail: `PATCH /api/payouts/{id}/status` -> `InProgress`
+- **Roulette coordination:** tail **`[MGM_WHO]`** and **`POST /api/roulette/verify-candidate`** (see `docs/SPEC.md`)
 - WinAPI injection:
   - Target **foreground** `WoW.exe` (MVP)
-  - Inject `/run ReceiveGold("...")` with <255 char chunking
+  - Inject **`/run NotifyWinnerWhisper(...)`** and **`/run ReceiveGold("...")`** with <255 char chunking
   - Use `PostMessage` as primary strategy with `SendInput` fallback
 - Feedback loop:
   - Receive **`!twgold`** from addon → call Backend **acceptance** endpoint (not **`Sent`**)
@@ -175,8 +176,9 @@ Acting as **[WPF/WinAPI Expert]**:
 - Use CommunityToolkit.Mvvm for MVVM structure.
 - Implement explicit-claim queue flow:
   - `GET /api/payouts/pending`
-  - On **Sync/Inject**: `PATCH /api/payouts/{id}/status` -> `InProgress`
-- Implement Win32 `PostMessage` injection to call `ReceiveGold` in WoW:
+  - For each new **`Pending`** winner: inject **`/run NotifyWinnerWhisper("<id>","<CharacterName>")`** per **`docs/SPEC.md` §8–9** (addon sends §9 whisper **before** mail **`ReceiveGold`** flow)
+  - On **Sync/Inject** (mail prep): `PATCH /api/payouts/{id}/status` -> `InProgress`
+- Implement Win32 `PostMessage` injection for **`NotifyWinnerWhisper`** and **`ReceiveGold`** in WoW:
   - Target the **foreground** `WoW.exe` process (MVP)
   - Implement <255 char chunking for injected `/run` commands
   - Add `SendInput` fallback strategy for blocked/unreliable primary injection
@@ -215,11 +217,12 @@ Acting as **[Frontend/Twitch Expert]**:
 - Implement **visual roulette** + **5-minute** countdown (aligned with Backend; **no** early spin).
 - Implement pull status UX:
   - Call `GET /api/payouts/my-last` (and any pool APIs)
-- Ensure alignment with Twitch Dev Rig for MVP debugging.
+- **MVP-5 scope (locked):** **viewer panel only** (`docs/UI_SPEC.md` **UI-101–106**). **Do not** implement broadcaster dashboard panels **UI-201–204** in MVP-5 (post-MVP / when Backend adds broadcaster JWT routes).
+- Ensure alignment with Twitch Dev Rig for MVP debugging (**real** Extension JWTs per `docs/SPEC.md`).
 
 ### MVP-6: End-to-end demo & verification
 
-- Demo scenario: **`!twgold <CharacterName>`** in **chat** → **roulette spin** → **`/who`** online OK → **winner notification whisper** (§9) → winner **`!twgold`** in **WoW** → **confirm-acceptance** → desktop inject → streamer sends mail → **`[MGM_CONFIRM:UUID]`** in log → backend **`Sent`** → **winner removed from pool**
+- Demo scenario: **`!twgold <CharacterName>`** in **chat** → **roulette spin** (random candidate) → **`/who`** online OK → Desktop **`NotifyWinnerWhisper`** → **winner notification whisper** (§9) → winner **`!twgold`** in **WoW** → **confirm-acceptance** → desktop **`ReceiveGold`** inject → streamer sends mail → **`[MGM_CONFIRM:UUID]`** in log → backend **`Sent`** → **winner removed from pool**
 - Add minimal backend tests for:
   - idempotency (`EnrollmentRequestId`)
   - one-active-per-user

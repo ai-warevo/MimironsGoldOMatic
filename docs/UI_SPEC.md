@@ -29,7 +29,7 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 - **Winners** are **online-verified** via **`/who`** before **`Pending` payout**; Extension shows **“You won”**; **in WoW**, winner gets the **notification whisper** and replies **`!twgold`** (**case-insensitive**; `docs/SPEC.md` §5, §9).
 - **Fixed 1,000g** per winning payout (`docs/SPEC.md` §2). **Desktop** holds **`X-MGM-ApiKey`**; Extension uses Twitch EBS/JWT to **Backend** (not the Desktop secret).
 
-> ⚠️ **DECISION:** Streamer **Extension dashboard** screens (UI-201–204) are specified as **future-facing / optional for MVP-5** because **`docs/SPEC.md`** does not yet define broadcaster-only config endpoints or Extension-configured gold amounts (MVP gold is fixed). Layouts below support implementation when APIs exist.
+> ⚠️ **DECISION (locked):** Streamer **Extension dashboard** screens (**UI-201–204**) are **out of MVP-5** — implement **viewer** panels **UI-101–106** only (`docs/ROADMAP.md` MVP-5). Layouts below remain **reference** for post-MVP when broadcaster JWT routes exist; MVP gold stays fixed per **`docs/SPEC.md`**.
 
 ---
 

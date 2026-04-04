@@ -22,8 +22,9 @@
   - Rate limiting (e.g. ~5 req/min per IP/user).
 - **Roulette (MVP):**
   - **Visual roulette** cadence: default **every 5 minutes**; **minimum 1** participant.
+  - **Candidate selection:** **uniform random** among active pool rows (`docs/SPEC.md` glossary, §5).
   - **Non-winners remain in the pool** after each spin; **winners are removed when `Sent`** (may re-enroll via chat).
-  - **Online gate:** spin resolution **must** use **`/who <Winner_InGame_Nickname>`** before **`Pending` payout**; offline candidates invalid (re-draw policy per `docs/SPEC.md`).
+  - **Online gate:** spin resolution **must** use **`/who <Winner_InGame_Nickname>`** before **`Pending` payout**; offline candidates invalid (**no** second pick same cycle — `docs/SPEC.md`).
   - **Winner notification:** API/state so the **Twitch Extension** can show **“You won”**; **in-game** whisper flow per **`docs/SPEC.md` §9** (Russian text + reply **`!twgold`**).
 - **Acceptance vs sent:**
   - Record **willingness to accept** when Desktop calls **`confirm-acceptance`** after observing **`[MGM_ACCEPT:UUID]`** in **`WoWChatLog.txt`** (addon printed after Lua whisper **`!twgold`** match; `docs/SPEC.md` §9–10).

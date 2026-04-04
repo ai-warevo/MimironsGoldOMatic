@@ -46,6 +46,6 @@ Requirements:
 2) Fill `prompt.md`, `plan.md`, `checks.md`, and `report.md`.
 3) Implement fix with regression test.
 4) Run tests and summarize verification.
-5) Create commit and provide PR title/body.
+5) Use command /commit and provide PR title/body.
 ```
 

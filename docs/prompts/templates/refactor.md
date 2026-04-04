@@ -39,7 +39,7 @@ Use this when you want to **improve internal code structure** without changing e
 
 ### Refactor strategy
 
-- **Small steps** (sequence of safe commits/PRs):
+- **Small steps** (sequence of safe `.cursors/commands/commit.md`):
 - **Safety rails** (tests, feature flags, canaries):
 - **Rollback plan**:
 
