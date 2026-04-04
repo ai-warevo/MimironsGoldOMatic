@@ -14,6 +14,8 @@
  *   node .cursor/skills/amend-commit/scripts/amend_commit_meta_wrap.mjs run --mode single --commit <full-or-abbrev-sha> --message-only --made-with "Tool" --co-authored-by "Other <o@example.com>"
  *
  *   node .cursor/skills/amend-commit/scripts/amend_commit_meta_wrap.mjs run --mode all --base origin/main --made-with "X" --co-authored-by "Y <y@example.com>" --author-name "A" --author-email "a@example.com" --committer-name "C" --committer-email "c@example.com"
+ *
+ *   node .cursor/skills/amend-commit/scripts/amend_commit_meta_wrap.mjs run --mode all --base origin/main --made-with "Cursor" --co-authored-by "Cursor Agent <cursoragent@cursor.com>" --author-name "Anatoly Ivanov" --author-email "ai.vibeqodez@vk.com" --committer-name "Anatoly Ivanov" --committer-email "ai.vibeqodez@vk.com"
  */
 
 import { spawnSync } from "node:child_process";
