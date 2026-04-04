@@ -4,17 +4,15 @@ namespace MimironsGoldOMatic.Shared;
 
 public sealed class CreatePayoutRequestValidator : AbstractValidator<CreatePayoutRequest>
 {
-    private const int CharacterNameMaxLength = 32;
-
     public CreatePayoutRequestValidator()
     {
         RuleFor(x => x.CharacterName)
             .NotEmpty()
-            .MaximumLength(CharacterNameMaxLength)
-            .Matches(@"^[^:;]+$")
-            .WithMessage("CharacterName must not contain ':' or ';'.");
+            .Length(2, 12)
+            .Must(s => s.All(char.IsLetter))
+            .WithMessage("CharacterName must be 2–12 letters (see docs/SPEC.md §4 for Latin/Cyrillic script rules).");
 
-        RuleFor(x => x.TwitchTransactionId)
+        RuleFor(x => x.EnrollmentRequestId)
             .NotEmpty();
     }
 }

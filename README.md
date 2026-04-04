@@ -9,6 +9,10 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 
 **MVP deployment:** **one** broadcaster channel per Backend instance (see `docs/SPEC.md` deployment scope).
 
+## Implementation status
+
+Normative contracts are **document-complete** for the approved MVP (`docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md`, `docs/INTERACTION_SCENARIOS.md`). The **product** is still in early scaffolding: see **`docs/IMPLEMENTATION_READINESS.md`** (*Source code parity*) for per-project progress (Backend template API, default Extension/WPF UIs, minimal addon Lua, partial `MimironsGoldOMatic.Shared`).
+
 ## MVP Specification (final)
 
 - **Gold per winning payout**: fixed **1,000g** (MVP). **Subscribers** join the giveaway by typing **`!twgold <CharacterName>`** in **broadcast Twitch chat** (**`!twgold`** prefix **case-insensitive**; server nickname for the roulette); the Backend **monitors chat** (e.g. EventSub). **Character names** in the pool must be **unique**. Channel Points are **not** used.

@@ -3,6 +3,10 @@
 ## High-Level Purpose
 Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.5a.
 
+## Implementation status (short)
+
+Product **specs and scenarios** are aligned in docs; **executable code** is mostly scaffold. See `docs/IMPLEMENTATION_READINESS.md` for a per-layer snapshot (`src/` vs MVP-0…MVP-6).
+
 ## System Architecture
 `Twitch Extension -> ASP.NET Core API -> WPF App (WinAPI/PostMessage) -> WoW 3.3.5a Addon (Lua)`
 

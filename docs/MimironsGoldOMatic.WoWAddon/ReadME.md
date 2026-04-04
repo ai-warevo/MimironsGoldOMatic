@@ -1,5 +1,6 @@
 ## MimironsGoldOMatic.WoWAddon (Lua | Bridge between WPF Dekstop App & game)
 
+- **Repository status:** `src/MimironsGoldOMatic.WoWAddon` contains `.toc` and a **minimal** Lua stub. Behaviors below (**`ReceiveGold`**, **`NotifyWinnerWhisper`**, **`[MGM_WHO]`**, whispers, **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`**) are **specified** for implementation — see `docs/IMPLEMENTATION_READINESS.md`.
 - **UI spec:** `docs/UI_SPEC.md` §4 (addon **UI-401–405**: entry point, MAIL_SHOW panel, toasts, debug frame).
 - **Role:** Receives injected commands and provides the final UX for the streamer; **detects `!twgold` whispers** (willingness to accept gold) and **prints `[MGM_CONFIRM:UUID]`** after mail is sent (**required** for **`Sent`** on the server).
 - **Target:** WoW 3.3.5a (WotLK).

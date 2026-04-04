@@ -2,6 +2,8 @@
 
 This document describes **user-facing** interfaces for the MVP. It is **not** source code.
 
+**Implementation note:** The Twitch Extension, WPF app, and WoW addon **source trees** are still largely **scaffolds** (see `docs/IMPLEMENTATION_READINESS.md`). Panels **UI-101–106**, **UI-301–308**, and **UI-401–405** here are the **target** UX; shipping UIs must match this spec as they are built.
+
 ## Related documentation
 
 Keep this UI spec aligned with the rest of the repo (paths relative to this file in `docs/`):

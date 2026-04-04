@@ -4,6 +4,8 @@ This document is the **canonical implementation contract** for the MVP.
 `docs/ROADMAP.md` contains step-by-step prompts and links into this spec.  
 **User-facing UI** (Twitch Extension, WPF, WoW addon screens, states, ASCII layouts): `docs/UI_SPEC.md`.
 
+**Implementation parity:** For gaps between **this specification** and the **current** `src/` tree (scaffolds, partial Shared library, missing solution file), see `docs/IMPLEMENTATION_READINESS.md`.
+
 ### MVP deployment scope (normative)
 
 - **Single broadcaster** for MVP: one configured Twitch **channel / broadcaster** per Backend deployment. Extension JWT and chat ingest target that channel only. Multi-channel support is **out of scope** for MVP unless added later.

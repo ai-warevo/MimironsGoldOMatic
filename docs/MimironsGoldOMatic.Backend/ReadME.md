@@ -1,5 +1,6 @@
 ## MimironsGoldOMatic.Backend (ASP.NET Core | Bridge between Twitch & WPF Desktop app)
 
+- **Repository status:** `src/MimironsGoldOMatic.Backend` currently ships the default ASP.NET Core **template** (sample OpenAPI/weather endpoint only). MVP endpoints, Marten, PostgreSQL, and chat ingestion described below are **specified**, not yet implemented — see `docs/IMPLEMENTATION_READINESS.md`.
 - **UI spec (consumer-facing):** Extension/Desktop/Addon behaviors that the API supports are summarized in `docs/UI_SPEC.md`; API shapes remain canonical in `docs/SPEC.md`.
 - **Role:** Orchestrates the **participant pool**, **roulette spins**, **payout queue**, and persistent storage.
 - **Stack:** ASP.NET Core, Marten (Event Store), PostgreSQL, EF Core (read models only).

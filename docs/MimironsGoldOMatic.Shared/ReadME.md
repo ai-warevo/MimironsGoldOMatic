@@ -38,8 +38,9 @@
 
 ## Validation / Logic
 
-Contains shared validation for **`CharacterName`** per **`docs/SPEC.md` §4** (length **2–12**; Latin/Cyrillic letters only; no spaces). MVP business rules like fixed gold amount, lifetime caps,
-and concurrency limits are enforced by the Backend.
+Contains shared validation for **`CharacterName`**: **length 2–12** and **letters only** (`char.IsLetter`), plus exclusion of payload-unsafe patterns where applicable. **`docs/SPEC.md` §4** further restricts allowed scripts to **Latin or Cyrillic** Unicode letters; Shared may accept other Unicode letters until Backend or a stricter validator narrows scripts.
+
+MVP business rules like fixed gold amount, lifetime caps, and concurrency limits are enforced by the Backend.
 
 Status and API semantics are normative in `docs/SPEC.md`:
 

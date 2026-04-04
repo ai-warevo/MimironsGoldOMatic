@@ -1,5 +1,9 @@
 # General Architectural Requirements (All Components) & Repo Layout
 
+## Documentation vs code
+
+Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/ROADMAP.md`**. The **`docs/IMPLEMENTATION_READINESS.md`** file tracks (1) doc/spec consistency and (2) **what is implemented under `src/`** today versus MVP steps.
+
 ## High-Level Patterns
 - **DDD (Domain-Driven Design):** The core logic, limits (10k gold), and state transitions must be encapsulated within the Domain layer (Aggregates/Value Objects).
 - **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching **in the Backend** (`docs/MimironsGoldOMatic.Shared/ReadME.md`).

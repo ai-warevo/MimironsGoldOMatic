@@ -6,6 +6,6 @@ public sealed record PayoutDto(
     string TwitchDisplayName,
     string CharacterName,
     long GoldAmount,
-    string TwitchTransactionId,
+    string EnrollmentRequestId,
     PayoutStatus Status,
     DateTime CreatedAt);

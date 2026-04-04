@@ -4,6 +4,13 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **References:** `README.md`, `CONTEXT.md`, `AGENTS.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md` (screen-level UX aligned to these flows), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
 
+### How to use Part 2 (test cases)
+
+- **TC-xxx** rows are **verification targets** derived from `docs/SPEC.md` and related docs. They are **not** bound to existing automated tests until those suites exist.
+- **When to run:** after the relevant MVP slice ships (e.g. Backend routes for TC-003+; Desktop WinAPI for TC-005+; addon mail path for TC-007+).
+- **Automation:** once `src/MimironsGoldOMatic.sln` exists, prefer `dotnet test` for Backend/Desktop/Shared integration tests; Extension and WoW flows may remain manual or harness-driven until dedicated test projects exist.
+- **Auth notes:** `docs/SPEC.md` requires **real Twitch-issued Extension JWTs** (Dev Rig and production). Tests must not rely on a long-term “mock JWT” bypass unless explicitly labeled as **temporary harness** and called out in test code.
+
 ---
 
 ## Part 1 — Component Interaction Scenarios
@@ -872,7 +879,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ---
 
-### TC-017: Valid Dev Rig token (when mock enabled)
+### TC-017: Valid Extension JWT (Dev Rig or deployed)
 
 **Covers:** SC-014
 
@@ -880,21 +887,21 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Type:** Integration
 
-**Preconditions:** Dev Rig session with expected test token.
+**Preconditions:** Dev Rig (or deployed Extension) session with a **real Twitch-issued** Extension JWT, as required by `docs/SPEC.md` (MVP deployment scope).
 
 **Steps:**
 
-1. `POST /api/payouts/claim` with valid test auth
+1. Call a JWT-protected enroll or read endpoint (e.g. `POST /api/payouts/claim` when implemented) with valid `Authorization: Bearer <token>`.
 
 **Expected Result:**
 
 | Assertion | Expected Value |
 |-----------|----------------|
-| HTTP status | `201` or `200` |
+| HTTP status | `201` or `200` (or other success per endpoint contract) |
 
-**Expected Side Effects:** Enrollment persisted.
+**Expected Side Effects:** Enrollment or read succeeds per `docs/SPEC.md`.
 
-**Notes:** README: production JWT is roadmap.
+**Notes:** Stricter production JWT rotation and issuer checks are a roadmap hardening item; MVP still uses **validated real tokens**, not a permanent mock bypass.
 
 ---
 

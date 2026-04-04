@@ -10,13 +10,15 @@ Canonical implementation contracts live in:
 
 **UI/UX (screens, element inventory, flows):** Use [`docs/UI_SPEC.md`](UI_SPEC.md) for **UI-1xx–UI-4xx** panel definitions, Twitch panel constraints (~318px), WPF window layouts, and WoW 3.3.5a frame notes while implementing MVP-3 / MVP-4 / MVP-5.
 
+**Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today (solution file, scaffolds, partial Shared library), see [`docs/IMPLEMENTATION_READINESS.md`](IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*.
+
 **Payout model note:** **Subscribers** join by **`!twgold <CharacterName>`** in **broadcast Twitch chat** (monitored by Backend); **character names** are **unique** in the pool. Gold is **not** paid instantly. A **visual roulette** (**every 5 minutes**, minimum **1** participant) picks **one winner**; **non-winners stay**; **winners are removed from the pool when `Sent`**, and may **re-enter** via chat. **Consent** is **WoW whisper `!twgold`** after the **winner notification whisper** (`docs/SPEC.md` §9). **`Sent`** only after **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
 
 ## MVP (End-to-end happy path)
 
 ### MVP-0: Repo skeleton
 
-- Create `src/MimironsGoldOMatic.sln`
+- Create `src/MimironsGoldOMatic.sln` (not yet present in the repo; projects currently live as loose folders under `src/`)
 - Add projects under `src/`:
   - `MimironsGoldOMatic.Shared`
   - `MimironsGoldOMatic.Backend`

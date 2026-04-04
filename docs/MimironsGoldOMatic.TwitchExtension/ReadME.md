@@ -1,5 +1,6 @@
 ## MimironsGoldOMatic.TwitchExtension (React | Bridge between twitch & backend)
 
+- **Repository status:** `src/MimironsGoldOMatic.TwitchExtension` is a **Vite + React** scaffold (template `App.tsx`). Roulette, Twitch helper integration, Zustand, and **UI-101–106** are **not** implemented yet — see `docs/IMPLEMENTATION_READINESS.md` and `docs/UI_SPEC.md`.
 - **UI spec:** `docs/UI_SPEC.md` §1 — **MVP:** viewer panel **UI-101–106** only. Broadcaster **UI-201–204** are **out of MVP-5** implementation (see `docs/ROADMAP.md` MVP-5 prompt).
 - **Role:** Viewer-facing **roulette**, pool display, and **winner / payout status**. **Pool enrollment is driven by Twitch chat** (`!twgold <CharacterName>` per `docs/SPEC.md`), not by a form-only flow.
 - **Stack:** React 18+, Vite, TypeScript, Tailwind CSS.
