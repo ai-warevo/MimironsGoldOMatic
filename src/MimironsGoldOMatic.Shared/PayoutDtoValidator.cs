@@ -14,7 +14,9 @@ public sealed class PayoutDtoValidator : AbstractValidator<PayoutDto>
             .Must(CharacterNameRules.IsValid)
             .WithMessage(
                 "CharacterName must be 2–12 Unicode letters in Latin or Cyrillic scripts only (docs/SPEC.md §4).");
-        RuleFor(x => x.GoldAmount).GreaterThan(0);
+        RuleFor(x => x.GoldAmount)
+            .Equal(PayoutEconomics.MvpWinningPayoutGold)
+            .WithMessage($"GoldAmount must be {PayoutEconomics.MvpWinningPayoutGold}g for MVP winning payouts (docs/SPEC.md §2).");
         RuleFor(x => x.EnrollmentRequestId).NotEmpty();
     }
 }

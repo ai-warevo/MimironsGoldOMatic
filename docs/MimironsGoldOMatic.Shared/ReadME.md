@@ -41,7 +41,9 @@
 
 Contains shared validation for **`CharacterName`**: **length 2–12** (after trim) and **Unicode letters in Latin or Cyrillic script blocks only** (no digits, punctuation, or spaces), implemented in **`CharacterNameRules`** and FluentValidation (`docs/SPEC.md` §4).
 
-MVP business rules like fixed gold amount, lifetime caps, and concurrency limits are enforced by the Backend.
+**`PayoutEconomics.MvpWinningPayoutGold`:** fixed **1,000g** per winning payout on `PayoutDto` (SPEC §2); validated in **`PayoutDtoValidator`**.
+
+Other MVP business rules (lifetime caps, concurrency limits) are enforced by the Backend.
 
 Status and API semantics are normative in `docs/SPEC.md`:
 

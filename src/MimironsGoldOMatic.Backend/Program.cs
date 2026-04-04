@@ -1,39 +1,134 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using FluentValidation;
+using MimironsGoldOMatic.Backend.Application;
+using MimironsGoldOMatic.Backend.Auth;
+using MimironsGoldOMatic.Backend.Configuration;
+using MimironsGoldOMatic.Backend.Persistence;
+using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Shared;
+using Marten;
+using Marten.Events;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.IdentityModel.Tokens;
+using System.Threading.RateLimiting;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.Configure<MgmOptions>(builder.Configuration.GetSection(MgmOptions.SectionName));
+builder.Services.Configure<TwitchOptions>(builder.Configuration.GetSection(TwitchOptions.SectionName));
+
+builder.Services.AddControllers().AddJsonOptions(o =>
+{
+    o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
+
 builder.Services.AddOpenApi();
+
+var pg = builder.Configuration.GetConnectionString("PostgreSQL");
+if (string.IsNullOrWhiteSpace(pg))
+    throw new InvalidOperationException("ConnectionStrings:PostgreSQL is required for Marten.");
+
+builder.Services.AddMarten(opts =>
+{
+    opts.Connection(pg);
+    opts.DatabaseSchemaName = "mgm";
+    opts.RegisterDocumentType<PoolDocument>();
+    opts.RegisterDocumentType<SpinStateDocument>();
+    opts.RegisterDocumentType<PayoutReadDocument>();
+    opts.RegisterDocumentType<ChatMessageDedupDocument>();
+    opts.RegisterDocumentType<EnrollmentIdempotencyDocument>();
+    opts.Events.StreamIdentity = StreamIdentity.AsGuid;
+    opts.Events.AddEventType(typeof(PayoutCreated));
+    opts.Events.AddEventType(typeof(PayoutStatusChanged));
+    opts.Events.AddEventType(typeof(WinnerAcceptanceRecorded));
+    opts.Events.AddEventType(typeof(HelixRewardSentAnnouncementSucceeded));
+});
+
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(PostClaimHandler).Assembly));
+
+builder.Services.AddSingleton<ChatEnrollmentService>();
+builder.Services.AddSingleton<HelixChatService>();
+builder.Services.AddHostedService<RouletteSynchronizerHostedService>();
+builder.Services.AddHostedService<PayoutExpirationHostedService>();
+
+builder.Services.AddHttpClient("Helix", c =>
+{
+    c.DefaultRequestHeaders.Add("Accept", "application/json");
+    c.Timeout = TimeSpan.FromSeconds(30);
+});
+
+var twitch = builder.Configuration.GetSection(TwitchOptions.SectionName).Get<TwitchOptions>() ?? new TwitchOptions();
+
+byte[] extensionKey;
+if (!string.IsNullOrEmpty(twitch.ExtensionSecret))
+    extensionKey = Convert.FromBase64String(twitch.ExtensionSecret);
+else if (builder.Environment.IsDevelopment())
+    extensionKey = SHA256.HashData(Encoding.UTF8.GetBytes("mgm-dev-extension-secret-change-me"));
+else
+    throw new InvalidOperationException("Twitch:ExtensionSecret (base64) is required outside Development.");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = !string.IsNullOrEmpty(twitch.ExtensionClientId),
+            ValidAudience = string.IsNullOrEmpty(twitch.ExtensionClientId) ? null : twitch.ExtensionClientId,
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(extensionKey),
+            NameClaimType = "user_id",
+        };
+    })
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", _ => { });
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api/twitch/eventsub"))
+            return RateLimitPartition.GetNoLimiter("eventsub");
+
+        var key = context.User.FindFirst("user_id")?.Value
+                  ?? context.Connection.RemoteIpAddress?.ToString()
+                  ?? "anon";
+        return RateLimitPartition.GetFixedWindowLimiter(
+            key,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+            });
+    });
+});
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreatePayoutRequestValidator>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var store = scope.ServiceProvider.GetRequiredService<IDocumentStore>();
+    await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 }
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

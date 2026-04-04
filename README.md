@@ -53,6 +53,12 @@ Normative contracts are **document-complete** for the approved MVP (`docs/SPEC.m
 - `/.github/workflows` will contain CI build/test pipelines for both .NET and the React frontend.
 - `/.cursor` contains project-specific AI rules to keep naming and compatibility consistent.
 
+## Setup
+
+- **[SETUP.md](SETUP.md)** — index to the setup guides below
+- **[SETUP-for-developer.md](SETUP-for-developer.md)** — prerequisites, PostgreSQL, Backend `appsettings` (including Twitch keys), running projects from source
+- **[SETUP-for-streamer.md](SETUP-for-streamer.md)** — installing the WoW addon, Twitch Extension, and Desktop app; operator notes
+
 ## Documentation
 
 - **Architecture & repo layout (docs entrypoint):** [`docs/ReadME.md`](docs/ReadME.md)
