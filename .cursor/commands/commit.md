@@ -35,15 +35,21 @@ description: Generates a conventional git commit command based on all local chan
 6. **Rules**:
    - **Language**: English only.
    - **Mood**: Imperative (e.g., "add").
-   - **Footer**: Every commit message MUST end with these two lines separated by a blank line from the description:
+   - **Footer**: After a blank line following the description, end with **one** trailer line only:
      
-     Made-with: Cursor
-     Co-authored-by: Cursor Agent <cursoragent@cursor.com>
+     `Co-authored-by: Cursor Agent <cursoragent@cursor.com>`
+     
+     **Do not** add `Made-with: Cursor` inside agent-composed messages (see `.cursor/rules/git-commit-footer.mdc`) — Cursor or other tooling may add `Made-with` separately; duplicating it breaks the footer.
 7. **Multi-commit Logic**: If changes are too large or cover unrelated topics, suggest splitting them into multiple commands.
 8. **Workflow**:
    - Generate and run `git add .` first.
-   - Then output the command: `git commit -m "<type>(<scope>): <description>
-   
-Made-with: Cursor
+   - Then output a single `git commit` using `-F` with a file **or** one heredoc-style message so the body and footer are not split across multiple `-m` flags (which can duplicate lines or add stray blank paragraphs).
+   - Example shape (subject, blank line, body, blank line, `Co-authored-by` only):
 
-Co-Authored-By: Cursor Agent <cursoragent@cursor.com>"`
+     `git commit -F - <<'EOF'
+     <type>(<scope>): <description>
+
+     <optional body paragraph>
+
+     Co-authored-by: Cursor Agent <cursoragent@cursor.com>
+     EOF`
