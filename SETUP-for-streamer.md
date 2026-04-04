@@ -48,6 +48,7 @@ Enable chat logging in WoW options if needed so **`[MGM_WHO]`**, **`[MGM_ACCEPT:
 
 - Viewers enroll via **`!twgold <CharacterName>`** in **Twitch chat** (subscriber-gated; see spec).
 - After a win, the flow uses **in-game whispers** and **`!twgold`** consent; the addon prints tags the Desktop forwards to the EBS.
+- For roulette **online checks**, the Desktop (or a macro) runs **`/run MGM_RunWhoForSpin("<currentSpinCycleId>","<CharacterName>")`** so the addon prints **`[MGM_WHO]`** + JSON (`docs/SPEC.md` §8). **`currentSpinCycleId`** comes from **`GET /api/roulette/state`**.
 
 Details: **`docs/MimironsGoldOMatic.WoWAddon/ReadME.md`** and **`docs/SPEC.md`** §8–10.
 

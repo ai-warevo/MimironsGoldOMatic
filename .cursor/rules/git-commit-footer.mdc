@@ -20,3 +20,5 @@ When you propose, compose, or run `git commit` messages here:
 3. **Spelling** — Use `Made-with:` (hyphen, not “Made with”). Use `Co-authored-by:` (hyphenated, lowercase `by`) as in Git trailers.
 
 4. **One composed message** — Write the full message in a **single** `-F` file or one heredoc. **Do not** build the footer by chaining several `git commit -m` flags for different lines; that often creates **duplicate** `Made-with` lines or stray blank paragraphs.
+
+5. Also disable your auto "Commit Attribution", by default it writes `Made-with: Cursor` at the end of commit message - it's redundant

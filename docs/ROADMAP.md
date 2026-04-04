@@ -141,6 +141,8 @@ Acting as **[EBS/API Expert]**:
 - Intercept **whispers** to the streamer where the message is exactly **`!twgold`** and notify the Desktop utility (**EBS** **acceptance** via Desktop); winner **must** have been **notified** first per product flow
 - **Required:** after mail is sent, print **`[MGM_CONFIRM:UUID]`** to chat (UUID is payout id) for **`WoWChatLog.txt`** / **`Sent`**
 
+**Status — implemented (code):** `src/MimironsGoldOMatic.WoWAddon` — **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin(spinCycleId, characterName)`** (Desktop `/run` with **`currentSpinCycleId`** from EBS), mail queue panel on **`MAIL_SHOW`**, **Prepare Mail**, **`[MGM_WHO]`** / **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`** per `docs/SPEC.md` §8–10. **`/mgm`** + minimap button. Runtime verification on a live 3.3.5a client is manual.
+
 Spec links:
 
 - `docs/SPEC.md` (§9 Addon; §10 Chat log / Desktop bridge)
