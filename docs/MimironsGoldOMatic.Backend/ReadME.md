@@ -1,10 +1,10 @@
 ## MimironsGoldOMatic.Backend — EBS (Extension Backend Service) (ASP.NET Core | Bridge between Twitch Extension & WPF Desktop)
 
 - **EBS:** This project **`MimironsGoldOMatic.Backend`** is the **EBS** — same as **`docs/SPEC.md`**. It owns **Twitch Extension JWT** validation, **EventSub** (`channel.chat.message`), **Helix** (§11 **`Send Chat Message`**, inline **3×** retry, **no** Outbox in MVP), and Desktop **`ApiKey`** routes.
-- **Repository status:** `src/MimironsGoldOMatic.Backend` currently ships the default ASP.NET Core **template** (sample OpenAPI/weather endpoint only). MVP endpoints, Marten, PostgreSQL, and chat ingestion described below are **specified**, not yet implemented — see `docs/IMPLEMENTATION_READINESS.md`.
+- **Repository status:** `src/MimironsGoldOMatic.Backend` implements **MVP-2** per `docs/ROADMAP.md`: Marten on PostgreSQL, MediatR command/query handlers, Extension JWT + Desktop `X-MGM-ApiKey`, EventSub chat enrollment, roulette/pool/payout HTTP surface, Helix reward-sent announcement (inline retries), and hourly payout expiration. Set `ConnectionStrings:PostgreSQL`, `Mgm:ApiKey`, and `Twitch:*` in configuration (see `appsettings.Development.json` for a local Postgres example). **EF Core** is not used in this project yet (read models are Marten documents).
 - **UI spec (consumer-facing):** Extension/Desktop/Addon behaviors that the API supports are summarized in `docs/UI_SPEC.md`; API shapes remain canonical in `docs/SPEC.md`.
 - **Role:** Orchestrates the **participant pool**, **roulette spins**, **payout queue**, and persistent storage.
-- **Stack:** ASP.NET Core, Marten (Event Store), PostgreSQL, EF Core (read models only).
+- **Stack:** ASP.NET Core, Marten (Event Store), PostgreSQL. EF Core remains optional for future read-side tooling (`docs/SPEC.md` §6).
 
 ## Key Functions
 
@@ -47,9 +47,10 @@
 ## Additional Libraries
 
 - `Marten`
-- `Npgsql`
-- `Npgsql.EntityFrameworkCore.PostgreSQL` (query-side mapping only)
+- `MediatR`
+- `FluentValidation.DependencyInjectionExtensions`
 - `Microsoft.AspNetCore.Authentication.JwtBearer`
+- `Polly.Extensions.Http` (Helix HTTP resilience)
 
 ## Architecture & Patterns
 - **Idempotency Pattern:**

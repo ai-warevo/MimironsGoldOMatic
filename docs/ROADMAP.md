@@ -97,6 +97,8 @@ Acting as **[EBS/API Expert]**:
   - Dev Rig-first for Twitch Extension auth (production JWT validation deferred)
   - Desktop uses a pre-shared `ApiKey` (global static key in EBS config)
 
+**Status — implemented (code):** `src/MimironsGoldOMatic.Backend` — Marten + PostgreSQL (`ConnectionStrings:PostgreSQL`), MVP HTTP routes (Extension JWT + Desktop `X-MGM-ApiKey`), EventSub `channel.chat.message` at `POST /api/twitch/eventsub`, MediatR handlers, roulette sync + payout expiration hosted services, Helix §11 inline retry after `Sent`. Configure `Mgm`, `Twitch`, and Postgres before running; see `docs/MimironsGoldOMatic.Backend/ReadME.md` and `appsettings*.json`. Runtime E2E against Twitch/Helix not verified in CI.
+
 Spec links:
 
 - `docs/SPEC.md#2-mvp-economics--anti-abuse-rules`

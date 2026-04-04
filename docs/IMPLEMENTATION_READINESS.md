@@ -46,7 +46,7 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 |---|---|---|
 | MVP-0 | `src/MimironsGoldOMatic.slnx` + project skeletons | **Complete (skeleton):** `slnx` lists the three .NET projects; `src/MimironsGoldOMatic.WoWAddon` and `src/MimironsGoldOMatic.TwitchExtension` exist as non-MSBuild trees (per `docs/ROADMAP.md` MVP-0 — not part of the .NET solution file). |
 | MVP-1 | Shared contracts + validation | **Complete:** `PayoutStatus`, `PayoutDto` (incl. `IsRewardSentAnnouncedToChat`), `CreatePayoutRequest`, `CharacterNameRules`, FluentValidation validators (see `docs/MimironsGoldOMatic.Shared/ReadME.md`). |
-| MVP-2 | Backend API + Marten/PostgreSQL | **Scaffold only:** template `Program.cs` (sample weather endpoint); no payout/roulette routes. |
+| MVP-2 | Backend API + Marten/PostgreSQL | **Implemented:** Marten event store + read docs, MVP routes (`claim`, pool/roulette, payouts pending/status/confirm, verify-candidate), EventSub webhook, JWT + ApiKey auth, global rate limit (5/min per user/IP; EventSub exempt), Helix announcement + expiration job. Requires local Postgres + `appsettings` (`Mgm`, `Twitch`, connection string). |
 | MVP-3 | WoW addon | **Partial:** `.toc` + Lua stubs for queue, **`MAIL_SEND_SUCCESS`** / **`MAIL_FAILED`**, **`[MGM_CONFIRM]`**, completion whisper, **`SendMail`** hook (full **MAIL_SHOW** UI and **`NotifyWinnerWhisper`** still TODO). |
 | MVP-4 | WPF Desktop + WinAPI | **Scaffold only:** default `MainWindow`; no API client or injection. |
 | MVP-5 | Twitch Extension UI | **Scaffold only:** default Vite/React `App.tsx`; normative **`Sent`** chat string helper in `src/rewardSentAnnouncement.ts`; no Twitch helper, roulette, or `UI-101–106` yet. |
@@ -66,4 +66,4 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 ## Go/No-Go
 
 - **Go (documentation):** MVP contracts are consistent across normative docs; agents can implement against `docs/SPEC.md` + `docs/ROADMAP.md`.
-- **Go (product demo):** **No** — Backend, Desktop, Extension, and addon still need MVP-2…5 implementation per the snapshot above.
+- **Go (product demo):** **No** — Backend MVP-2 code is present but an end-to-end demo still needs Postgres/Twitch configuration plus MVP-3…5 (Desktop, Extension, addon) wired to the live API.
