@@ -16,6 +16,7 @@
   - **Optional:** **POST** `/api/payouts/claim` for Dev Rig / testing only (same semantics as chat enroll; see `docs/SPEC.md`).
 - **Visual roulette:** Animated selection on each spin; **5-minute** cadence; **minimum 1** participant; reflect **`/who`** / verification if Backend exposes it.
 - **Winner UX:** **“You won”** + instructions: **in WoW**, reply to the streamer’s whisper with **`!twgold`** (case-insensitive; see `docs/SPEC.md` §9); **`Sent`** after **`[MGM_CONFIRM:UUID]`** in WoW log per spec.
+- **Reward-sent copy (normative):** Hardcode the Russian template for **`Sent`** (panel + driving chat announcement) per **`docs/SPEC.md` §11: `Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** (`WINNER_NAME` = enrolled **`CharacterName`**). Twitch **broadcast chat** delivery is **Backend Helix** and/or Extension-triggered API — see spec §11.
 
 ## Libraries
 

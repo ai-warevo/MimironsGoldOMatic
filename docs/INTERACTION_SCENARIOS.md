@@ -1,6 +1,6 @@
 # Mimiron's Gold-o-Matic — Interaction Scenarios & Test Cases
 
-This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** **subscribers** join via **`!twgold <CharacterName>`** in **broadcast chat**; a **roulette** selects an **online-verified** winner; **WoW whisper reply `!twgold`** (after the **winner notification whisper**, `docs/SPEC.md` §9) leads the addon to print **`[MGM_ACCEPT:UUID]`** → Desktop **`confirm-acceptance`**; **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** drives **`Sent`** and **removes** the winner from the pool.
+This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** **subscribers** join via **`!twgold <CharacterName>`** in **broadcast chat**; a **roulette** selects an **online-verified** winner; **WoW whisper reply `!twgold`** (after the **winner notification whisper**, `docs/SPEC.md` §9) leads the addon to print **`[MGM_ACCEPT:UUID]`** → Desktop **`confirm-acceptance`**; on **MGM-armed** mail **`MAIL_SEND_SUCCESS`**, the addon prints **`[MGM_CONFIRM:UUID]`** (→ **`Sent`**, pool removal) and whispers the winner the **mail-completion** Russian line; **Twitch chat** may announce delivery per **`docs/SPEC.md` §11** (Extension template).
 
 **References:** `README.md`, `CONTEXT.md`, `AGENTS.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md` (screen-level UX aligned to these flows), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
 
@@ -37,11 +37,12 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 10. [Desktop] → [Backend]: `GET /api/payouts/pending` → streamer **Sync/Inject**
 11. [Desktop] → [Backend]: `PATCH /api/payouts/{id}/status` `{ "status": "InProgress" }`
 12. [Desktop] → [WoW Client]: WinAPI **PostMessage** / **SendInput** fallback: `/run ReceiveGold("<chunked payload>")` \<255 chars per line (`docs/SPEC.md` §8)
-13. [WoW Client] → [WoWAddon]: Lua `ReceiveGold(dataString)`; queue `MAIL_SHOW` UX; streamer sends mail (1000g = 10000000 copper)
-14. [WoWAddon] → [WoW Chat Log]: print `[MGM_CONFIRM:<uuid>]` → appears in `Logs\WoWChatLog.txt`
+13. [WoW Client] → [WoWAddon]: Lua `ReceiveGold(dataString)`; queue `MAIL_SHOW` UX; streamer sends mail on **MGM-armed** path (1000g = 10000000 copper)
+14. [WoW Client] → [WoWAddon]: **`MAIL_SEND_SUCCESS`** → print `[MGM_CONFIRM:<uuid>]` → `Logs\WoWChatLog.txt`; whisper winner **`Награда отправлена тебе на почту, проверяй ящик!`** (`docs/SPEC.md` §9). **Manual** send without arm → no tag / no completion whisper.
 15. [Desktop] → [Backend]: tail log → `PATCH /api/payouts/{id}/status` `{ "status": "Sent" }` → **remove winner from pool**
+16. [Backend] and/or [TwitchExtension] → [Twitch Chat]: optional **`Награда отправлена персонажу <Winner> на почту, проверяй ящик!`** (`docs/SPEC.md` §11)
 
-**Postconditions:** Payout `Sent`; winner **removed** from participant pool; pool row may be re-added later via **`!twgold <CharacterName>`**; viewer sees status in Extension.
+**Postconditions:** Payout `Sent`; winner **removed** from participant pool; pool row may be re-added later via **`!twgold <CharacterName>`**; viewer sees status in Extension; winner received **in-game** completion whisper; stream chat may show **§11** announcement.
 
 **Failure exits:** enrollment rejected (not subscribed, duplicate **character name** in pool, cap, invalid name); **offline at `/who`** (**no winner** this cycle — **no** re-draw); missing **WoW whisper `!twgold`** consent; injection or mail failure; log never shows `MGM_CONFIRM`; API down at any HTTP step.
 
@@ -87,22 +88,22 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ### SC-004: WoW Addon confirms gold delivery via in-game mail and reports back
 
-**Trigger:** Streamer completes **Send Mail** in UI after `ReceiveGold` populated fields.
+**Trigger:** Streamer completes **Send Mail** in UI after `ReceiveGold` populated fields (**MGM-armed** send path).
 
 **Actor:** Streamer (in-game)
 
-**Preconditions:** Mailbox open; addon queued payout; recipient accepted per product flow (`!twgold` already processed); gold available.
+**Preconditions:** Mailbox open; addon queued payout; recipient accepted per product flow (`!twgold` already processed); gold available; send is **armed** for MGM (not a unrelated manual compose).
 
 **Flow:**
 
 1. [WoWAddon] → [Mail UI]: `SendMailNameEditBox`, subject, `MoneyInputFrame_SetCopper` (3.3.5a)
-2. [WoW Client]: mail sent to server
-3. [WoWAddon] → [Chat / WoWChatLog]: **`[MGM_CONFIRM:<payoutGuid>]`** (required for automated `Sent`)
+2. [WoW Client]: client submits mail → **`MAIL_SEND_SUCCESS`** (or **`MAIL_FAILED`**)
+3. On **`MAIL_SEND_SUCCESS`** (MGM-armed only): [WoWAddon] → [Chat / WoWChatLog]: **`[MGM_CONFIRM:<payoutGuid>]`** (required for automated `Sent`); [WoWAddon] → [Winner]: whisper **`Награда отправлена тебе на почту, проверяй ящик!`** (`docs/SPEC.md` §9)
 4. [Desktop] → [Backend]: observes log line → `PATCH` → `Sent`
 
-**Postconditions:** Backend `Sent`; audit log shows mail-send confirmation path.
+**Postconditions:** Backend `Sent`; audit log shows mail-send confirmation path; winner got completion whisper.
 
-**Failure exits:** mailbox closed; insufficient gold; invalid recipient; addon does not emit tag; Desktop misses log rotation.
+**Failure exits:** mailbox closed; insufficient gold; invalid recipient; **`MAIL_FAILED`** (no tag / no completion whisper); manual send without MGM arm (no tag); Desktop misses log rotation.
 
 ---
 
@@ -596,7 +597,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ---
 
-### TC-007: Addon emits MGM_CONFIRM after mail send
+### TC-007: Addon emits MGM_CONFIRM and completion whisper after MGM-armed MAIL_SEND_SUCCESS
 
 **Covers:** SC-004
 
@@ -604,7 +605,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Type:** Integration (in-client or harness)
 
-**Preconditions:** Mail compose filled for payout `a1b2c3d-1111-2222-3333-444444444444`; mailbox open.
+**Preconditions:** Mail compose filled for payout `a1b2c3d-1111-2222-3333-444444444444`; mailbox open; send **MGM-armed**.
 
 **Input:**
 
@@ -614,18 +615,21 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Steps:**
 
-1. Trigger confirmed send through addon wrapper
-2. Read system/chat output or `WoWChatLog.txt`
+1. Trigger confirmed send through addon/MGM path → **`MAIL_SEND_SUCCESS`**
+2. Read `WoWChatLog.txt` and verify winner whisper (in-client)
+3. Send mail manually without MGM arm → **`MAIL_SEND_SUCCESS`** must **not** emit `[MGM_CONFIRM:…]`
 
 **Expected Result:**
 
 | Assertion | Expected Value |
 |-----------|----------------|
-| Log line | `[MGM_CONFIRM:a1b2c3d-1111-2222-3333-444444444444]` |
+| MGM path log line | `[MGM_CONFIRM:a1b2c3d-1111-2222-3333-444444444444]` |
+| Winner whisper body | `Награда отправлена тебе на почту, проверяй ящик!` |
+| Manual send | no `[MGM_CONFIRM]` |
 
-**Expected Side Effects:** Lua prints tag; 3.3.5a chat APIs only—no HTTP from Lua.
+**Expected Side Effects:** Lua prints tag; completion whisper via **`SendChatMessage`**; no HTTP from Lua.
 
-**Notes:** Whisper path uses events, not chat log (`docs/SPEC.md` §10).
+**Notes:** `docs/SPEC.md` §9 (**`MAIL_SEND_SUCCESS`** / **`MAIL_FAILED`**).
 
 ---
 

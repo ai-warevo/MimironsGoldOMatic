@@ -93,7 +93,7 @@ Responsibilities:
 - Implement WoW 3.3.5a addon scaffolding (`.toc` + Lua).
 - Expose **`NotifyWinnerWhisper(payoutId, characterName)`** (global) for Desktop-injected **`/run`** per **`docs/SPEC.md` §8–9.
 - Hook into the mail interface (event hooking / frame integration) to receive queued payout payloads.
-- Send the **winner notification whisper** per `docs/SPEC.md` §9 (`/whisper <Winner_InGame_Nickname> …` Russian text); intercept **whisper/private messages** where the body matches **`!twgold`** (**case-insensitive**, no extra text) and **print `[MGM_ACCEPT:UUID]`** to chat so Desktop can read **`WoWChatLog.txt`** (**`Sent`** still requires **`[MGM_CONFIRM:UUID]`** per `docs/SPEC.md` §9–10).
+- Send the **winner notification whisper** per `docs/SPEC.md` §9 (`/whisper <Winner_InGame_Nickname> …` Russian text); intercept **whisper/private messages** where the body matches **`!twgold`** (**case-insensitive**, no extra text) and **print `[MGM_ACCEPT:UUID]`** to chat so Desktop can read **`WoWChatLog.txt`**. On **`MAIL_SEND_SUCCESS`** for an **MGM-armed** send only, **print `[MGM_CONFIRM:UUID]`** and whisper the winner **`Награда отправлена тебе на почту, проверяй ящик!`**; **do not** run that path for unrelated manual mail (`docs/SPEC.md` §9–10).
 - Run **`/who`**, parse **3.3.5a**, emit **`[MGM_WHO]`** + JSON to the default chat frame so it appears in **`WoWChatLog.txt`** (`docs/SPEC.md` §8); support mail flow as before.
 - Provide a robust mail queue processor and UI population logic.
 - Keep code compatible with FrameXML and the 3.3.5a Lua environment constraints.
@@ -102,7 +102,7 @@ Responsibilities:
 
 Responsibilities:
 - Scaffold the Twitch Extension UI using React + Vite + TypeScript.
-- Implement **visual roulette** (fixed **5-minute** spin; **no** early spins) and copy that directs viewers to **`!twgold <CharacterName>`** in **stream chat** (subscriber); show a **countdown to the next spin** using **server-authoritative** schedule fields from the API (`docs/SPEC.md` §5, §11). **“You won”** UX and instructions that **in-game whisper reply `!twgold`** (case-insensitive) is **required** for consent before gold mail (`docs/SPEC.md` §9–11).
+- Implement **visual roulette** (fixed **5-minute** spin; **no** early spins) and copy that directs viewers to **`!twgold <CharacterName>`** in **stream chat** (subscriber); show a **countdown to the next spin** using **server-authoritative** schedule fields from the API (`docs/SPEC.md` §5, §11). **“You won”** UX and instructions that **in-game whisper reply `!twgold`** (case-insensitive) is **required** for consent before gold mail (`docs/SPEC.md` §9–11). Hardcode **`Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** for **`Sent`** panel copy and coordinate **broadcast chat** announcement per **`docs/SPEC.md` §11** (Backend Helix and/or Extension-triggered API).
 - Integrate with the expected Twitch auth/token mechanism for the API.
 - Align client-side types with shared DTOs produced/consumed by the backend.
 

@@ -31,6 +31,7 @@
   - Record **willingness to accept** when Desktop calls **`confirm-acceptance`** after observing **`[MGM_ACCEPT:UUID]`** in **`WoWChatLog.txt`** (addon printed after Lua whisper **`!twgold`** match; `docs/SPEC.md` §9–10).
   - Set **`Sent`** only when Desktop reports **`[MGM_CONFIRM:UUID]`** observed in **`WoWChatLog.txt`** (mail actually sent); then **remove winner from pool**.
 - **Expiration:** Hourly background job marks `Pending`/`InProgress` older than 24 hours as `Expired` (no reactivation).
+- **Twitch chat (reward sent):** When a payout becomes **`Sent`**, optionally post **`Награда отправлена персонажу <CharacterName> на почту, проверяй ящик!`** to **broadcast chat** via **Helix** (broadcaster token), matching the Extension’s hardcoded template (`docs/SPEC.md` §11).
 
 ## API Endpoints
 

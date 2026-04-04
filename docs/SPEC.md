@@ -36,7 +36,7 @@ This document is the **canonical implementation contract** for the MVP.
 - **Terminal payout**: a payout in `Sent`, `Failed`, `Cancelled`, or `Expired`.
 - **Acceptance to receive gold (WoW, normative)**: After receiving the **winner notification whisper** (above), the winner **must** send a **private in-game message** (whisper reply) whose text matches **`!twgold`** with **case-insensitive** comparison after trim (**no** other words or punctuation). The **addon** **must** detect this in **Lua** whisper events, then **print `[MGM_ACCEPT:UUID]`** to WoW chat so it appears in **`Logs\WoWChatLog.txt`**; the **Desktop** utility **must** tail that file and call **`POST .../confirm-acceptance`** (see §9–10). This is **not** proof that mail was sent (see **`[MGM_CONFIRM:UUID]`**). *Non-normative:* Twitch broadcast chat **`!twgold`** (no args) as an alternate acceptance path is **not** part of the MVP contract unless explicitly added later.
 - **Acceptance tag (`[MGM_ACCEPT:UUID]`)**: **Addon-emitted** line printed to WoW chat after a valid whisper **`!twgold`** is observed; **`UUID`** is the payout id. Used so **Desktop** can automate **`confirm-acceptance`** via the **same** `WoWChatLog.txt` watcher as **`[MGM_CONFIRM:UUID]`** (different regex). **Not** the same as parsing the user’s whisper text from the log — the addon **owns** the tag content.
-- **Mail-send confirmation (`[MGM_CONFIRM:UUID]`)**: after the streamer actually sends the in-game mail, the addon **must** print **`[MGM_CONFIRM:UUID]`** to WoW chat so it appears in **`Logs\WoWChatLog.txt`**. Desktop **must** parse this (required); **`Sent`** on the server is driven by this signal (see §10). **`Sent`** also **removes** the winner from the **participant pool** (see §5).
+- **Mail-send confirmation (`[MGM_CONFIRM:UUID]`)**: after an **MGM-armed** in-game mail send succeeds (**`MAIL_SEND_SUCCESS`**, §9), the addon **must** print **`[MGM_CONFIRM:UUID]`** to WoW chat so it appears in **`Logs\WoWChatLog.txt`**, then whisper the winner the **mail-completion** Russian line (§9). **Manual** non-MGM mail sends **must not** emit this tag. Desktop **must** parse **`[MGM_CONFIRM:UUID]`** (required); **`Sent`** on the server is driven by this signal (see §10). **`Sent`** also **removes** the winner from the **participant pool** (see §5).
 
 ## 2) MVP economics & anti-abuse rules
 
@@ -450,13 +450,31 @@ When invoked for a **`Pending`** payout, the **addon** **must** send the followi
 - The **`!twgold`** reply **does not** mean mail was sent; **`Sent`** still requires **`[MGM_CONFIRM:UUID]`** in the WoW log.
 - **Desktop** tails **`Logs\WoWChatLog.txt`** and calls **`POST .../confirm-acceptance`** when **`[MGM_ACCEPT:UUID]`** matches (§5, §10).
 
+### Mail-send detection (normative; MGM-tracked sends only)
+
+**Event:** WoW **3.3.5a** fires **`MAIL_SEND_SUCCESS`** when the client successfully submits an outgoing mail. **`MAIL_FAILED`** fires when the send does not complete.
+
+**MGM vs manual mail:** The addon **must** treat **`MAIL_SEND_SUCCESS`** as the trigger for the steps below **only** when the send was **armed** by the **MGM mail queue** flow (e.g. after **`ReceiveGold`** / **Prepare Mail** from this addon). If the streamer composes and sends mail **manually** in the default mailbox UI **without** going through that armed path, the addon **must not** emit **`[MGM_CONFIRM:UUID]`**, **must not** send the **mail-completion whisper** (below), and **must not** clear or advance MGM payout state for that send.
+
+**Arming (implementation guidance):** Set an internal **pending-send** context (payout id + winner **`CharacterName`**) immediately before the **`SendMail(...)`** call that corresponds to an MGM-prepared send (e.g. **secure hook** on **`SendMail`** / **`SendMailFrame_SendMail`** when the recipient matches the armed payout). Clear the armed state on **`MAIL_FAILED`**, **mailbox close**, or successful handling of **`MAIL_SEND_SUCCESS`**.
+
 ### Mail-send tag (normative; required for automated `Sent`)
 
-When the addon confirms the **actual in-game mail send** for a payout, it **must** print to chat (so it is captured in the chat log):
+When the addon handles **`MAIL_SEND_SUCCESS`** for an **MGM-armed** send, it **must**:
 
-- `[MGM_CONFIRM:UUID]`
+1. Print to the **default chat frame** (so it appears in **`Logs\WoWChatLog.txt`**):
 
-where `UUID` is the payout id. Desktop **must** monitor **`Logs\WoWChatLog.txt`** for this pattern and only then transition the payout to **`Sent`** on the server (see §3, §5).
+   - `[MGM_CONFIRM:UUID]`
+
+   where `UUID` is the payout id.
+
+2. **Then** whisper the **winner** (same **`CharacterName`** as the mailed recipient) the **exact** in-game text (single whisper; hardcoded in addon):
+
+   `Награда отправлена тебе на почту, проверяй ящик!`
+
+   Use **`SendChatMessage`** with **`"WHISPER"`** (or equivalent 3.3.5a API) so only the winner sees this line. This is **separate** from **`[MGM_CONFIRM:UUID]`** (which Desktop uses for **`Sent`**).
+
+Desktop **must** monitor **`Logs\WoWChatLog.txt`** for **`[MGM_CONFIRM:UUID]`** and only then transition the payout to **`Sent`** on the server (see §3, §5).
 
 ## 10) Chat log parsing & Desktop bridge (MVP)
 
@@ -468,7 +486,7 @@ where `UUID` is the payout id. Desktop **must** monitor **`Logs\WoWChatLog.txt`*
 |-----|------------------------|----------------|
 | **`[MGM_WHO]{...json}`** | After **`/who`** parse for the spin candidate (§8) | **`POST /api/roulette/verify-candidate`** with parsed JSON + **`X-MGM-ApiKey`** |
 | **`[MGM_ACCEPT:UUID]`** | After Lua detects valid whisper **`!twgold`** from the expected winner (§9) | **`POST /api/payouts/{id}/confirm-acceptance`** with **`{id}`** = UUID |
-| **`[MGM_CONFIRM:UUID]`** | After mail is actually sent (§9) | **`PATCH`** payout → **`Sent`** (or equivalent) |
+| **`[MGM_CONFIRM:UUID]`** | After **MGM-armed** mail succeeds (**`MAIL_SEND_SUCCESS`**, §9) | **`PATCH`** payout → **`Sent`** (or equivalent) |
 
 - **Important:** **`[MGM_ACCEPT:UUID]`** is **addon-emitted** after whisper events — Desktop is **not** parsing the user’s whisper body from the log. (Parsing raw whisper lines from **`WoWChatLog.txt`** remains **out of scope** for MVP.)
 
@@ -512,6 +530,8 @@ Behavior notes:
 - On match, Desktop updates Backend to **`Sent`** for that payout id.
 - Desktop should allow a manual override (**Mark as Sent**) only as an operator escape hatch if automation misses (policy decision).
 
+**Note:** The winner also receives an in-game **whisper** on **`MAIL_SEND_SUCCESS`** (MGM path only); that whisper **does not** replace **`[MGM_CONFIRM:UUID]`** for Desktop parsing.
+
 ## 11) Twitch Extension: visual roulette (MVP)
 
 - Display the **participant pool** (or count) and a **visual roulette** animation on each spin.
@@ -521,4 +541,14 @@ Behavior notes:
 - Present the **winner** to the streamer and **all viewers**. For the **winning viewer**, show **“You won”** as soon as the Backend reports their win (after online verification and **`Pending` payout** if applicable).
 - **Winner-facing** instructions **must** say: you will receive an **in-game whisper** (Russian text per §9) from the streamer’s character; **reply** to that whisper with **`!twgold`** (case-insensitive) to **consent**; then the streamer sends gold mail; **`Sent`** follows **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
 - After **`Sent`**, the winner is **removed** from the pool; they can **re-enter** with **`!twgold <CharacterName>`** in chat again.
+- **Twitch chat — reward sent announcement (normative copy):** All viewers **should** see one line in **broadcast stream chat** when a winning payout becomes **`Sent`** (gold mail confirmed). The **exact** template is ( **`WINNER_NAME`** = enrolled **`CharacterName`** for that payout):
+
+  `Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`
+
+  **Extension:** keep this string **hardcoded** in the Twitch Extension source (e.g. a small template helper) so in-panel copy and any client-triggered announcement stay aligned with **`docs/SPEC.md`**.
+
+  **Delivery (MVP options, pick one consistent stack):** (a) **Backend** posts the line via **Twitch Helix** `Send Chat Message` (or IRC) when it applies **`Sent`**, using the same template and **`CharacterName`** from the payout; Extension only mirrors the text in UI, **or** (b) Extension detects **`Sent`** via **`GET /api/payouts/my-last`** and calls a **Backend** endpoint that validates the caller and posts the same line. The chat line **must not** rely on the WoW addon (Twitch chat is outside the game client).
+
+  **Winner panel:** the winning viewer’s Extension UI **must** show equivalent confirmation (can reuse the same Russian template with **`WINNER_NAME`** = self).
+
 - On **overload** (**`429`**, **`503`**, network errors), follow **§5.1 Extension resilience** (backoff + Retry).

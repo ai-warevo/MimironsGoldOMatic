@@ -225,13 +225,18 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 | EL-104-01 | Banner | "YOU WON!" | pulse / static | none |
 | EL-104-02 | Static text | In **WoW**, reply to the streamer’s whisper with **`!twgold`** (exact) to consent | default | selectable copy |
 | EL-104-03 | Status chip | Pending / In progress / Sent | colors | poll-driven |
-| EL-104-04 | Static text | Explainer for Sent | default | none |
+| EL-104-04 | Static text | **Sent** explainer (Russian, normative in `docs/SPEC.md` §11) | default | none |
+| EL-104-05 | Static text (optional) | Note that stream chat may show the public announcement line | default | none |
 
 ### States
 
 - **Won — Pending:** After **in-game** notification whisper; waiting for viewer **`!twgold`** whisper reply (and streamer mail flow).
 - **In progress:** Desktop `InProgress`; mail prep.
-- **Sent:** Mail confirmed via `[MGM_CONF…]` — show **"Gold mailed — check your mailbox"** (not "instant gold" on enroll).
+- **Sent:** Mail confirmed via **`[MGM_CONFIRM:UUID]`** after **`MAIL_SEND_SUCCESS`** on the **MGM-armed** send (`docs/SPEC.md` §9). Show the **exact** Russian line (hardcoded in Extension), with **`WINNER_NAME`** = viewer’s enrolled **`CharacterName`**:
+
+  `Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`
+
+  The **same** template (same placeholder) is used for the **broadcast Twitch chat** announcement when **`Sent`** is applied (`docs/SPEC.md` §11). In WoW, the winner also receives a **private** completion whisper from the addon (different Russian text, §9).
 
 ### ASCII Visualization
 
@@ -253,7 +258,8 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 ╔══════════════════════════════════════════╗
 ║  You won — delivery complete!             ║
 ║  Status: [  Sent ✓  ]        EL-104-03    ║
-║  Thanks for playing fair, gnome friend.   ║
+║  Награда отправлена персонажу Norinn      ║
+║  на почту, проверяй ящик!    ← EL-104-04  ║
 ╚══════════════════════════════════════════╝
 ```
 

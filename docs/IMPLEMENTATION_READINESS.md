@@ -18,7 +18,8 @@ Canonical normative source remains `docs/SPEC.md`. For **user-visible** behavior
 | Confirmation semantics (`Sent`) | **`Sent`** requires **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** (Desktop log watcher → Backend) | `docs/SPEC.md`, `README.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`, `docs/ROADMAP.md` | Ready |
 | Desktop injection strategy | Primary `PostMessage`, fallback `SendInput` | `docs/SPEC.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/ROADMAP.md` | Ready |
 | Addon payload format | `UUID:CharacterName:GoldCopper;` | `docs/SPEC.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md` | Ready |
-| Mail-send tag format | **`[MGM_CONFIRM:UUID]`** — **required** in **`WoWChatLog.txt`** for automated **`Sent`** | `docs/SPEC.md`, `README.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`, `docs/ROADMAP.md` | Ready |
+| Mail-send tag format | **`[MGM_CONFIRM:UUID]`** on **`MAIL_SEND_SUCCESS`** (MGM-armed send only) + winner whisper **`Награда отправлена тебе на почту, проверяй ящик!`** | `docs/SPEC.md`, `README.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`, `docs/ROADMAP.md` | Ready |
+| Twitch chat reward-sent line | **`Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** (Extension hardcodes; Helix/EBS per §11) | `docs/SPEC.md` §11, `docs/UI_SPEC.md` UI-104, `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md` | Ready |
 | Acceptance tag format | **`[MGM_ACCEPT:UUID]`** — **required** in **`WoWChatLog.txt`** for automated **`confirm-acceptance`** | `docs/SPEC.md` §9–10, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md` | Ready |
 | Roulette behavior | Visual roulette; **5-minute** spin only (**no** early spin); **min 1** participant; **non-winners stay**; **winners removed on `Sent`**; **`/who`** before finalize; **Twitch chat** enroll **`!twgold <CharacterName>`**; **WoW** winner whisper + reply **`!twgold`**; **subscriber**-gated | `docs/SPEC.md`, `README.md`, `docs/ROADMAP.md`, `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md` | Ready |
 | Chat prefix & whisper consent | Enrollment **`!twgold`** prefix **case-insensitive**; WoW whisper **`!twgold`** consent **case-insensitive** (after trim) | `docs/SPEC.md` §1, §5, §9–11; `README.md`; `AGENTS.md` | Ready |
@@ -46,9 +47,9 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 | MVP-0 | `src/MimironsGoldOMatic.sln` + project skeletons | **No solution file** yet; projects exist as separate folders under `src/`. |
 | MVP-1 | Shared contracts + validation | **Partial:** `PayoutStatus`, `PayoutDto`, `CreatePayoutRequest`, FluentValidation validators (see `docs/MimironsGoldOMatic.Shared/ReadME.md`). |
 | MVP-2 | Backend API + Marten/PostgreSQL | **Scaffold only:** template `Program.cs` (sample weather endpoint); no payout/roulette routes. |
-| MVP-3 | WoW addon | **Scaffold only:** `.toc` + nearly empty `MimironsGoldOMatic.lua`. |
+| MVP-3 | WoW addon | **Partial:** `.toc` + Lua stubs for queue, **`MAIL_SEND_SUCCESS`** / **`MAIL_FAILED`**, **`[MGM_CONFIRM]`**, completion whisper, **`SendMail`** hook (full **MAIL_SHOW** UI and **`NotifyWinnerWhisper`** still TODO). |
 | MVP-4 | WPF Desktop + WinAPI | **Scaffold only:** default `MainWindow`; no API client or injection. |
-| MVP-5 | Twitch Extension UI | **Scaffold only:** default Vite/React `App.tsx`; no Twitch helper, roulette, or `UI-101–106` yet. |
+| MVP-5 | Twitch Extension UI | **Scaffold only:** default Vite/React `App.tsx`; normative **`Sent`** chat string helper in `src/rewardSentAnnouncement.ts`; no Twitch helper, roulette, or `UI-101–106` yet. |
 | MVP-6 | E2E demo + tests | **Not started** (depends on MVP-2…5 + solution file). |
 
 ## Residual implementation risks (not contradictions)

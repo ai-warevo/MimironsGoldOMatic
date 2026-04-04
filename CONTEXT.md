@@ -32,7 +32,7 @@ Product **specs and scenarios** are aligned in docs; **executable code** is most
 - **WoW targeting (MVP)**: Desktop targets the **foreground** `WoW.exe` process; process picker is roadmap.
 - **Confirmation**:
   - **Acceptance (willing to receive gold)**: After the **winner notification whisper**, the winner whispers **`!twgold`** in WoW → addon prints **`[MGM_ACCEPT:UUID]`** → **`WoWChatLog.txt`** → Desktop → **Backend** **`confirm-acceptance`** (not **`Sent`**).
-  - **Mail sent (required for `Sent`)**: **`[MGM_CONFIRM:UUID]`** in **`Logs\WoWChatLog.txt`**; Desktop **must** parse it and then set **`Sent`** on the **Backend** (see `docs/SPEC.md`).
+  - **Mail sent (required for `Sent`)**: **`MAIL_SEND_SUCCESS`** on **MGM-armed** send → addon prints **`[MGM_CONFIRM:UUID]`** in **`Logs\WoWChatLog.txt`** and whispers the winner **`Награда отправлена тебе на почту, проверяй ящик!`**; Desktop **must** parse **`[MGM_CONFIRM:UUID]`** → **`Sent`**. **Twitch chat** may show **`Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** (`docs/SPEC.md` §9–11).
   - **Fallback**: Desktop manual **Mark as Sent** if policy allows.
 
 ## Primary Data Flow (conceptual)
