@@ -35,6 +35,8 @@ Each step is executed with a checklist supplied by the project owner (often inli
   - `MimironsGoldOMatic.TwitchExtension`
   - `MimironsGoldOMatic.WoWAddon`
 
+**Status — implemented:** `MimironsGoldOMatic.slnx` lists the three .NET projects. `MimironsGoldOMatic.TwitchExtension` (Vite/React) and `MimironsGoldOMatic.WoWAddon` (30300 addon) exist under `src/` with their own tooling and are **not** MSBuild projects in the solution file (see `docs/IMPLEMENTATION_READINESS.md`).
+
 Spec links:
 
 - `docs/SPEC.md#4-identity-idempotency-and-dtos`
@@ -46,6 +48,8 @@ Spec links:
 - Define `PayoutDto` fields (MVP):
   - `Id`, `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount` (fixed 1,000g), `EnrollmentRequestId`, `Status`, `CreatedAt`, `IsRewardSentAnnouncedToChat` (Helix §11 read-model flag; `docs/SPEC.md` §6)
 - Add shared validation for `CharacterName`
+
+**Status — implemented:** `src/MimironsGoldOMatic.Shared` (.NET 10), namespace `MimironsGoldOMatic.Shared`: `PayoutStatus`, `PayoutDto` (incl. `IsRewardSentAnnouncedToChat`), `CreatePayoutRequest`, `PayoutEconomics.MvpWinningPayoutGold` (1,000g per SPEC §2), `CharacterNameRules` + FluentValidation (`PayoutDtoValidator`, `CreatePayoutRequestValidator`). Details: `docs/MimironsGoldOMatic.Shared/ReadME.md`.
 
 Spec links:
 
