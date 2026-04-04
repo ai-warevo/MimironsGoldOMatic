@@ -32,13 +32,14 @@
   - `string EnrollmentRequestId` (links payout to pool enrollment / audit trail where stored)
   - `PayoutStatus Status`
   - `DateTime CreatedAt`
+  - `bool IsRewardSentAnnouncedToChat` (read/API shape; Helix §11 at-most-once flag per `docs/SPEC.md` §6 — defaults to `false` in Shared)
 - **CreatePayoutRequest (Record):** Used by Twitch Extension to **join the participant pool**:
   - `string CharacterName`
   - `string EnrollmentRequestId`
 
 ## Validation / Logic
 
-Contains shared validation for **`CharacterName`**: **length 2–12** and **letters only** (`char.IsLetter`), plus exclusion of payload-unsafe patterns where applicable. **`docs/SPEC.md` §4** further restricts allowed scripts to **Latin or Cyrillic** Unicode letters; Shared may accept other Unicode letters until Backend or a stricter validator narrows scripts.
+Contains shared validation for **`CharacterName`**: **length 2–12** (after trim) and **Unicode letters in Latin or Cyrillic script blocks only** (no digits, punctuation, or spaces), implemented in **`CharacterNameRules`** and FluentValidation (`docs/SPEC.md` §4).
 
 MVP business rules like fixed gold amount, lifetime caps, and concurrency limits are enforced by the Backend.
 

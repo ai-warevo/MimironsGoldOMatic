@@ -44,7 +44,7 @@ Spec links:
 - Define `PayoutStatus`: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`
 - Define `CreatePayoutRequest`: `CharacterName`, `EnrollmentRequestId`
 - Define `PayoutDto` fields (MVP):
-  - `Id`, `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount` (fixed 1,000g), `EnrollmentRequestId`, `Status`, `CreatedAt`
+  - `Id`, `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount` (fixed 1,000g), `EnrollmentRequestId`, `Status`, `CreatedAt`, `IsRewardSentAnnouncedToChat` (Helix §11 read-model flag; `docs/SPEC.md` §6)
 - Add shared validation for `CharacterName`
 
 Spec links:
@@ -60,7 +60,7 @@ Acting as **[EBS/API Expert]**:
 - Initialize the .NET 10 Class Library project `MimironsGoldOMatic.Shared` inside `/src`.
 - Implement the shared contracts **as documented**:
   - `PayoutStatus` enum including: `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`
-  - `PayoutDto` record including: `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount`, `EnrollmentRequestId`, `Status`, `CreatedAt`
+  - `PayoutDto` record including: `Id`, `TwitchUserId`, `TwitchDisplayName`, `CharacterName`, `GoldAmount`, `EnrollmentRequestId`, `Status`, `CreatedAt`, `IsRewardSentAnnouncedToChat`
   - `CreatePayoutRequest` record including: `CharacterName`, `EnrollmentRequestId`
 - Ensure the namespace is `MimironsGoldOMatic.Shared`.
 

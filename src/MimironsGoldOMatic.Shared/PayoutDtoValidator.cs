@@ -11,9 +11,9 @@ public sealed class PayoutDtoValidator : AbstractValidator<PayoutDto>
         RuleFor(x => x.TwitchDisplayName).NotEmpty();
         RuleFor(x => x.CharacterName)
             .NotEmpty()
-            .Length(2, 12)
-            .Must(s => s.All(char.IsLetter))
-            .WithMessage("CharacterName must be 2–12 letters (see docs/SPEC.md §4 for Latin/Cyrillic script rules).");
+            .Must(CharacterNameRules.IsValid)
+            .WithMessage(
+                "CharacterName must be 2–12 Unicode letters in Latin or Cyrillic scripts only (docs/SPEC.md §4).");
         RuleFor(x => x.GoldAmount).GreaterThan(0);
         RuleFor(x => x.EnrollmentRequestId).NotEmpty();
     }

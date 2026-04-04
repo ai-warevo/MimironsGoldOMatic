@@ -36,7 +36,7 @@ Canonical normative source remains `docs/SPEC.md`. For **user-visible** behavior
 | MediatR placement | Handlers in **Backend** only; **Shared** = contracts/validation | `docs/MimironsGoldOMatic.Shared/ReadME.md` | Ready |
 | MVP-5 Extension scope | **Viewer** UI only; **no** UI-201–204 | `docs/ROADMAP.md`, `docs/UI_SPEC.md` | Ready |
 | Shared DTO field names | `PayoutDto` / `CreatePayoutRequest` use **`EnrollmentRequestId`** (idempotency for Extension claim path) per `docs/SPEC.md` §4 | `docs/SPEC.md`, `docs/MimironsGoldOMatic.Shared/ReadME.md`, `src/MimironsGoldOMatic.Shared` | Ready |
-| Shared `CharacterName` validation | **2–12** characters, letters only in Shared validators; **Latin/Cyrillic-only** tightening remains documented in `docs/SPEC.md` §4 (may add script-specific checks in Backend) | `docs/SPEC.md` §4, `docs/MimironsGoldOMatic.Shared/ReadME.md` | Partial (letters-only wider than Latin/Cyrillic) |
+| Shared `CharacterName` validation | **2–12** characters (after trim), **Latin/Cyrillic script letters only** in Shared (`CharacterNameRules` + FluentValidation) | `docs/SPEC.md` §4, `docs/MimironsGoldOMatic.Shared/ReadME.md` | Ready |
 
 ## Source code parity (MVP track)
 
@@ -44,8 +44,8 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 
 | MVP step | Roadmap intent | Current `src/` state |
 |---|---|---|
-| MVP-0 | `src/MimironsGoldOMatic.slnx` + project skeletons | **Partial:** `MimironsGoldOMatic.slnx` includes Shared, Backend, Desktop; add WoW/Twitch projects when scaffolded. |
-| MVP-1 | Shared contracts + validation | **Partial:** `PayoutStatus`, `PayoutDto`, `CreatePayoutRequest`, FluentValidation validators (see `docs/MimironsGoldOMatic.Shared/ReadME.md`). |
+| MVP-0 | `src/MimironsGoldOMatic.slnx` + project skeletons | **Complete (skeleton):** `slnx` lists the three .NET projects; `src/MimironsGoldOMatic.WoWAddon` and `src/MimironsGoldOMatic.TwitchExtension` exist as non-MSBuild trees (per `docs/ROADMAP.md` MVP-0 — not part of the .NET solution file). |
+| MVP-1 | Shared contracts + validation | **Complete:** `PayoutStatus`, `PayoutDto` (incl. `IsRewardSentAnnouncedToChat`), `CreatePayoutRequest`, `CharacterNameRules`, FluentValidation validators (see `docs/MimironsGoldOMatic.Shared/ReadME.md`). |
 | MVP-2 | Backend API + Marten/PostgreSQL | **Scaffold only:** template `Program.cs` (sample weather endpoint); no payout/roulette routes. |
 | MVP-3 | WoW addon | **Partial:** `.toc` + Lua stubs for queue, **`MAIL_SEND_SUCCESS`** / **`MAIL_FAILED`**, **`[MGM_CONFIRM]`**, completion whisper, **`SendMail`** hook (full **MAIL_SHOW** UI and **`NotifyWinnerWhisper`** still TODO). |
 | MVP-4 | WPF Desktop + WinAPI | **Scaffold only:** default `MainWindow`; no API client or injection. |
@@ -61,7 +61,7 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
   - WinAPI timing/retry on real **3.3.5a** clients;
   - validate addon **`[MGM_WHO]`** / **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`** visibility in **`WoWChatLog.txt`** on target clients;
   - **idempotent** **`confirm-acceptance`** / **`verify-candidate`** under log replay;
-  - optional: tighten **`CharacterName`** validation to **Latin + Cyrillic scripts only** beyond `char.IsLetter` in Shared.
+  - optional: extend **`CharacterName`** script ranges if product adds non–Latin/Cyrillic realm naming rules.
 
 ## Go/No-Go
 

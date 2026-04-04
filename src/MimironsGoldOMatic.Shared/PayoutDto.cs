@@ -8,4 +8,5 @@ public sealed record PayoutDto(
     long GoldAmount,
     string EnrollmentRequestId,
     PayoutStatus Status,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    bool IsRewardSentAnnouncedToChat = false);
