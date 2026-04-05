@@ -1,14 +1,13 @@
-using MimironsGoldOMatic.Backend.Api;
 using MimironsGoldOMatic.Backend.Application;
 using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Tests.Support;
+using MimironsGoldOMatic.Backend.UnitTests.Support;
 using MimironsGoldOMatic.Shared;
 using Marten;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.Tests;
+namespace MimironsGoldOMatic.Backend.UnitTests;
 
 [Collection(nameof(PostgresCollection))]
 [Trait("Category", "Integration")]
@@ -34,7 +33,7 @@ public sealed class PostClaimRulesIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task PostClaim_same_enrollment_id_is_idempotent_201_then_200()
+    public async Task Should_Return201Then200_WhenSameEnrollmentId_Idempotent()
     {
         var m = _services!.GetRequiredService<IMediator>();
         var body = new CreatePayoutRequest("Abcd", "enroll-idem-1");
@@ -48,7 +47,7 @@ public sealed class PostClaimRulesIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task PostClaim_enrollment_id_bound_to_first_twitch_user()
+    public async Task Should_Return409_WhenEnrollmentIdBoundToDifferentTwitchUser()
     {
         var m = _services!.GetRequiredService<IMediator>();
         var body = new CreatePayoutRequest("Abcd", "enroll-shared-key");
@@ -59,7 +58,7 @@ public sealed class PostClaimRulesIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task PostClaim_rejects_when_pending_payout_exists_for_user()
+    public async Task Should_Return409_WhenPendingPayoutExistsForUser()
     {
         var sp = _services!;
         var store = sp.GetRequiredService<IDocumentStore>();
@@ -88,7 +87,7 @@ public sealed class PostClaimRulesIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task PostClaim_rejects_when_lifetime_sent_cap_would_be_exceeded()
+    public async Task Should_Return409_WhenLifetimeSentCapWouldBeExceeded()
     {
         var sp = _services!;
         var store = sp.GetRequiredService<IDocumentStore>();

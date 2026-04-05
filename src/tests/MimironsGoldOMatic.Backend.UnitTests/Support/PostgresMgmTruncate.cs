@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace MimironsGoldOMatic.Backend.Tests.Support;
+namespace MimironsGoldOMatic.Backend.UnitTests.Support;
 
 /// <summary>Clears all tables in the Marten <c>mgm</c> schema between tests (Docker PostgreSQL).</summary>
 internal static class PostgresMgmTruncate

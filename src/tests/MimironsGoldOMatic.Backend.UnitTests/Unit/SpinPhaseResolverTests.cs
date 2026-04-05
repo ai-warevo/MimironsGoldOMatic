@@ -2,8 +2,9 @@ using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.Tests.Unit;
+namespace MimironsGoldOMatic.Backend.UnitTests.Unit;
 
+/// <summary>Spin phase FSM from pool + spin documents and wall clock (UTC).</summary>
 [Trait("Category", "Unit")]
 public sealed class SpinPhaseResolverTests
 {
@@ -30,14 +31,14 @@ public sealed class SpinPhaseResolverTests
     };
 
     [Fact]
-    public void Resolve_idle_when_pool_was_empty_at_cycle_start()
+    public void Should_ReturnIdle_WhenPoolWasEmptyAtCycleStart()
     {
         var phase = SpinPhaseResolver.Resolve(TSelect.AddMinutes(1), PoolNonEmpty(), Spin(poolWasEmptyAtStart: true, TSelect));
         Assert.Equal("idle", phase);
     }
 
     [Fact]
-    public void Resolve_idle_when_pool_has_no_members()
+    public void Should_ReturnIdle_WhenPoolHasNoMembers()
     {
         var pool = new PoolDocument { Id = EbsIds.PoolDocumentId, Members = [] };
         var phase = SpinPhaseResolver.Resolve(TSelect.AddMinutes(1), pool, Spin(poolWasEmptyAtStart: false, TSelect));
@@ -45,29 +46,45 @@ public sealed class SpinPhaseResolverTests
     }
 
     [Fact]
-    public void Resolve_collecting_before_selection_window()
+    public void Should_ReturnCollecting_WhenBeforeSelectionInstant()
     {
         var phase = SpinPhaseResolver.Resolve(TSelect.AddSeconds(-1), PoolNonEmpty(), Spin(false, null));
         Assert.Equal("collecting", phase);
     }
 
+    /// <summary>Boundary: at <c>tSelect</c> exactly, collecting window has closed.</summary>
     [Fact]
-    public void Resolve_completed_when_past_selection_window_but_no_candidate_yet()
+    public void Should_ReturnCompleted_WhenAtSelectionInstantAndNoCandidateYet()
+    {
+        var phase = SpinPhaseResolver.Resolve(TSelect, PoolNonEmpty(), Spin(false, null));
+        Assert.Equal("completed", phase);
+    }
+
+    [Fact]
+    public void Should_ReturnCompleted_WhenPastSelectionWindowButNoCandidateYet()
     {
         var phase = SpinPhaseResolver.Resolve(TSelect.AddSeconds(10), PoolNonEmpty(), Spin(false, null));
         Assert.Equal("completed", phase);
     }
 
     [Fact]
-    public void Resolve_spinning_after_candidate_until_verify_start()
+    public void Should_ReturnSpinning_AfterCandidateUntilVerifyStart()
     {
         var picked = TSelect.AddSeconds(5);
         var phase = SpinPhaseResolver.Resolve(TVerifyStart.AddSeconds(-1), PoolNonEmpty(), Spin(false, picked));
         Assert.Equal("spinning", phase);
     }
 
+    /// <summary>Boundary: at verify start instant, phase becomes verification (not spinning).</summary>
     [Fact]
-    public void Resolve_verification_from_verify_start_until_deadline()
+    public void Should_ReturnVerification_WhenExactlyAtVerifyStart()
+    {
+        var picked = TSelect.AddSeconds(5);
+        Assert.Equal("verification", SpinPhaseResolver.Resolve(TVerifyStart, PoolNonEmpty(), Spin(false, picked)));
+    }
+
+    [Fact]
+    public void Should_ReturnVerification_FromVerifyStartUntilDeadline()
     {
         var picked = TSelect.AddSeconds(5);
         Assert.Equal("verification",
@@ -76,11 +93,29 @@ public sealed class SpinPhaseResolverTests
             SpinPhaseResolver.Resolve(TCycleEnd.AddSeconds(1), PoolNonEmpty(), Spin(false, picked)));
     }
 
+    /// <summary>Boundary: after cycle end but before verification grace deadline, still verification.</summary>
     [Fact]
-    public void Resolve_completed_after_verification_deadline()
+    public void Should_ReturnVerification_WhenAfterCycleEndButBeforeVerificationDeadline()
+    {
+        var picked = TSelect.AddSeconds(5);
+        var phase = SpinPhaseResolver.Resolve(TCycleEnd, PoolNonEmpty(), Spin(false, picked));
+        Assert.Equal("verification", phase);
+    }
+
+    [Fact]
+    public void Should_ReturnCompleted_AfterVerificationDeadline()
     {
         var picked = TSelect.AddSeconds(5);
         var phase = SpinPhaseResolver.Resolve(TVerifyDeadline.AddSeconds(1), PoolNonEmpty(), Spin(false, picked));
         Assert.Equal("completed", phase);
+    }
+
+    /// <summary>Non-UTC input is normalized to UTC kind for comparisons.</summary>
+    [Fact]
+    public void Should_NormalizeUnspecifiedKind_ToUtcForComparison()
+    {
+        var picked = TSelect.AddSeconds(5);
+        var localLike = DateTime.SpecifyKind(TVerifyStart.AddSeconds(1), DateTimeKind.Unspecified);
+        Assert.Equal("verification", SpinPhaseResolver.Resolve(localLike, PoolNonEmpty(), Spin(false, picked)));
     }
 }

@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Shared",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.csproj", "{79813A28-D2D9-4CCE-8793-9775A907C38A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Tests", "MimironsGoldOMatic.Backend.Tests\MimironsGoldOMatic.Backend.Tests.csproj", "{983D718F-5AE1-49AA-A8AE-ECE6D334056E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.UnitTests", "tests\MimironsGoldOMatic.Backend.UnitTests\MimironsGoldOMatic.Backend.UnitTests.csproj", "{983D718F-5AE1-49AA-A8AE-ECE6D334056E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Desktop", "MimironsGoldOMatic.Desktop\MimironsGoldOMatic.Desktop.csproj", "{1FDE405C-F07A-463B-B014-4EF8F6CB1BB9}"
 EndProject

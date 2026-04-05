@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <!-- Entrypoint and source-generated OpenAPI helpers are not unit-tested here; core logic lives under Services/Application/Controllers. -->
+          <ExcludeByFile>**/Program.cs,**/OpenApiXmlCommentSupport.generated.cs</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

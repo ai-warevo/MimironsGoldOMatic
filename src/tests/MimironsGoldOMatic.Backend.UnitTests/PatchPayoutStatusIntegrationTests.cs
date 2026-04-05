@@ -1,13 +1,13 @@
 using MimironsGoldOMatic.Backend.Application;
 using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Tests.Support;
+using MimironsGoldOMatic.Backend.UnitTests.Support;
 using MimironsGoldOMatic.Shared;
 using Marten;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.Tests;
+namespace MimironsGoldOMatic.Backend.UnitTests;
 
 [Collection(nameof(PostgresCollection))]
 [Trait("Category", "Integration")]
@@ -33,7 +33,7 @@ public sealed class PatchPayoutStatusIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Patch_to_Sent_removes_winner_from_pool()
+    public async Task Should_RemoveWinnerFromPool_WhenPatchToSent()
     {
         var sp = _services!;
         var store = sp.GetRequiredService<IDocumentStore>();
@@ -72,5 +72,61 @@ public sealed class PatchPayoutStatusIntegrationTests : IAsyncLifetime
         var pool = await q.LoadAsync<PoolDocument>(EbsIds.PoolDocumentId, CancellationToken.None);
         Assert.NotNull(pool);
         Assert.DoesNotContain(pool.Members, x => x.TwitchUserId == uid);
+    }
+
+    [Fact]
+    public async Task Should_Return409_WhenDisallowedPendingToSent()
+    {
+        var sp = _services!;
+        var store = sp.GetRequiredService<IDocumentStore>();
+        var payoutId = Guid.NewGuid();
+        await using (var s = store.LightweightSession())
+        {
+            s.Store(new PayoutReadDocument
+            {
+                Id = payoutId,
+                TwitchUserId = "u",
+                TwitchDisplayName = "d",
+                CharacterName = "Abcd",
+                GoldAmount = PayoutEconomics.MvpWinningPayoutGold,
+                EnrollmentRequestId = "spin:x",
+                Status = PayoutStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+            });
+            await s.SaveChangesAsync();
+        }
+
+        var m = sp.GetRequiredService<IMediator>();
+        var r = await m.Send(new PatchPayoutStatusCommand(payoutId, PayoutStatus.Sent));
+        Assert.False(r.Ok);
+        Assert.Equal(409, r.StatusCode);
+    }
+
+    [Fact]
+    public async Task Should_AllowInProgressToCancelled()
+    {
+        var sp = _services!;
+        var store = sp.GetRequiredService<IDocumentStore>();
+        var payoutId = Guid.NewGuid();
+        await using (var s = store.LightweightSession())
+        {
+            s.Store(new PayoutReadDocument
+            {
+                Id = payoutId,
+                TwitchUserId = "u",
+                TwitchDisplayName = "d",
+                CharacterName = "Abcd",
+                GoldAmount = PayoutEconomics.MvpWinningPayoutGold,
+                EnrollmentRequestId = "spin:x",
+                Status = PayoutStatus.InProgress,
+                CreatedAt = DateTime.UtcNow,
+            });
+            await s.SaveChangesAsync();
+        }
+
+        var m = sp.GetRequiredService<IMediator>();
+        var r = await m.Send(new PatchPayoutStatusCommand(payoutId, PayoutStatus.Cancelled));
+        Assert.True(r.Ok);
+        Assert.Equal(PayoutStatus.Cancelled, r.Value!.Status);
     }
 }

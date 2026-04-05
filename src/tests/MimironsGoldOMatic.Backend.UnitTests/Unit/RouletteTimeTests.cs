@@ -1,15 +1,16 @@
 using MimironsGoldOMatic.Backend.Services;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.Tests.Unit;
+namespace MimironsGoldOMatic.Backend.UnitTests.Unit;
 
+/// <summary>Five-minute roulette grid anchored to Unix epoch (UTC).</summary>
 [Trait("Category", "Unit")]
 public sealed class RouletteTimeTests
 {
     private static readonly DateTime Epoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public void FloorToFiveMinuteUtc_idempotent()
+    public void Should_BeIdempotent_WhenFlooringToFiveMinuteUtc()
     {
         var t = new DateTime(2026, 4, 5, 14, 37, 22, DateTimeKind.Utc);
         var f = RouletteTime.FloorToFiveMinuteUtc(t);
@@ -17,7 +18,7 @@ public sealed class RouletteTimeTests
     }
 
     [Fact]
-    public void FloorToFiveMinuteUtc_aligns_to_epoch_based_five_minute_grid()
+    public void Should_AlignToEpochBasedFiveMinuteGrid_WhenFlooring()
     {
         var onGrid = Epoch.AddMinutes(500);
         Assert.Equal(onGrid, RouletteTime.FloorToFiveMinuteUtc(onGrid));
@@ -26,7 +27,7 @@ public sealed class RouletteTimeTests
     }
 
     [Fact]
-    public void NextSpinBoundaryUtc_is_strictly_after_input_and_on_grid()
+    public void Should_ReturnStrictlyAfterInput_WhenNextSpinBoundaryUtc()
     {
         var t = new DateTime(2026, 4, 5, 14, 37, 22, DateTimeKind.Utc);
         var next = RouletteTime.NextSpinBoundaryUtc(t);
@@ -36,10 +37,18 @@ public sealed class RouletteTimeTests
     }
 
     [Fact]
-    public void NextSpinBoundaryUtc_when_exactly_on_boundary_returns_next_block()
+    public void Should_ReturnNextBlock_WhenInputExactlyOnBoundary()
     {
         var onGrid = Epoch.AddMinutes(1000);
         var next = RouletteTime.NextSpinBoundaryUtc(onGrid);
         Assert.Equal(onGrid.AddMinutes(5), next);
+    }
+
+    /// <summary>Constants used by spin phase and synchronizer must stay in sync with product spec (4m collect, 30s spin).</summary>
+    [Fact]
+    public void Should_MatchSpecDurations_ForCollectingAndSpinningSeconds()
+    {
+        Assert.Equal(4 * 60, RouletteTime.CollectingSeconds);
+        Assert.Equal(30, RouletteTime.SpinningSeconds);
     }
 }

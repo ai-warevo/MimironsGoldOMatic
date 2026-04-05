@@ -2,14 +2,14 @@ using MimironsGoldOMatic.Backend.Api;
 using MimironsGoldOMatic.Backend.Application;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Backend.Tests.Support;
+using MimironsGoldOMatic.Backend.UnitTests.Support;
 using MimironsGoldOMatic.Shared;
 using Marten;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.Tests;
+namespace MimironsGoldOMatic.Backend.UnitTests;
 
 [Collection(nameof(PostgresCollection))]
 [Trait("Category", "Integration")]
@@ -39,7 +39,7 @@ public sealed class RouletteVerifyCandidateIntegrationTests : IAsyncLifetime
     /// Uses a past pick instant with a verification deadline still in the future so the handler accepts real wall-clock time.
     /// </summary>
     [Fact]
-    public async Task Roulette_single_participant_verify_online_creates_pending_payout()
+    public async Task Should_CreatePendingPayout_WhenSingleParticipantVerifyOnline()
     {
         var sp = _services!;
         var store = sp.GetRequiredService<IDocumentStore>();

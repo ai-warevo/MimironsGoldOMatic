@@ -41,6 +41,7 @@ builder.Services.AddMarten(opts =>
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(PostClaimHandler).Assembly));
 
 builder.Services.AddSingleton<ChatEnrollmentService>();
+builder.Services.AddSingleton<IChatEnrollmentIngest>(sp => sp.GetRequiredService<ChatEnrollmentService>());
 builder.Services.AddSingleton<HelixChatService>();
 builder.Services.AddHostedService<RouletteSynchronizerHostedService>();
 builder.Services.AddHostedService<PayoutExpirationHostedService>();

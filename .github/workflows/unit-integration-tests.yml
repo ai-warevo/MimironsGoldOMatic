@@ -7,7 +7,7 @@
 #
 # TODO: Add proper unit tests for WoWAddon when available (Lua test runner / busted, or extracted pure-Lua modules).
 # TODO: Split Backend into parallel jobs (unit vs integration / filter matrix) if wall-clock time grows; today
-#       one job runs the full Backend.Tests suite (Testcontainers-backed integration tests included).
+#       one job runs the full Backend.UnitTests suite (Testcontainers-backed integration tests included).
 
 name: Unit and integration tests
 
@@ -39,7 +39,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj', 'tests/**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
@@ -47,8 +47,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p TestResults/backend
-          dotnet restore src/MimironsGoldOMatic.Backend.Tests/MimironsGoldOMatic.Backend.Tests.csproj
-          dotnet test src/MimironsGoldOMatic.Backend.Tests/ \
+          dotnet restore src/tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj
+          dotnet test src/tests/MimironsGoldOMatic.Backend.UnitTests/ \
             --configuration Release \
             --no-restore \
             --verbosity normal \
@@ -80,7 +80,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj', 'tests/**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 

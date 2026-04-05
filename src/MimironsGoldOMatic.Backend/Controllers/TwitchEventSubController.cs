@@ -13,7 +13,7 @@ namespace MimironsGoldOMatic.Backend.Controllers;
 [AllowAnonymous]
 [Route("api/twitch/eventsub")]
 public sealed class TwitchEventSubController(
-    ChatEnrollmentService chatEnrollment,
+    IChatEnrollmentIngest chatEnrollment,
     IOptions<TwitchOptions> twitch,
     ILogger<TwitchEventSubController> log)
     : ControllerBase
