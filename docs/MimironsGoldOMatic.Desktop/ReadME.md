@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 ## MimironsGoldOMatic.Desktop (WPF | Bridge between EBS & Lua addon)
 
 - **Repository status:** `src/MimironsGoldOMatic.Desktop` ships the **MVP-4** WPF utility: queue UI, **`HttpClient`** + Polly to the EBS ( **`X-MGM-ApiKey`** ), single-file tail of **`WoWChatLog.txt`**, and foreground **`WoW.exe`** injection per `docs/SPEC.md` §8–10. See `docs/IMPLEMENTATION_READINESS.md` for parity notes.

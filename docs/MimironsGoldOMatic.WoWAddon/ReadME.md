@@ -1,4 +1,6 @@
-## MimironsGoldOMatic.WoWAddon (Lua | Bridge between WPF Dekstop App & game)
+<!-- Updated: 2026-04-05 -->
+
+## MimironsGoldOMatic.WoWAddon (Lua | Bridge between WPF Desktop App & game)
 
 - **Repository status:** `src/MimironsGoldOMatic.WoWAddon` implements **MVP-3** per `docs/ROADMAP.md`: queue + **`MAIL_SHOW`** side panel, **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin`**, chat-log tags, and mail-send confirmation. **UI-405** debug frame and richer scroll UX are optional follow-ups (`docs/UI_SPEC.md`).
 - **UI spec:** `docs/UI_SPEC.md` §4 (addon **UI-401–405**: entry point, MAIL_SHOW panel, toasts, debug frame).

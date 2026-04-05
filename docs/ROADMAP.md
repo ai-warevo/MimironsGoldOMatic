@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 # Project Roadmap: Mimiron's Gold-o-Matic
 
 This roadmap reflects the **finalized MVP specification** agreed during design clarification.
@@ -10,7 +12,7 @@ Canonical implementation contracts live in:
 
 **UI/UX (screens, element inventory, flows):** Use [`docs/UI_SPEC.md`](UI_SPEC.md) for **UI-1xx–UI-4xx** panel definitions, Twitch panel constraints (~318px), WPF window layouts, and WoW 3.3.5a frame notes while implementing MVP-3 / MVP-4 / MVP-5.
 
-**Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today (solution file, scaffolds, partial Shared library), see [`docs/IMPLEMENTATION_READINESS.md`](IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*.
+**Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today versus **MVP-6** (tests, E2E harness) and residual risks, see [`docs/IMPLEMENTATION_READINESS.md`](IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*.
 
 ### Mandatory checklist (every roadmap step)
 
@@ -94,10 +96,10 @@ Acting as **[EBS/API Expert]**:
 - Background job:
   - Hourly: mark `Pending`/`InProgress` older than 24h as `Expired` (terminal, no reactivation)
 - Auth/security (MVP):
-  - Dev Rig-first for Twitch Extension auth (production JWT validation deferred)
-  - Desktop uses a pre-shared `ApiKey` (global static key in EBS config)
+  - Extension **Bearer** JWT: HS256 validation using **`Twitch:ExtensionSecret`** (base64); **`Twitch:ExtensionClientId`** as JWT **`aud`** when set. **Development** may use an empty secret with a fixed dev-derived key (`Program.cs`).
+  - Desktop uses a pre-shared **`Mgm:ApiKey`** (header **`X-MGM-ApiKey`**).
 
-**Status — implemented (code):** `src/MimironsGoldOMatic.Backend` — Marten + PostgreSQL (`ConnectionStrings:PostgreSQL`), MVP HTTP routes (Extension JWT + Desktop `X-MGM-ApiKey`), EventSub `channel.chat.message` at `POST /api/twitch/eventsub`, MediatR handlers, roulette sync + payout expiration hosted services, Helix §11 inline retry after `Sent`. Configure `Mgm`, `Twitch`, and Postgres before running; see `docs/MimironsGoldOMatic.Backend/ReadME.md` and `appsettings*.json`. Runtime E2E against Twitch/Helix not verified in CI.
+**Status — implemented (code):** `src/MimironsGoldOMatic.Backend` — Marten + PostgreSQL (`ConnectionStrings:PostgreSQL`), MVP HTTP routes (Extension JWT + Desktop `X-MGM-ApiKey`), EventSub `channel.chat.message` at `POST /api/twitch/eventsub`, MediatR handlers, roulette sync + payout expiration hosted services, Helix §11 inline retry after `Sent`, global rate limiter (EventSub exempt). Configure `Mgm`, `Twitch`, and Postgres before running; see `docs/MimironsGoldOMatic.Backend/ReadME.md` and `appsettings*.json`. Runtime E2E against Twitch/Helix not verified in CI.
 
 Spec links:
 
@@ -128,8 +130,8 @@ Acting as **[EBS/API Expert]**:
 - Implement expiration job:
   - Hourly background process transitions `Pending/InProgress` older than 24h to `Expired`
 - Implement MVP auth posture:
-  - Dev Rig-first for Twitch Extension auth
-  - Desktop requests must include a pre-shared `ApiKey`
+  - Extension JWT validation (**HS256** + optional **`aud`**); Dev Rig for real tokens
+  - Desktop requests must include pre-shared **`X-MGM-ApiKey`**
 
 ### MVP-3: WoW Addon (`MimironsGoldOMatic.WoWAddon`)
 
@@ -279,8 +281,8 @@ Acting as **[Senior Architect]**:
 
 ## Production milestone (Security hardening)
 
-- Full Twitch JWT validation (issuer/audience + public key rotation)
+- Harden Twitch JWT validation (**issuer** validation, secret rotation runbooks; current MVP uses **symmetric** Extension secret / HS256, not OIDC JWKS)
 - Secrets/config hardening across environments
 - Security review (abuse cases, logging hygiene)
-- CI pipelines for .NET and frontend builds/tests
+- CI pipelines for .NET and frontend builds/tests (as of 2026-04-05, `.github/workflows/` contains only a placeholder — add workflows when ready)
 

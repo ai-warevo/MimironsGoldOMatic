@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 # AI Agent Operational Protocol (AGENTS.md)
 
 ## 1. Role & Identity
@@ -58,9 +60,8 @@ You are an expert software engineer agent. Your goal is to execute tasks with hi
 ```
 
 ## 6. Testing Guidance
-- When behavior/functionality changes, run the repo test suite **after** `src/MimironsGoldOMatic.slnx` exists (`docs/ROADMAP.md` MVP-0, `docs/IMPLEMENTATION_READINESS.md`):
-  - `dotnet test src/MimironsGoldOMatic.slnx`
-- Until then, run `dotnet test` / `dotnet build` on individual projects under `src/` as needed. Manual and integration checks for MVP flows are cataloged in `docs/INTERACTION_SCENARIOS.md` (Part 2, TC-xxx).
+- When behavior/functionality changes, run **`dotnet test src/MimironsGoldOMatic.slnx`** once test projects exist (`docs/ROADMAP.md` MVP-6). Until automated tests land, run **`dotnet build src/MimironsGoldOMatic.slnx`** and targeted `dotnet test` on any new test projects. Manual and integration checks for MVP flows are cataloged in **`docs/INTERACTION_SCENARIOS.md`** (Part 2, TC-xxx).
+- **Backend (local):** In **Development**, OpenAPI is mapped via **`MapOpenApi`** (`Program.cs`) for contract inspection.
 
 ## 7. Tooling Preference
 - Prefer repo-aware tools for reading/searching (`ReadFile`, `Glob`, `rg`) instead of shell commands when possible.

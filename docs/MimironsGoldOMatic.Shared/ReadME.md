@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 ## MimironsGoldOMatic.Shared (.NET 10)
 
 - **Role:** Single source of truth for data structures used by both the **EBS** (`MimironsGoldOMatic.Backend`) and the Desktop app.
@@ -10,9 +12,9 @@
 - **Audit & Scalability:** Design for high availability and full transparency. A streamer should be able to see exactly when and why a payout failed or was delayed.
 
 ## Low-level Patterns
-- **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across **EBS** and Desktop.
-- **Primary Constructors:** Use C# 14 / .NET 10 primary constructors for all DTOs and Records.
-- **Result Pattern:** Use `FluentResults` for domain and service layer responses instead of throwing exceptions.
+- **FluentValidation:** Shared validators for `PayoutDto` and `CreatePayoutRequest`; **`CharacterNameRules`** for format checks.
+- **Primary constructors / records:** DTOs such as **`PayoutDto`**, **`CreatePayoutRequest`** are **`record`** types in this assembly.
+- **Application results:** The **EBS** uses **`HandlerResult<T>`** + **`ApiErrorDto`** in MediatR handlers — **not** part of this library.
 
 ## Core Entities
 

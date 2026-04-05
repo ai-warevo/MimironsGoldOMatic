@@ -1,8 +1,10 @@
+<!-- Updated: 2026-04-05 -->
+
 # Mimiron's Gold-o-Matic — Detailed UI/UX Specification
 
 This document describes **user-facing** interfaces for the MVP. It is **not** source code.
 
-**Implementation note:** The Twitch Extension, WPF app, and WoW addon **source trees** are still largely **scaffolds** (see `docs/IMPLEMENTATION_READINESS.md`). Panels **UI-101–106**, **UI-301–308**, and **UI-401–405** here are the **target** UX; shipping UIs must match this spec as they are built.
+**Implementation note:** **MVP-5** viewer panel (**UI-101–106**) is implemented in `src/MimironsGoldOMatic.TwitchExtension` (Zustand + EBS polling). **MVP-4** Desktop (**UI-301–308** subset) and **MVP-3** WoW addon (**UI-401–405** subset) are implemented under `src/`; compare `docs/IMPLEMENTATION_READINESS.md` for polish / optional items (e.g. UI-405). Broadcaster dashboard **UI-201–204** remains **post-MVP**.
 
 ## Related documentation
 

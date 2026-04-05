@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 # Setup overview
 
 This repository has two setup guides, depending on who you are:

@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 # Context
 
 ## High-Level Purpose
@@ -5,7 +7,7 @@ Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.
 
 ## Implementation status (short)
 
-Product **specs and scenarios** are aligned in docs; **executable code** is mostly scaffold. See `docs/IMPLEMENTATION_READINESS.md` for a per-layer snapshot (`src/` vs MVP-0…MVP-6).
+**MVP-1 … MVP-5** are implemented in **`src/`** (Shared, Backend, Desktop, Twitch Extension, WoW addon). **MVP-6** (test suite / E2E automation) and production packaging are still open. See **`docs/IMPLEMENTATION_READINESS.md`** for the matrix and residual risks.
 
 ## System Architecture
 `Twitch Extension -> EBS (MimironsGoldOMatic.Backend / ASP.NET Core) -> WPF App (WinAPI/PostMessage) -> WoW 3.3.5a Addon (Lua)`
@@ -29,8 +31,8 @@ Product **specs and scenarios** are aligned in docs; **executable code** is most
 - **Payout lifecycle statuses** (for the **current winner’s** payout): `Pending`, `InProgress`, `Sent`, `Failed`, `Cancelled`, `Expired`.
 - **Expiration**: **EBS** hourly job expires `Pending`/`InProgress` older than 24h; no reactivation.
 - **Security (MVP)**:
-  - **Twitch Extension JWT:** **Dev Rig** and **deployed** **EBS** use **real Twitch-issued** Extension tokens; the **EBS** **validates** them per Twitch (no long-term mock-JWT bypass; `docs/SPEC.md` deployment scope).
-  - Desktop-to-**EBS** uses a pre-shared `ApiKey` (locally trusted Desktop app).
+  - **Twitch Extension JWT:** **HS256** validation using **`Twitch:ExtensionSecret`** (base64); JWT **`aud`** checked when **`Twitch:ExtensionClientId`** is set. **Development** may run with empty secret + dev-derived key (`Program.cs`). **Issuer** / JWKS rotation: roadmap (`docs/ROADMAP.md`).
+  - Desktop-to-**EBS** uses pre-shared **`Mgm:ApiKey`** (**`X-MGM-ApiKey`** header).
 - **WoW targeting (MVP)**: Desktop targets the **foreground** `WoW.exe` process; process picker is roadmap.
 - **Confirmation**:
   - **Acceptance (willing to receive gold)**: After the **winner notification whisper**, the winner whispers **`!twgold`** in WoW → addon prints **`[MGM_ACCEPT:UUID]`** → **`WoWChatLog.txt`** → Desktop → **EBS** **`confirm-acceptance`** (not **`Sent`**).
@@ -50,8 +52,8 @@ Product **specs and scenarios** are aligned in docs; **executable code** is most
 - **UI/UX artifact:** `docs/UI_SPEC.md` describes every MVP screen (**UI-1xx–4xx**), element IDs, and navigation flow for Twitch Extension, WPF Desktop, and WoW addon.
 - Repo engineering workflow artifacts live under `docs/prompts/` (templates + logged task history).
 
-## Test Topology (when solution exists)
-- Primary verification: `dotnet test src/MimironsGoldOMatic.slnx`
+## Test Topology
+- **.NET:** `dotnet test src/MimironsGoldOMatic.slnx` (add test projects under MVP-6; today the solution builds application projects).
 - Frontend/backend integration checks should validate:
   - API contract compatibility with shared DTOs.
   - Payload chunking boundaries and WoW-injection command sizing.

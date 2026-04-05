@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 # Mimiron's Gold-o-Matic — Interaction Scenarios & Test Cases
 
 This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** **subscribers** join via **`!twgold <CharacterName>`** in **broadcast chat**; a **roulette** selects an **online-verified** winner; **WoW whisper reply `!twgold`** (after the **winner notification whisper**, `docs/SPEC.md` §9) leads the addon to print **`[MGM_ACCEPT:UUID]`** → Desktop **`confirm-acceptance`**; on **MGM-armed** mail **`MAIL_SEND_SUCCESS`**, the addon prints **`[MGM_CONFIRM:UUID]`** (→ **`Sent`**, pool removal) and whispers the winner the **mail-completion** Russian line; the **EBS** **must** **attempt** the §11 Twitch broadcast line via **Helix** after **`Sent`** (Extension hardcoded template matches).
@@ -10,7 +12,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 - **TC-xxx** rows are **verification targets** derived from `docs/SPEC.md` and related docs. They are **not** bound to existing automated tests until those suites exist.
 - **When to run:** after the relevant MVP slice ships (e.g. **EBS** routes for TC-003+; Desktop WinAPI for TC-005+; addon mail path for TC-007+).
-- **Automation:** once `src/MimironsGoldOMatic.slnx` exists, prefer `dotnet test` for **EBS**/Desktop/Shared integration tests; Extension and WoW flows may remain manual or harness-driven until dedicated test projects exist.
+- **Automation:** `src/MimironsGoldOMatic.slnx` exists — use **`dotnet test src/MimironsGoldOMatic.slnx`** for .NET projects when test projects are added; Extension and WoW flows may remain manual or harness-driven until dedicated test projects exist.
 - **Auth notes:** `docs/SPEC.md` requires **real Twitch-issued Extension JWTs** (Dev Rig and production). Tests must not rely on a long-term “mock JWT” bypass unless explicitly labeled as **temporary harness** and called out in test code.
 
 ---
@@ -109,6 +111,25 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ---
 
+### SC-005: Twitch EventSub delivers chat enrollment to the EBS
+
+**Trigger:** A **subscriber** (badge on **`channel.chat.message`**) types **`!twgold Norinn`** in **broadcast** chat; Twitch POSTs an EventSub notification to the EBS.
+
+**Actor:** Viewer, System (Twitch → EBS)
+
+**Preconditions:** EventSub subscription **`channel.chat.message`** is **enabled**; callback URL reaches **`POST /api/twitch/eventsub`**; **`Twitch:EventSubSecret`** matches (or empty for local dev only); **`ConnectionStrings:PostgreSQL`** available.
+
+**Flow:**
+
+1. [Twitch] → [Backend]: `POST /api/twitch/eventsub` with signed headers and JSON body (`subscription.type` = `channel.chat.message`, `event` contains `message_id`, `chatter_user_id`, `message.text`, `badges`).
+2. [Backend] → [Backend]: verify HMAC when secret configured; parse **`!twgold <CharacterName>`**; if **not** subscriber per badges → log / ignore; else dedupe by **`message_id`**, validate name, update **pool** (replace same **`TwitchUserId`** row per `docs/SPEC.md` §5).
+
+**Postconditions:** Pool row exists for viewer; **no** `Pending` payout until a spin + **`verify-candidate`** path succeeds.
+
+**Failure exits:** wrong signature → **`401`**; malformed payload → ignored or minimal response; duplicate **`message_id`** → no-op; name taken by another user → silent reject (no pool change); active payout / lifetime cap → silent reject.
+
+---
+
 ### SC-010: API receives enrollment / spin updates but WPF Desktop App is offline
 
 **Trigger:** Viewers enroll; Backend creates `Pending` winner payout; Desktop not running.
@@ -119,7 +140,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Flow:**
 
-1. [TwitchExtension] → [Backend]: enroll + spin flows complete → `Pending` payout exists
+1. [Viewer] → [Twitch Chat] / [System]: enrollment + scheduled spin complete → **`Pending`** payout exists on **EBS** (Extension may only poll for status — not required to create the payout).
 2. [Backend] → [Desktop]: **no** poll — queue grows in DB only
 
 **Postconditions:** Payouts stay `Pending` until Desktop polls or **hourly job** may later `Expired` if >24h (`docs/SPEC.md` §7).
@@ -151,17 +172,17 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ### SC-012: WoW character name in the request does not exist on the realm
 
-**Trigger:** Viewer submits enrollment with a name that is not a real character on the streamer’s realm/faction context.
+**Trigger:** Viewer enrolls with a name that is not a real character on the streamer’s realm/faction context (format-valid).
 
 **Actor:** Viewer
 
-**Preconditions:** Backend validates **format** (shared validation). MVP does **not** call external realm/Armory APIs.
+**Preconditions:** Backend validates **format** only (shared **`CharacterNameRules`**). MVP does **not** call external realm/Armory APIs.
 
 **Flow:**
 
-1. [TwitchExtension] → [Backend]: `POST /api/payouts/claim` with bogus name (format-valid)
-2. [Backend] → [Backend]: may accept enrollment if only regex rules apply (`docs/SPEC.md` §4, §5)
-3. At **spin / win** time, **`/who <Name>`** in-game is the **online / presence** check (`docs/SPEC.md` glossary). A non-existent name will typically fail **`/who`** / mail UX; otherwise streamer uses **manual** fail path (`Failed`) (faction/manual handling).
+1. [Viewer] → [Twitch Chat]: **`!twgold <Name>`** (primary path) **or** [TwitchExtension] → [Backend]: **`POST /api/payouts/claim`** (optional; requires **`Mgm:DevSkipSubscriberCheck`** for local Dev Rig while Helix subscriber check on claim is unimplemented — see `docs/SPEC.md` §5).
+2. [Backend] → [Backend]: if rules pass, **pool** row may be stored (`docs/SPEC.md` §4, §5).
+3. At **spin / win** time, **`/who <Name>`** in-game is the **online / presence** check (`docs/SPEC.md` glossary). A non-existent or offline name yields **no `Pending` payout** that cycle (**no** re-draw). If a payout still reaches mail UX incorrectly, streamer may use **manual** **`Failed`**.
 
 **Postconditions:** Possible **enrollment** stored; payout delivery may hit **Failed** in Desktop or streamer correction.
 

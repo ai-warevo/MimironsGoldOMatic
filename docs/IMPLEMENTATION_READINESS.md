@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 # MVP Implementation Readiness Matrix
 
 ## What this file measures
@@ -58,6 +60,7 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 - Remaining engineering detail (expected):
   - projection update strategy and replay/rebuild procedure;
   - concurrency control in command handlers;
+  - **Helix subscriber verification** for **`POST /api/payouts/claim`** when **`Mgm:DevSkipSubscriberCheck`** is **`false`** (currently returns **`403 not_subscriber`** unless dev flag is set);
   - WinAPI timing/retry on real **3.3.5a** clients;
   - validate addon **`[MGM_WHO]`** / **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`** visibility in **`WoWChatLog.txt`** on target clients;
   - **idempotent** **`confirm-acceptance`** / **`verify-candidate`** under log replay;

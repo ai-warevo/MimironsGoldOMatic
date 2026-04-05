@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 # Setup for streamers and operators
 
 This guide is for **broadcasters** who run Mimiron's Gold-o-Matic: **WoW addon**, **Twitch Extension**, and **Desktop** helper, and how they connect to the **Backend (EBS)**.

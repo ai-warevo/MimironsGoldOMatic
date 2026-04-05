@@ -1,6 +1,8 @@
+<!-- Updated: 2026-04-05 -->
+
 ## MimironsGoldOMatic.Backend — EBS (Extension Backend Service) (ASP.NET Core | Bridge between Twitch Extension & WPF Desktop)
 
-- **EBS:** This project **`MimironsGoldOMatic.Backend`** is the **EBS** — same as **`docs/SPEC.md`**. It owns **Twitch Extension JWT** validation, **EventSub** (`channel.chat.message`), **Helix** (§11 **`Send Chat Message`**, inline **3×** retry, **no** Outbox in MVP), and Desktop **`ApiKey`** routes.
+- **EBS:** This project **`MimironsGoldOMatic.Backend`** is the **EBS** — same as **`docs/SPEC.md`**. It owns **Twitch Extension JWT** validation (**HS256** via **`Twitch:ExtensionSecret`**; optional **`aud`** = **`ExtensionClientId`**), **EventSub** (`channel.chat.message` → **`POST /api/twitch/eventsub`**), **Helix** (§11 **`Send Chat Message`**, inline **3×** retry in **`HelixChatService`**, **no** Outbox in MVP), and Desktop **`X-MGM-ApiKey`** routes.
 - **Repository status:** `src/MimironsGoldOMatic.Backend` implements **MVP-2** per `docs/ROADMAP.md`: Marten on PostgreSQL, MediatR command/query handlers, Extension JWT + Desktop `X-MGM-ApiKey`, EventSub chat enrollment, roulette/pool/payout HTTP surface, Helix reward-sent announcement (inline retries), and hourly payout expiration. Set `ConnectionStrings:PostgreSQL`, `Mgm:ApiKey`, and `Twitch:*` in configuration (see `appsettings.Development.json` for a local Postgres example). **EF Core** is not used in this project yet (read models are Marten documents).
 - **UI spec (consumer-facing):** Extension/Desktop/Addon behaviors that the API supports are summarized in `docs/UI_SPEC.md`; API shapes remain canonical in `docs/SPEC.md`.
 - **Role:** Orchestrates the **participant pool**, **roulette spins**, **payout queue**, and persistent storage.
@@ -9,8 +11,8 @@
 ## Key Functions
 
 - **Authentication (phased):**
-  - **MVP:** optimize for Twitch Dev Rig debugging; production-ready Twitch JWT validation (issuer/audience + key rotation) is a roadmap milestone.
-  - **Desktop security (MVP):** Desktop-to-**EBS** uses a pre-shared `ApiKey` (locally trusted Desktop app).
+  - **MVP:** Extension **Bearer** JWT validated with symmetric key from **`Twitch:ExtensionSecret`**; **Development** fallback when secret empty. **Issuer** / JWKS-style rotation: roadmap.
+  - **Desktop security (MVP):** **`X-MGM-ApiKey`** matching **`Mgm:ApiKey`** (`ApiKeyAuthenticationHandler`).
 - **Persistence model (MVP):**
   - Write-side source of truth: Marten Event Store in PostgreSQL.
   - Read-side query model: projections/read tables (EF Core optional for mapping/querying projections).
@@ -36,9 +38,10 @@
 
 ## API Endpoints
 
-- **POST** `/api/payouts/claim` (optional): Extension/Dev Rig enrollment; same rules as **`!twgold <CharacterName>`** (**subscriber**, **unique** name). Primary enrollment is **Twitch chat** (see `docs/SPEC.md`).
+- **POST** `/api/twitch/eventsub`: **EventSub** webhook (**AllowAnonymous** + HMAC when secret set). **`channel.chat.message`** → **`ChatEnrollmentService`** (`docs/SPEC.md` §5).
+- **POST** `/api/payouts/claim` (optional): Extension/Dev Rig pool enrollment; **`Mgm:DevSkipSubscriberCheck`** gates Helix-less dev use (**`docs/SPEC.md`** §5). Returns **`PoolEnrollmentResponse`** JSON on success.
 - **GET** `/api/payouts/pending`: Fetched by the Desktop App. Returns **winner** payouts available for sync/injection (primarily `Pending`).
-- **PATCH** `/api/payouts/{id}/status`: Updates payout status where allowed (Desktop), including **`Sent`** after mail-send confirmation.
+- **PATCH** `/api/payouts/{id}/status`: Updates payout status where allowed (Desktop); response body **`PayoutDto`**.
 - **POST** `/api/payouts/{id}/confirm-acceptance` (recommended): Desktop reports **`!twgold`** matched the winner → record **acceptance** (not **`Sent`**).
 - **GET** `/api/payouts/my-last`: Used by the Twitch Extension (pull model) to show the viewer their latest payout status.
   - Returns `404 Not Found` when no payout exists for caller.
@@ -50,7 +53,7 @@
 - `MediatR`
 - `FluentValidation.DependencyInjectionExtensions`
 - `Microsoft.AspNetCore.Authentication.JwtBearer`
-- `Polly.Extensions.Http` (Helix HTTP resilience)
+- `Polly.Extensions.Http` (referenced; **Helix** retries are implemented as a simple **3-attempt** loop in **`HelixChatService`** today)
 
 ## Architecture & Patterns
 - **Idempotency Pattern:**
@@ -65,4 +68,4 @@
   This makes business rules readable, testable, and reusable.
 
 ## Event Sourcing
-- **Marten Integration:** Persist every state change as a sequence of events (`ClaimCreated`, `InjectedByDesktop`, `WinnerAcceptedGold`, `MailSendConfirmed`, etc.). This provides a full audit trail for both the streamer and developers.
+- **Marten Integration:** Payout streams use registered event types such as **`PayoutCreated`**, **`PayoutStatusChanged`**, **`WinnerAcceptanceRecorded`**, **`HelixRewardSentAnnouncementSucceeded`** (`Program.cs`). This provides an append-only audit trail for payout lifecycle changes.

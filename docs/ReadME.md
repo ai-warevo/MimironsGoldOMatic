@@ -1,8 +1,10 @@
+<!-- Updated: 2026-04-05 -->
+
 # General Architectural Requirements (All Components) & Repo Layout
 
 ## Documentation vs code
 
-Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/ROADMAP.md`**. The **`docs/IMPLEMENTATION_READINESS.md`** file tracks (1) doc/spec consistency and (2) **what is implemented under `src/`** today versus MVP steps.
+Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/ROADMAP.md`**. The **`docs/IMPLEMENTATION_READINESS.md`** file tracks (1) doc/spec consistency and (2) **what is implemented under `src/`** today versus MVP steps (**MVP-1…5** shipped in tree; **MVP-6** tests pending).
 
 ## High-Level Patterns
 - **DDD (Domain-Driven Design):** The core logic, limits (10k gold), and state transitions must be encapsulated within the Domain layer (Aggregates/Value Objects).
@@ -15,9 +17,9 @@ Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/R
 - **EF Core scope in MVP:** read-model projections only (query side), not the canonical write store.
 
 ## MimironsGoldOMatic.Shared (.NET 10)
-- **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across **EBS** and Desktop.
-- **Primary Constructors:** Use C# 14 / .NET 10 primary constructors for all DTOs and Records.
-- **Result Pattern:** Use `FluentResults` for domain and service layer responses instead of throwing exceptions.
+- **FluentValidation:** Shared validation rules for `PayoutDto` and `CreatePayoutRequest` (`CharacterNameRules`, validators). Character name patterns must be validated consistently across **EBS** and Desktop.
+- **Primary Constructors:** Use C# 14 / .NET 10 primary constructors for DTOs and records where applicable.
+- **EBS application layer:** Handlers return **`HandlerResult<T>`** + **`ApiErrorDto`** (MediatR in **`MimironsGoldOMatic.Backend`**) — not a shared “result” package in **Shared**.
 
 
 ## High-level Workflow
@@ -40,8 +42,8 @@ Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/R
 - **Expiration:** **EBS** hourly job marks `Pending`/`InProgress` older than 24h as `Expired` (no reactivation).
 - **Confirmation:** **`/who`** online gate; **winner notification**; **`!twgold`** reply → acceptance on **EBS**; **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** → **`Sent`** (required for automation); §11 **Helix** line best-effort after **`Sent`**; manual **Mark as Sent** per `docs/SPEC.md`.
 - **Auth (MVP):**
-  - Twitch Dev Rig first; production JWT validation is roadmap.
-  - Desktop uses a pre-shared `ApiKey` to call the **EBS**.
+  - Extension **JWT** (**HS256** + optional **`aud`**) per **`Program.cs`** / **`TwitchOptions`**; full issuer hardening is roadmap.
+  - Desktop uses pre-shared **`X-MGM-ApiKey`** to call the **EBS**.
 
 ## Technical specification (canonical)
 
