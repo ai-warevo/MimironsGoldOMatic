@@ -1,4 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation plan) -->
+<!-- Updated: 2026-04-05 (Tier A implementation) -->
 
 # E2E automation plan (MVP-6): Chat → WoW → Helix
 
@@ -11,7 +12,8 @@ This document proposes how to automate the **full operator workflow** currently 
 - Backend (EBS): `src/MimironsGoldOMatic.Backend/` — **not** `MimironsGoldOMatic.WEBAPI.Backend`.
 - WoW addon: `src/MimironsGoldOMatic.WoWAddon/`.
 - Desktop: `src/MimironsGoldOMatic.Desktop/`.
-- CI: `.github/workflows/` (currently placeholder via `.gitkeep` only).
+- CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub). Other workflows may be added later.
+- Tier A mocks: `src/Mocks/MockEventSubWebhook/`, `src/Mocks/MockExtensionJwt/`.
 
 ---
 
@@ -189,14 +191,43 @@ A **passed** Tier A **E2E** run should demonstrate:
 
 ---
 
+## Tier A implementation (repository)
+
+**Status:** Partial — **EventSub relay + Extension JWT issuer + GitHub Actions** are implemented. **MockHelixApi** and **SyntheticDesktop** remain **out of scope** for this slice (see §8).
+
+### MockEventSubWebhook (`src/Mocks/MockEventSubWebhook/`)
+
+- **Purpose:** Stand-in for the **Twitch → EBS** edge. Accepts the same **`POST /api/twitch/eventsub`** shape the real [`TwitchEventSubController`](../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs) expects, verifies **HMAC-SHA256** (`Twitch-Eventsub-Message-*` headers) when `Twitch:EventSubSecret` is set (same algorithm as EBS), logs, then **forwards** the raw body and headers to **`{Backend:BaseUrl}/api/twitch/eventsub`**.
+- **Endpoints:** `GET /health`, **`POST /api/twitch/eventsub`**.
+- **Configuration:** `Backend:BaseUrl`, `Twitch:EventSubSecret`, **`ASPNETCORE_URLS`** (default local profile **9051** in `Properties/launchSettings.json`).
+- **Run:** `dotnet run --project src/Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj`
+
+### MockExtensionJwt (`src/Mocks/MockExtensionJwt/`)
+
+- **Purpose:** Issues **HS256** Extension **Bearer** tokens using the **same signing material** as the Backend ([`Program.cs`](../src/MimironsGoldOMatic.Backend/Program.cs): base64 `Twitch:ExtensionSecret`, or Development fallback `SHA256("mgm-dev-extension-secret-change-me")` when secret empty).
+- **Endpoints:** `GET /health`, **`GET /token?userId=…&displayName=…`** → JSON `{ "access_token", "token_type", "expires_in" }` for **`GET /api/pool/me`**, **`POST /api/payouts/claim`**, etc.
+- **Configuration:** `Twitch:ExtensionSecret`, optional `Twitch:ExtensionClientId` (**aud**). **`ASPNETCORE_URLS`** (default **9052**).
+- **Run:** `dotnet run --project src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj`
+
+### CI workflow (`.github/workflows/e2e-test.yml`)
+
+- **Trigger:** `pull_request` to **`main`**.
+- **Steps (summary):** Start **PostgreSQL 16** service → build **`MimironsGoldOMatic.slnx`** → run **Backend** (`Development`, shared `Twitch:EventSubSecret`) → run both mocks → **Python** [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) posts a synthetic **`channel.chat.message`** to the mock → assert **`GET /api/pool/me`** with JWT shows **`isEnrolled: true`** and expected **`characterName`** (`!twgold E2EHero`).
+
+### E2E script
+
+- [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) — builds JSON + Twitch HMAC; can target the mock or the EBS directly for debugging.
+
+---
+
 ## 8. Next steps (implementation checklist)
 
 1. **Refactor `HelixChatService`** to use configurable Helix base URI (default production). **Verify** existing integration behavior unchanged.
 2. **Add `MockHelixHandler`** (or WireMock) and **one** **`E2E`/`Integration`** test: **`Sent`** → outbound HTTP asserted.
-3. **Add `EventSubSignatureHelper`** + test **`POST /api/twitch/eventsub`** with **non-empty** `EventSubSecret` (optional parallel to empty-secret path).
-4. **Compose chained test** (or harness): enroll → spin tick → verify-candidate → confirm-acceptance → patch statuses → assert Helix mock + pool.
-5. **Create `.github/workflows/e2e-test.yml`** (and optionally **`ci.yml`**) with Docker service / `dotnet test` filters (`Category=E2E` if introduced).
-6. **Document** test filter in **`docs/MimironsGoldOMatic.Backend/ReadME.md`** (plan and tasks are linked from **`docs/INTERACTION_SCENARIOS.md`**, **`docs/ROADMAP.md`**, **`docs/IMPLEMENTATION_READINESS.md`**).
+3. **Optional:** Add in-repo **`EventSubSignatureHelper`** in **`Backend.Tests`** (or reuse **Python** script logic) for xUnit coverage of **`POST /api/twitch/eventsub`** with **non-empty** `EventSubSecret` — **Tier A CI** already exercises the full path via mocks + script.
+4. **Compose chained test** (or harness): enroll → spin tick → verify-candidate → confirm-acceptance → patch statuses → assert Helix mock + pool (**SyntheticDesktop** + **MockHelixApi**).
+5. ~~**Create `.github/workflows/e2e-test.yml`**~~ **Done (Tier A).** Optionally add **`ci.yml`** for PR **build/test** only; add **`Category=E2E`** **dotnet test** when in-process E2E tests exist.
+6. **Document** test filters in **`docs/MimironsGoldOMatic.Backend/ReadME.md`** (updated for Tier A CI pointer).
 7. **Tier B (later):** self-hosted Windows job spec + operator runbook in **`docs/SETUP.md`** (no code change required in this plan).
 
 ---
@@ -206,3 +237,4 @@ A **passed** Tier A **E2E** run should demonstrate:
 | Version | Date | Note |
 |---------|------|------|
 | 1.0 | 2026-04-05 | Initial plan from **SC-001** + current Backend layout |
+| 1.1 | 2026-04-05 | **Tier A:** `MockEventSubWebhook`, `MockExtensionJwt`, `e2e-test.yml`, `send_e2e_eventsub.py` |

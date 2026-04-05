@@ -1,4 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation tasks) -->
+<!-- Updated: 2026-04-05 (Tier A mocks landed) -->
 
 # E2E automation tasks (MVP-6)
 
@@ -6,8 +7,8 @@
 
 Tasks to implement the E2E automation plan described in [E2E Automation Plan](E2E_AUTOMATION_PLAN.md).
 
-- **Current status:** Plan created; **Tier A** (**CI**) automation **pending** (mocks + chained tests + workflow).
-- **Target completion:** Full **Tier A** flow **Automated** in **CI/CD** (Backend + Postgres + mocked Helix + **SyntheticDesktop** HTTP sequence). **Tier B** (real WoW + Desktop + Twitch) remains optional / self-hosted per the plan.
+- **Current status:** **Tier A (partial):** **`src/Mocks/MockEventSubWebhook`**, **`src/Mocks/MockExtensionJwt`**, **`.github/workflows/e2e-test.yml`**, **`.github/scripts/send_e2e_eventsub.py`** — synthetic chat → EBS pool → **`GET /api/pool/me`** in **CI**. **Not started:** **MockHelixApi**, **SyntheticDesktop**, in-repo **xUnit** E2E chain (tasks A1–A3, B2–B3 as optional follow-ups).
+- **Target completion:** Full **Tier A** **API** slice **Automated** (done for enrollment path). Extend with **Helix** stub + **SyntheticDesktop** + spin/**verify-candidate** chain; **Tier B** (real WoW) remains optional per the plan.
 
 **Normative product behavior:** unchanged — still defined in **`docs/SPEC.md`**. This file is execution tracking only.
 
@@ -15,13 +16,13 @@ Tasks to implement the E2E automation plan described in [E2E Automation Plan](E2
 
 ## 2. Task breakdown by component
 
-The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubController`](../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs)). **MockEventSubWebhook** means **test-side HTTP clients + payloads**, not a duplicate webhook service.
+The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubController`](../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs)). **Implemented:** standalone relay **`src/Mocks/MockEventSubWebhook`** + **Python** sender in **CI** (see [Tier A implementation](E2E_AUTOMATION_PLAN.md#tier-a-implementation-repository)). **Optional:** duplicate signing logic in **xUnit** (A1–A3).
 
 ### A. MockEventSubWebhook (test harness)
 
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
-| A1 | Add **`EventSubSignatureHelper`** (or equivalent) in **`MimironsGoldOMatic.Backend.Tests`** that computes Twitch **`Twitch-Eventsub-Message-Signature`** (`sha256=` HMAC-SHA256 over `message-id + timestamp + body`) matching [`VerifySignature`](../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs). | Backend Dev | 0.5–1 day | Use a known `Twitch:EventSubSecret` in test configuration. |
+| A1 | Add **`EventSubSignatureHelper`** (or equivalent) in **`MimironsGoldOMatic.Backend.Tests`** that computes Twitch **`Twitch-Eventsub-Message-Signature`** (`sha256=` HMAC-SHA256 over `message-id + timestamp + body`) matching [`VerifySignature`](../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs). | Backend Dev | 0.5–1 day | **Optional** — **CI** already signs in **Python**; in-repo helper reduces drift. |
 | A2 | Add golden JSON bodies for **`channel.chat.message`** under e.g. `Backend.Tests/Fixtures/EventSub/` (`subscription`, `event.message_id`, `chatter_user_id`, `message.text`, subscriber **`badges`**). | Backend Dev | 0.5 day | Align with Twitch EventSub reference; version fixtures when schema changes. |
 | A3 | Integration test: **`HttpClient`** **`POST`** to **`/api/twitch/eventsub`** with headers + body → assert pool enrollment via Marten or follow-up **`GET`** (if test host exposes full pipeline). | Backend Dev | 1 day | Cover both empty secret (dev bypass) and signed path. |
 | A4 | Document fixture maintenance in **`docs/MimironsGoldOMatic.Backend/ReadME.md`** or link this file. | Backend Dev | 0.25 day | Pairs with risk task R1. |
@@ -30,7 +31,7 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
-| B1 | Implement a small **test JWT builder** (HS256) using the same signing material as [`Program.cs`](../src/MimironsGoldOMatic.Backend/Program.cs) (**Extension** secret / dev key) with claims **`user_id`**, optional **`display_name`**. | Backend Dev | 0.5 day | Not Twitch-issued; label tests **harness-only** per **`docs/INTERACTION_SCENARIOS.md`** auth notes. |
+| B1 | Implement a small **test JWT builder** (HS256) using the same signing material as [`Program.cs`](../src/MimironsGoldOMatic.Backend/Program.cs) (**Extension** secret / dev key) with claims **`user_id`**, optional **`display_name`**. | Backend Dev | 0.5 day | **Done** as **`MockExtensionJwt`** **`GET /token`** — keep for parity or retire if service-only approach wins. |
 | B2 | Wire JWT into shared test host factory (same pattern as [`BackendTestHost`](../src/MimironsGoldOMatic.Backend.Tests/Support/) / existing integration setup). | Backend Dev | 0.5 day | |
 | B3 | Tests calling **`GET /api/pool/me`**, **`POST /api/payouts/claim`** ([`RouletteController`](../src/MimironsGoldOMatic.Backend/Controllers/RouletteController.cs)) with **`Authorization: Bearer`**. | Backend Dev | 1 day | Respect **`Mgm:DevSkipSubscriberCheck`** / subscriber rules when exercising **claim**. |
 
@@ -58,7 +59,7 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 |---|------|--------|------|--------|
 | S1 | **Configurable Helix URL** (same as **C1**). | Backend Dev | (see C1) | Single implementation; listed here as shared dependency for **CI**. |
 | S2 | **Evaluate Docker Compose** for mocks vs **in-process** stubs + **Testcontainers** Postgres only. | DevOps / Backend Dev | 0.5 day | Plan default: **no** separate Compose required for Tier A if **`DelegatingHandler`** suffices; Compose optional for WireMock sidecar. |
-| S3 | Add **`.github/workflows/e2e-test.yml`**: **`dotnet build`**, **`--filter Category=Unit`**, **`Category=Integration`**, then **`Category=E2E`** (or chosen filter) with **Docker** and longer timeout. | DevOps | 1 day | Replace `.gitkeep` placeholder pattern in [`.github/workflows/`](../.github/workflows/). |
+| S3 | Add **`.github/workflows/e2e-test.yml`**: **`dotnet build`**, **`--filter Category=Unit`**, **`Category=Integration`**, then **`Category=E2E`** (or chosen filter) with **Docker** and longer timeout. | DevOps | 1 day | **Tier A job done:** [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) (PR → **main**, Postgres + mocks). Extend later with **`dotnet test`** stages if desired. |
 | S4 | Introduce **`[Trait("Category", "E2E")]`** (or reuse **Integration**) on new chained tests; document in **`docs/MimironsGoldOMatic.Backend/ReadME.md`**. | Backend Dev | 0.25 day | |
 
 ---
@@ -94,7 +95,7 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 
 **Clarification needed (team discussion):**
 
-- Whether **Tier A** enrollment uses **EventSub only**, **`POST /api/payouts/claim` only**, or **both** in separate tests.
+- **Tier A CI** currently uses **EventSub** only (via mock relay). Whether to add a parallel job for **`POST /api/payouts/claim`** + JWT.
 - Whether to add **`WireMock.NET`** package vs **pure** `DelegatingHandler` (policy + maintenance).
 - **Self-hosted Windows** runner budget for **Tier B** (if any).
 
@@ -105,3 +106,4 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 | Version | Date | Note |
 |---------|------|------|
 | 1.0 | 2026-04-05 | Initial tasks from [E2E Automation Plan](E2E_AUTOMATION_PLAN.md) |
+| 1.1 | 2026-04-05 | Tier A mocks + **`e2e-test.yml`** + Python sender; tasks file status updated |

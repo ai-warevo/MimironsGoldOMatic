@@ -56,6 +56,7 @@
 - **Unit (no Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit`** — `RouletteTime`, `SpinPhaseResolver`, `TwGoldChatEnrollmentParser` (`!twgold` line shape).
 - **Integration (Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Integration`** — PostgreSQL via **Testcontainers**, Marten + MediatR (`PostClaim`, `verify-candidate`, expiration sweep, **`Sent`** pool removal).
 - **All tests:** **`dotnet test src/MimironsGoldOMatic.slnx`** — runs unit + integration; full suite needs Docker. Not a substitute for Twitch/WoW manual scenarios.
+- **CI Tier A (E2E mocks):** GitHub Actions **`.github/workflows/e2e-test.yml`** runs Backend + Postgres + **`src/Mocks/MockEventSubWebhook`** + **`src/Mocks/MockExtensionJwt`**, sends a synthetic **`channel.chat.message`**, asserts **`GET /api/pool/me`**. See [`docs/E2E_AUTOMATION_PLAN.md`](../E2E_AUTOMATION_PLAN.md) (**Tier A implementation**).
 
 ## Additional Libraries
 

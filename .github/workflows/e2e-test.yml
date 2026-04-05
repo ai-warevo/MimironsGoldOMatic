@@ -1,0 +1,116 @@
+# Created: 2026-04-05 (Tier A E2E mocks)
+# Tier A: Backend + Postgres + MockEventSubWebhook (relay) + MockExtensionJwt; synthetic EventSub chat → pool enrollment → GET /api/pool/me
+name: E2E Tier A (mocks)
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  E2E_EVENTSUB_SECRET: e2e-ci-eventsub-secret
+
+jobs:
+  e2e-tier-a:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mgm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore and build solution
+        run: dotnet build src/MimironsGoldOMatic.slnx -c Release
+
+      - name: Start Backend (background)
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://127.0.0.1:8080
+          ConnectionStrings__PostgreSQL: Host=localhost;Port=5432;Database=mgm;Username=postgres;Password=postgres
+          Mgm__ApiKey: ci-desktop-api-key
+          Mgm__DevSkipSubscriberCheck: "true"
+          Twitch__EventSubSecret: ${{ env.E2E_EVENTSUB_SECRET }}
+        run: |
+          set -e
+          dotnet run --project src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj -c Release --no-build &
+          echo $! > /tmp/mgm-backend.pid
+          echo "Waiting for Backend on :8080..."
+          for i in $(seq 1 90); do
+            if curl -s -o /dev/null --connect-timeout 2 http://127.0.0.1:8080/ 2>/dev/null; then
+              echo "Backend accepting TCP/HTTP on :8080 (iteration $i)"
+              break
+            fi
+            sleep 1
+          done
+          curl -s -o /dev/null --connect-timeout 2 http://127.0.0.1:8080/ || { echo "Backend failed to start"; exit 1; }
+
+      - name: Start MockEventSubWebhook (background)
+        env:
+          ASPNETCORE_URLS: http://127.0.0.1:9051
+          Backend__BaseUrl: http://127.0.0.1:8080
+          Twitch__EventSubSecret: ${{ env.E2E_EVENTSUB_SECRET }}
+        run: |
+          set -e
+          dotnet run --project src/Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj -c Release --no-build &
+          echo $! > /tmp/mgm-mock-eventsub.pid
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:9051/health >/dev/null && echo "MockEventSubWebhook healthy" && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:9051/health >/dev/null || { echo "MockEventSubWebhook failed to start"; exit 1; }
+
+      - name: Start MockExtensionJwt (background)
+        env:
+          ASPNETCORE_URLS: http://127.0.0.1:9052
+        run: |
+          set -e
+          dotnet run --project src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj -c Release --no-build &
+          echo $! > /tmp/mgm-mock-jwt.pid
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:9052/health >/dev/null && echo "MockExtensionJwt healthy" && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:9052/health >/dev/null || { echo "MockExtensionJwt failed to start"; exit 1; }
+
+      - name: Send synthetic channel.chat.message via MockEventSubWebhook
+        run: |
+          set -e
+          python3 .github/scripts/send_e2e_eventsub.py \
+            --url http://127.0.0.1:9051 \
+            --secret "${{ env.E2E_EVENTSUB_SECRET }}" \
+            --user-id e2e-viewer-1 \
+            --login e2eviewer1 \
+            --text "!twgold E2EHero"
+
+      - name: Verify pool enrollment (Extension JWT)
+        run: |
+          set -e
+          TOKEN=$(curl -sS "http://127.0.0.1:9052/token?userId=e2e-viewer-1&displayName=E2EViewer" | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
+          echo "Got JWT (${#TOKEN} chars)"
+          BODY=$(curl -sS -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8080/api/pool/me)
+          echo "GET /api/pool/me => $BODY"
+          python3 -c "import json,sys; d=json.loads(sys.argv[1]); assert d.get('isEnrolled') is True, d; assert d.get('characterName')=='E2EHero', d" "$BODY"
+          echo "E2E Tier A: pool enrollment verified."
+
+      - name: Logs (on failure)
+        if: failure()
+        run: |
+          echo "--- Backend PID ---"; cat /tmp/mgm-backend.pid 2>/dev/null || true
+          echo "--- Try curl backend ---"; curl -v http://127.0.0.1:8080/ 2>&1 || true
