@@ -6,17 +6,17 @@ Interactive MVP risk closure: **no file-bridge**; addon emits **`[MGM_WHO]`** + 
 
 ## Modified files (this task + prior doc pass in same session)
 
-- `docs/SPEC.md`
+- `docs/overview/SPEC.md`
 - `README.md`
 - `CONTEXT.md`
 - `AGENTS.md`
-- `docs/ROADMAP.md`
-- `docs/INTERACTION_SCENARIOS.md`
-- `docs/IMPLEMENTATION_READINESS.md`
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`
+- `docs/overview/ROADMAP.md`
+- `docs/overview/INTERACTION_SCENARIOS.md`
+- `docs/reference/IMPLEMENTATION_READINESS.md`
+- `docs/components/backend/ReadME.md`
+- `docs/components/desktop/ReadME.md`
+- `docs/components/wow-addon/ReadME.md`
+- `docs/components/twitch-extension/ReadME.md`
 - `docs/prompts/history/2026-04-04/04-interactive-mvp-risk-closure/prompt.md`
 - `docs/prompts/history/2026-04-04/04-interactive-mvp-risk-closure/plan.md`
 - `docs/prompts/history/2026-04-04/04-interactive-mvp-risk-closure/checks.md`

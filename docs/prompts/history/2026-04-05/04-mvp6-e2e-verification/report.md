@@ -11,7 +11,7 @@ Delivered the **automated verification slice** of MVP-6: a PostgreSQL-backed int
 | Backend | `Persistence/MgmMartenDocumentConfiguration.cs` (new), `Services/RouletteCycleTick.cs` (new), `Services/PayoutExpirationProcessor.cs` (new), `Program.cs`, `Services/RouletteSynchronizerHostedService.cs`, `Services/PayoutExpirationHostedService.cs` |
 | Tests | `MimironsGoldOMatic.Backend.Tests/*` (new project: claim rules, expiration, roulette+verify, patch Sent pool removal, Testcontainers + truncate helper) |
 | Solution | `src/MimironsGoldOMatic.slnx` |
-| Docs | `docs/IMPLEMENTATION_READINESS.md`, `docs/SETUP.md`, `docs/ROADMAP.md`, `docs/MimironsGoldOMatic.Backend/ReadME.md` |
+| Docs | `docs/reference/IMPLEMENTATION_READINESS.md`, `docs/setup/SETUP.md`, `docs/overview/ROADMAP.md`, `docs/components/backend/ReadME.md` |
 
 ## Verification
 
@@ -26,7 +26,7 @@ Delivered the **automated verification slice** of MVP-6: a PostgreSQL-backed int
 
 ## Not done here (explicit)
 
-- Full **live** E2E (Twitch chat, Dev Rig, WoW client, Helix) — still manual per `docs/INTERACTION_SCENARIOS.md`.
+- Full **live** E2E (Twitch chat, Dev Rig, WoW client, Helix) — still manual per `docs/overview/INTERACTION_SCENARIOS.md`.
 - CI workflow wiring (roadmap **Production** milestone still mentions placeholder workflows).
 
 ## Technical debt

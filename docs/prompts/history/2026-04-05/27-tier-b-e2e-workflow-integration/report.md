@@ -9,7 +9,7 @@
 - `src/Mocks/SyntheticDesktop/Program.cs` — camelCase JSON for state responses
 - `src/Mocks/MockHelixApi/Program.cs` — header comment
 - `src/Tests/.../HelixChatServiceTests.cs` — BaseAddress on clients + new test
-- `docs/E2E_AUTOMATION_PLAN.md`, `docs/TIER_B_IMPLEMENTATION_TASKS.md`, `docs/TIER_B_PRELAUNCH_CHECKLIST.md`, `docs/TIER_B_POSTLAUNCH_VERIFICATION.md` (new)
+- `docs/e2e/E2E_AUTOMATION_PLAN.md`, `docs/e2e/TIER_B_IMPLEMENTATION_TASKS.md`, `docs/e2e/TIER_B_PRELAUNCH_CHECKLIST.md`, `docs/e2e/TIER_B_POSTLAUNCH_VERIFICATION.md` (new)
 - `scripts/tier_b_verification/check_workflow_integration.py` — header comment
 
 ## Verification

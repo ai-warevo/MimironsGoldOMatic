@@ -7,7 +7,7 @@
 - `src/MimironsGoldOMatic.Desktop.Tests/DesktopSmokeTests.cs` (new)
 - `src/MimironsGoldOMatic.slnx` (Desktop.Tests project path)
 - `src/MimironsGoldOMatic.TwitchExtension/package.json` (`test` script)
-- `docs/E2E_AUTOMATION_PLAN.md` (new section + doc control + CI overview line)
+- `docs/e2e/E2E_AUTOMATION_PLAN.md` (new section + doc control + CI overview line)
 
 ## Verification
 

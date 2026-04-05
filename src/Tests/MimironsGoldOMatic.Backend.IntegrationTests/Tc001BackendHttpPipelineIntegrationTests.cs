@@ -14,7 +14,7 @@ using Xunit;
 namespace MimironsGoldOMatic.Backend.IntegrationTests;
 
 /// <summary>
-/// Backend-visible slice of <see cref="docs/INTERACTION_SCENARIOS.md"/> <b>TC-001</b> / <b>SC-001</b> (WoW/Desktop segments remain manual).
+/// Backend-visible slice of <see cref="docs/overview/INTERACTION_SCENARIOS.md"/> <b>TC-001</b> / <b>SC-001</b> (WoW/Desktop segments remain manual).
 /// Covers Extension claim, pool read, Desktop verify-candidate over HTTP, and payout row in PostgreSQL.
 /// </summary>
 [Collection(nameof(PostgresCollection))]

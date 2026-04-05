@@ -7,13 +7,13 @@ Documentation now matches the clarified MVP: **subscribers** enroll and re-enter
 ## Files modified
 
 - Root: `README.md`, `CONTEXT.md`, `AGENTS.md`
-- `docs/SPEC.md`, `docs/ReadME.md`, `docs/ROADMAP.md`, `docs/INTERACTION_SCENARIOS.md`, `docs/UI_SPEC.md`, `docs/IMPLEMENTATION_READINESS.md`
+- `docs/overview/SPEC.md`, `docs/ReadME.md`, `docs/overview/ROADMAP.md`, `docs/overview/INTERACTION_SCENARIOS.md`, `docs/reference/UI_SPEC.md`, `docs/reference/IMPLEMENTATION_READINESS.md`
 - `docs/MimironsGoldOMatic.{Shared,Backend,TwitchExtension,Desktop,WoWAddon}/ReadME.md`
 
 ## Verification
 
-- `docs/SPEC.md` glossary and §5 define chat commands, uniqueness, pool removal on **`Sent`**, and optional **`POST /api/payouts/claim`**.
-- `docs/INTERACTION_SCENARIOS.md` SC-001 updated for chat ingest flow.
+- `docs/overview/SPEC.md` glossary and §5 define chat commands, uniqueness, pool removal on **`Sent`**, and optional **`POST /api/payouts/claim`**.
+- `docs/overview/INTERACTION_SCENARIOS.md` SC-001 updated for chat ingest flow.
 
 ## Follow-ups (implementation)
 

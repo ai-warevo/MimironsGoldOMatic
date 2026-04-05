@@ -2,7 +2,7 @@
 
 ## Scope
 
-- Replace Vite/React scaffold with production-shaped viewer panel aligned to `docs/UI_SPEC.md` UI-101–106 and `docs/SPEC.md` §5.1 / §11.
+- Replace Vite/React scaffold with production-shaped viewer panel aligned to `docs/reference/UI_SPEC.md` UI-101–106 and `docs/overview/SPEC.md` §5.1 / §11.
 - Integrate `window.Twitch.ext` (`onAuthorized`) for Bearer JWT to EBS.
 - Poll `GET /api/roulette/state`, `GET /api/pool/me`, `GET /api/payouts/my-last` with exponential backoff on 429/503/network (cap 60s) + Retry.
 - Countdown from `nextSpinAt` / `serverNow` with skew correction each poll.

@@ -1,7 +1,7 @@
 namespace MimironsGoldOMatic.Shared;
 
 /// <summary>
-/// MVP payout economics per <c>docs/SPEC.md</c> §2 (fixed winning payout amount).
+/// MVP payout economics per <c>docs/overview/SPEC.md</c> §2 (fixed winning payout amount).
 /// </summary>
 public static class PayoutEconomics
 {

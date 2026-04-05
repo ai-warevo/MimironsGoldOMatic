@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace MimironsGoldOMatic.Desktop.Win32;
 
-/// <summary>Fallback: <c>SendInput</c> with <c>KEYEVENTF_UNICODE</c> after foregrounding WoW (<c>docs/SPEC.md</c> §8).</summary>
+/// <summary>Fallback: <c>SendInput</c> with <c>KEYEVENTF_UNICODE</c> after foregrounding WoW (<c>docs/overview/SPEC.md</c> §8).</summary>
 public sealed class SendInputWoWInputStrategy : IWoWInputStrategy
 {
     private const uint InputKeyboard = 1;

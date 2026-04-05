@@ -8,6 +8,6 @@
 
 ## Files
 
-- `docs/SPEC.md` (§1 glossary, §5, §9, §10)
-- `AGENTS.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/INTERACTION_SCENARIOS.md`, `docs/IMPLEMENTATION_READINESS.md` as needed
+- `docs/overview/SPEC.md` (§1 glossary, §5, §9, §10)
+- `AGENTS.md`, `docs/components/desktop/ReadME.md`, `docs/components/wow-addon/ReadME.md`
+- `docs/overview/INTERACTION_SCENARIOS.md`, `docs/reference/IMPLEMENTATION_READINESS.md` as needed

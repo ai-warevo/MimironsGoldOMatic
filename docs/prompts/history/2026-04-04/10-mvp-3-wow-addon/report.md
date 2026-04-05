@@ -4,9 +4,9 @@
 
 - `src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua` — MVP-3 implementation
 - `src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.toc` — notes
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md` — status + globals table
-- `docs/IMPLEMENTATION_READINESS.md` — MVP-3 row
-- `docs/ROADMAP.md` — MVP-3 status line
+- `docs/components/wow-addon/ReadME.md` — status + globals table
+- `docs/reference/IMPLEMENTATION_READINESS.md` — MVP-3 row
+- `docs/overview/ROADMAP.md` — MVP-3 status line
 - `docs/prompts/history/2026-04-04/10-mvp-3-wow-addon/*`
 
 ## Verification

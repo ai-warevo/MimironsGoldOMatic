@@ -1,12 +1,12 @@
 ## Summary
 
 - Added an MVP-level API contract section to `docs/ReadME.md` (endpoints, auth expectations, statuses, transitions, error semantics).
-- Saved the finalized project roadmap to `docs/ROADMAP.md` and linked it from the root `README.md`.
+- Saved the finalized project roadmap to `docs/overview/ROADMAP.md` and linked it from the root `README.md`.
 
 ## Modified files
 
 - `docs/ReadME.md`
-- `docs/ROADMAP.md`
+- `docs/overview/ROADMAP.md`
 - `README.md`
 
 ## Verification

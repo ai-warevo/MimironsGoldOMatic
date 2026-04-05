@@ -1,12 +1,12 @@
 ## Summary
 
-- Integrated the phased bootstrap prompts (previously in `docs/prompts/todo/`) directly into `docs/ROADMAP.md` under `MVP-1..MVP-6`, making the roadmap the single canonical source.
-- Updated the root `README.md` to remove the link to `docs/prompts/todo/` and point to `docs/ROADMAP.md` instead.
+- Integrated the phased bootstrap prompts (previously in `docs/prompts/todo/`) directly into `docs/overview/ROADMAP.md` under `MVP-1..MVP-6`, making the roadmap the single canonical source.
+- Updated the root `README.md` to remove the link to `docs/prompts/todo/` and point to `docs/overview/ROADMAP.md` instead.
 - Deleted the `docs/prompts/todo/*.md` files to eliminate duplication.
 
 ## Modified files
 
-- `docs/ROADMAP.md`
+- `docs/overview/ROADMAP.md`
 - `README.md`
 - Deleted:
   - `docs/prompts/todo/1-Shared.md`

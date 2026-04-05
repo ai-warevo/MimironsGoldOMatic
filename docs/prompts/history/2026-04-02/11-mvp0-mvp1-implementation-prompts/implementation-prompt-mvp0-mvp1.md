@@ -5,8 +5,8 @@ Use this prompt to start coding from a clean docs-aligned baseline.
 ---
 
 Acting as **[Backend/API Expert]** with strict adherence to:
-- `docs/SPEC.md` (canonical contract)
-- `docs/IMPLEMENTATION_READINESS.md` (readiness matrix)
+- `docs/overview/SPEC.md` (canonical contract)
+- `docs/reference/IMPLEMENTATION_READINESS.md` (readiness matrix)
 - `AGENTS.md` (workflow and logging protocol)
 
 ## Scope
@@ -73,7 +73,7 @@ In `MimironsGoldOMatic.Shared` implement:
 - `dotnet build src/MimironsGoldOMatic.sln` succeeds.
 - Shared contracts compile without warnings promoted to errors.
 - Namespaces start with `MimironsGoldOMatic`.
-- No conflicts with `docs/SPEC.md` DTO/status naming.
+- No conflicts with `docs/overview/SPEC.md` DTO/status naming.
 
 ## Output requirements
 

@@ -16,5 +16,5 @@ Prepared a production-ready implementation prompt for:
 
 ### Notes
 
-- Prompt is aligned with `docs/SPEC.md` and `docs/IMPLEMENTATION_READINESS.md`.
+- Prompt is aligned with `docs/overview/SPEC.md` and `docs/reference/IMPLEMENTATION_READINESS.md`.
 - Prompt includes explicit acceptance criteria and output format for the next coding run.

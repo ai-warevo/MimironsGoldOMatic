@@ -14,11 +14,11 @@ Updated “live” project documentation to reflect the finalized MVP specificat
 - `README.md`
 - `CONTEXT.md`
 - `docs/ReadME.md`
-- `docs/MimironsGoldOMatic.Shared/ReadME.md`
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`
+- `docs/components/shared/ReadME.md`
+- `docs/components/backend/ReadME.md`
+- `docs/components/desktop/ReadME.md`
+- `docs/components/wow-addon/ReadME.md`
+- `docs/components/twitch-extension/ReadME.md`
 
 ## Verification
 

@@ -8,7 +8,7 @@
   - **`SpinPhaseResolverTests`** — idle, collecting, completed (no candidate past window), spinning, verification, completed past deadline.
   - **`TwGoldChatEnrollmentParserTests`** — theory rows for matches and rejects.
 - **Integration** classes tagged **`Category=Integration`** for filtering.
-- **Docs:** `docs/MimironsGoldOMatic.Backend/ReadME.md`, `docs/SETUP.md` — `dotnet test --filter Category=Unit` vs full suite.
+- **Docs:** `docs/components/backend/ReadME.md`, `docs/setup/SETUP.md` — `dotnet test --filter Category=Unit` vs full suite.
 
 ## Verification
 

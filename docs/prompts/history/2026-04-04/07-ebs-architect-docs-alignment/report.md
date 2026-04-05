@@ -2,7 +2,7 @@
 
 ## Summary
 
-Architect decisions (inline Helix §11, **no** Outbox in MVP, **EventSub-only** enrollment subscriber signal, **`IsRewardSentAnnouncedToChat`**, roadmap mandatory checklist, SC-022 non-speculative APIs) were written into **`docs/SPEC.md`** and cross-cutting docs. **EBS** replaces generic “Backend” in prose while **`MimironsGoldOMatic.Backend`** remains the project name.
+Architect decisions (inline Helix §11, **no** Outbox in MVP, **EventSub-only** enrollment subscriber signal, **`IsRewardSentAnnouncedToChat`**, roadmap mandatory checklist, SC-022 non-speculative APIs) were written into **`docs/overview/SPEC.md`** and cross-cutting docs. **EBS** replaces generic “Backend” in prose while **`MimironsGoldOMatic.Backend`** remains the project name.
 
 ## Git
 
@@ -12,16 +12,16 @@ Architect decisions (inline Helix §11, **no** Outbox in MVP, **EventSub-only** 
 
 - `AGENTS.md`
 - `CONTEXT.md`
-- `docs/IMPLEMENTATION_READINESS.md`
-- `docs/INTERACTION_SCENARIOS.md`
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-- `docs/MimironsGoldOMatic.Shared/ReadME.md`
-- `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/ROADMAP.md`
+- `docs/reference/IMPLEMENTATION_READINESS.md`
+- `docs/overview/INTERACTION_SCENARIOS.md`
+- `docs/components/backend/ReadME.md`
+- `docs/components/desktop/ReadME.md`
+- `docs/components/shared/ReadME.md`
+- `docs/components/twitch-extension/ReadME.md`
+- `docs/components/wow-addon/ReadME.md`
+- `docs/overview/ROADMAP.md`
 - `docs/ReadME.md`
-- `docs/SPEC.md`
+- `docs/overview/SPEC.md`
 
 ## Verification
 

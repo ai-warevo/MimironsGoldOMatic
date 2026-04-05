@@ -10,7 +10,7 @@ using Xunit;
 namespace MimironsGoldOMatic.Backend.IntegrationTests;
 
 /// <summary>
-/// <see cref="docs/INTERACTION_SCENARIOS.md"/> <b>SC-005</b> — HTTP <c>POST /api/twitch/eventsub</c> through Kestrel + Marten (empty webhook secret for signature bypass in test host).
+/// <see cref="docs/overview/INTERACTION_SCENARIOS.md"/> <b>SC-005</b> — HTTP <c>POST /api/twitch/eventsub</c> through Kestrel + Marten (empty webhook secret for signature bypass in test host).
 /// </summary>
 [Collection(nameof(PostgresCollection))]
 [Trait("Category", "Integration")]

@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace MimironsGoldOMatic.Desktop.Win32;
 
-/// <summary>MVP: use the <b>foreground</b> window only when its owning process is <c>WoW</c> (<c>docs/SPEC.md</c> §8).</summary>
+/// <summary>MVP: use the <b>foreground</b> window only when its owning process is <c>WoW</c> (<c>docs/overview/SPEC.md</c> §8).</summary>
 public static class WoWForegroundLocator
 {
     public static IntPtr TryGetForegroundWoWWindow()

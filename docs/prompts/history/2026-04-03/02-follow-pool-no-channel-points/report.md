@@ -7,8 +7,8 @@ Updated project documentation so MVP **does not** depend on Twitch Channel Point
 ## Modified files
 
 - Root: `README.md`, `CONTEXT.md`, `AGENTS.md`
-- `docs/ReadME.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/INTERACTION_SCENARIOS.md`, `docs/UI_SPEC.md`, `docs/IMPLEMENTATION_READINESS.md`
-- `docs/MimironsGoldOMatic.Shared/ReadME.md`, `docs/MimironsGoldOMatic.Backend/ReadME.md`, `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`
+- `docs/ReadME.md`, `docs/overview/SPEC.md`, `docs/overview/ROADMAP.md`, `docs/overview/INTERACTION_SCENARIOS.md`, `docs/reference/UI_SPEC.md`, `docs/reference/IMPLEMENTATION_READINESS.md`
+- `docs/components/shared/ReadME.md`, `docs/components/backend/ReadME.md`, `docs/components/twitch-extension/ReadME.md`
 
 ## Prompt history
 

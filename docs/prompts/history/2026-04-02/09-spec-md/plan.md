@@ -1,11 +1,11 @@
 ## Goal
 
-Add a single canonical technical specification file (`docs/SPEC.md`) to eliminate ambiguity for agents implementing MVP tasks, while keeping the roadmap concise.
+Add a single canonical technical specification file (`docs/overview/SPEC.md`) to eliminate ambiguity for agents implementing MVP tasks, while keeping the roadmap concise.
 
 ## Scope
 
-- Add: `docs/SPEC.md`
-- Update: `docs/ROADMAP.md` (add links to SPEC sections)
+- Add: `docs/overview/SPEC.md`
+- Update: `docs/overview/ROADMAP.md` (add links to SPEC sections)
 - Update: `docs/ReadME.md` (link to SPEC)
 - Update: `README.md` (link to SPEC)
 

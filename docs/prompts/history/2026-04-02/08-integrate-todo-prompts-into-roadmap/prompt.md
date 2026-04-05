@@ -1,6 +1,6 @@
 ## Request
 
-Integrate the step-by-step prompts from `docs/prompts/todo/` into the canonical roadmap at `docs/ROADMAP.md` (per MVP-0..MVP-N sections) to eliminate duplication.
+Integrate the step-by-step prompts from `docs/prompts/todo/` into the canonical roadmap at `docs/overview/ROADMAP.md` (per MVP-0..MVP-N sections) to eliminate duplication.
 
 After integration:
 

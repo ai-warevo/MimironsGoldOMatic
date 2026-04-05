@@ -3,18 +3,18 @@
 ## Goals
 
 - Resolve open product/contract ambiguities identified in review (case rules, spin authority, IPC, API shapes, edge cases).
-- Align `AGENTS.md` and component docs with canonical `docs/SPEC.md` (ES-first vs EF Core).
-- Update `docs/INTERACTION_SCENARIOS.md` to close or re-label OPEN QUESTIONS per decisions.
-- Optionally add a short normative subsection to `docs/SPEC.md` (or appendix) for decisions.
+- Align `AGENTS.md` and component docs with canonical `docs/overview/SPEC.md` (ES-first vs EF Core).
+- Update `docs/overview/INTERACTION_SCENARIOS.md` to close or re-label OPEN QUESTIONS per decisions.
+- Optionally add a short normative subsection to `docs/overview/SPEC.md` (or appendix) for decisions.
 
 ## Affected files (tentative)
 
 - `AGENTS.md`
-- `docs/SPEC.md`
-- `docs/INTERACTION_SCENARIOS.md`
-- `docs/IMPLEMENTATION_READINESS.md` (if residual risks change)
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/ROADMAP.md` only if we add minimum API contract references
+- `docs/overview/SPEC.md`
+- `docs/overview/INTERACTION_SCENARIOS.md`
+- `docs/reference/IMPLEMENTATION_READINESS.md` (if residual risks change)
+- `docs/components/backend/ReadME.md`, `docs/components/desktop/ReadME.md`, `docs/components/wow-addon/ReadME.md`
+- `docs/overview/ROADMAP.md` only if we add minimum API contract references
 
 ## Risks
 

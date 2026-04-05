@@ -5,8 +5,8 @@
 - `.github/workflows/e2e-test.yml` — comments, NuGet cache, scoped build.
 - `.github/workflows/release.yml` — new release pipeline.
 - `src/MimironsGoldOMatic.Backend/Dockerfile` — Backend Linux image (context `src/`).
-- `docs/E2E_AUTOMATION_PLAN.md` — CI/CD Pipeline Architecture section + Tier A timing/build notes.
-- `docs/E2E_AUTOMATION_TASKS.md` — PR checklist + V3–V7 release validation tasks.
+- `docs/e2e/E2E_AUTOMATION_PLAN.md` — CI/CD Pipeline Architecture section + Tier A timing/build notes.
+- `docs/e2e/E2E_AUTOMATION_TASKS.md` — PR checklist + V3–V7 release validation tasks.
 
 ## Verification
 

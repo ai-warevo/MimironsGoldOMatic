@@ -6,7 +6,7 @@ using Xunit;
 namespace MimironsGoldOMatic.Desktop.IntegrationTests;
 
 /// <summary>
-/// Desktop "login" = configured base URL + <c>X-MGM-ApiKey</c> (<c>docs/SPEC.md</c>, <c>docs/INTERACTION_SCENARIOS.md</c> SC-002 / TC-003–004).
+/// Desktop "login" = configured base URL + <c>X-MGM-ApiKey</c> (<c>docs/overview/SPEC.md</c>, <c>docs/overview/INTERACTION_SCENARIOS.md</c> SC-002 / TC-003–004).
 /// </summary>
 [Collection(nameof(DesktopIntegrationPostgresCollection))]
 [Trait("Category", "Integration")]

@@ -11,5 +11,5 @@
 ## Files
 
 - Root: `README.md`, `CONTEXT.md`, `AGENTS.md`
-- `docs/SPEC.md` (glossary, §5, §9–11), `docs/ReadME.md`, `docs/ROADMAP.md`, `docs/INTERACTION_SCENARIOS.md`, `docs/UI_SPEC.md`, `docs/IMPLEMENTATION_READINESS.md`
+- `docs/overview/SPEC.md` (glossary, §5, §9–11), `docs/ReadME.md`, `docs/overview/ROADMAP.md`, `docs/overview/INTERACTION_SCENARIOS.md`, `docs/reference/UI_SPEC.md`, `docs/reference/IMPLEMENTATION_READINESS.md`
 - `docs/MimironsGoldOMatic.*.ReadME.md` as needed

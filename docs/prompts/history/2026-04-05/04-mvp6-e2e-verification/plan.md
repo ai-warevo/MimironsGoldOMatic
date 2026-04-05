@@ -2,10 +2,10 @@
 
 ## Goals (from ROADMAP)
 
-- Align E2E data-flow narrative with `docs/SPEC.md` (verification note in readiness matrix).
+- Align E2E data-flow narrative with `docs/overview/SPEC.md` (verification note in readiness matrix).
 - Add minimal Backend/API integration tests: idempotency, one-active-per-user, lifetime cap, expiration, roulette with one participant.
 - Keep `MimironsGoldOMatic.slnx` as the .NET solution; non-MSBuild trees (Twitch Extension, WoW addon) remain documented per MVP-0.
-- Update `docs/IMPLEMENTATION_READINESS.md` MVP-6 row; add `dotnet test` + Docker note to `docs/SETUP.md`.
+- Update `docs/reference/IMPLEMENTATION_READINESS.md` MVP-6 row; add `dotnet test` + Docker note to `docs/setup/SETUP.md`.
 
 ## Architecture
 
@@ -22,4 +22,4 @@
 
 - `src/MimironsGoldOMatic.Backend`: new configuration helper, `RouletteCycleTick`, `PayoutExpirationProcessor`; refactor `Program.cs`, hosted services.
 - `src/MimironsGoldOMatic.Backend.Tests`: new project.
-- `src/MimironsGoldOMatic.slnx`, `docs/IMPLEMENTATION_READINESS.md`, `docs/SETUP.md`.
+- `src/MimironsGoldOMatic.slnx`, `docs/reference/IMPLEMENTATION_READINESS.md`, `docs/setup/SETUP.md`.

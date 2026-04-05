@@ -8,7 +8,7 @@ using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Desktop.Services;
 
-/// <summary>Single tail of <c>WoWChatLog.txt</c> for <c>[MGM_WHO]</c>, <c>[MGM_ACCEPT]</c>, <c>[MGM_CONFIRM]</c> (<c>docs/SPEC.md</c> §10).</summary>
+/// <summary>Single tail of <c>WoWChatLog.txt</c> for <c>[MGM_WHO]</c>, <c>[MGM_ACCEPT]</c>, <c>[MGM_CONFIRM]</c> (<c>docs/overview/SPEC.md</c> §10).</summary>
 public sealed partial class WoWChatLogTailService : IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new()

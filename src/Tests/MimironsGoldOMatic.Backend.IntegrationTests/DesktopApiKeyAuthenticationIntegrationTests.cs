@@ -5,7 +5,7 @@ using Xunit;
 namespace MimironsGoldOMatic.Backend.IntegrationTests;
 
 /// <summary>
-/// <see cref="docs/INTERACTION_SCENARIOS.md"/> <b>SC-002</b>, <b>TC-003</b>, <b>TC-004</b> — Desktop <c>X-MGM-ApiKey</c> against real host + PostgreSQL.
+/// <see cref="docs/overview/INTERACTION_SCENARIOS.md"/> <b>SC-002</b>, <b>TC-003</b>, <b>TC-004</b> — Desktop <c>X-MGM-ApiKey</c> against real host + PostgreSQL.
 /// </summary>
 [Collection(nameof(PostgresCollection))]
 [Trait("Category", "Integration")]

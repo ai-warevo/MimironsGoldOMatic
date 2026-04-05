@@ -12,7 +12,7 @@ Align root `*.md` and `docs/**/*.md` (excluding `docs/prompts/` except new histo
 ## Affected files (expected)
 
 - Root: `README.md`, `CONTEXT.md`, `AGENTS.md`
-- `docs/ReadME.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/INTERACTION_SCENARIOS.md`, `docs/UI_SPEC.md`, `docs/IMPLEMENTATION_READINESS.md`
+- `docs/ReadME.md`, `docs/overview/SPEC.md`, `docs/overview/ROADMAP.md`, `docs/overview/INTERACTION_SCENARIOS.md`, `docs/reference/UI_SPEC.md`, `docs/reference/IMPLEMENTATION_READINESS.md`
 - `docs/MimironsGoldOMatic.*/ReadME.md` (Shared, Backend, TwitchExtension; Desktop/WoW if references appear)
 
 ## Risks
@@ -22,4 +22,4 @@ Align root `*.md` and `docs/**/*.md` (excluding `docs/prompts/` except new histo
 ## Verification
 
 - Grep for removed concepts: `Channel Points`, `Switch to instant`, `instant spin`, `TwitchTransactionId`, `redemption` (where inappropriate).
-- Read-through of `docs/SPEC.md` glossary and §5 for internal consistency.
+- Read-through of `docs/overview/SPEC.md` glossary and §5 for internal consistency.

@@ -7,11 +7,11 @@ Synchronize “live” documentation (outside `docs/prompts/`) to reflect the fi
 - `README.md`
 - `CONTEXT.md`
 - `docs/ReadME.md`
-- `docs/MimironsGoldOMatic.Shared/ReadME.md`
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`
+- `docs/components/shared/ReadME.md`
+- `docs/components/backend/ReadME.md`
+- `docs/components/desktop/ReadME.md`
+- `docs/components/wow-addon/ReadME.md`
+- `docs/components/twitch-extension/ReadME.md`
 
 ## Key spec deltas to document
 
