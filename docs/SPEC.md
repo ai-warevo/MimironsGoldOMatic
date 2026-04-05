@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # Mimiron's Gold-o-Matic — Technical Specification (MVP)
 
@@ -7,6 +7,8 @@ This document is the **canonical implementation contract** for the MVP.
 **User-facing UI** (Twitch Extension, WPF, WoW addon screens, states, ASCII layouts): `docs/UI_SPEC.md`.
 
 **Code alignment:** MVP slices **MVP-1 … MVP-5** are implemented under `src/` (Shared, Backend, Desktop, Twitch Extension, WoW addon). Remaining gaps (automated tests, packaging, production hardening) are summarized in `docs/IMPLEMENTATION_READINESS.md`.
+
+**Non-normative digests (do not override this file):** [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), [`docs/GLOSSARY.md`](GLOSSARY.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md), [`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ### EBS — Extension Backend Service (normative, MVP)
 

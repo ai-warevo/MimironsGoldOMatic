@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # MVP Implementation Readiness Matrix
 
@@ -7,11 +7,11 @@
 1. **Documentation / spec alignment** — The table below checks that MVP decisions are **reflected consistently** across normative docs (`docs/SPEC.md`, READMEs, roadmap). A **Ready** row means the **written contracts** agree; it does **not** mean the feature is **implemented in code**.
 2. **Source tree parity** — See [Source code parity (MVP track)](#source-code-parity-mvp-track) for **what exists today** under `src/` versus MVP-0…MVP-6 in `docs/ROADMAP.md`.
 
-Canonical normative source remains `docs/SPEC.md`. For **user-visible** behavior and layout, cross-check `docs/UI_SPEC.md` (UI-1xx–4xx) alongside component READMEs.
+Canonical normative source remains **`docs/SPEC.md`**. For **user-visible** behavior and layout, cross-check **`docs/UI_SPEC.md`** (UI-1xx–4xx) alongside component READMEs. **Conceptual overviews** (architecture, MVP digest, workflows): [`docs/ARCHITECTURE.md`](ARCHITECTURE.md), [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md).
 
 | Decision | Required state | Fixed in docs | Doc / spec alignment |
 |---|---|---|---|
-| Architecture baseline | DDD + CQRS + ES are mandatory in MVP | `README.md`, `docs/ReadME.md`, `docs/SPEC.md`, `docs/ROADMAP.md` | Ready |
+| Architecture baseline | DDD + CQRS + ES are mandatory in MVP | `docs/ARCHITECTURE.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `README.md`, `docs/ReadME.md` | Ready |
 | MVP write-side source of truth | ES-first with Marten/PostgreSQL | `docs/SPEC.md`, `docs/ReadME.md`, `docs/MimironsGoldOMatic.Backend/ReadME.md`, `docs/ROADMAP.md` | Ready |
 | EF Core role | Read-model/query side only | `docs/SPEC.md`, `docs/ReadME.md`, `docs/MimironsGoldOMatic.Backend/ReadME.md`, `README.md`, `docs/ROADMAP.md` | Ready |
 | Claim endpoint success semantics | `POST /api/payouts/claim`: `201` new, `200` idempotent replay (pool **enrollment**) | `docs/SPEC.md`, `docs/MimironsGoldOMatic.Backend/ReadME.md`, `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`, `docs/MimironsGoldOMatic.Shared/ReadME.md`, `docs/ROADMAP.md` | Ready |

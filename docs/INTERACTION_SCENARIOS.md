@@ -1,10 +1,14 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # Mimiron's Gold-o-Matic — Interaction Scenarios & Test Cases
 
-This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** **subscribers** join via **`!twgold <CharacterName>`** in **broadcast chat**; a **roulette** selects an **online-verified** winner; **WoW whisper reply `!twgold`** (after the **winner notification whisper**, `docs/SPEC.md` §9) leads the addon to print **`[MGM_ACCEPT:UUID]`** → Desktop **`confirm-acceptance`**; on **MGM-armed** mail **`MAIL_SEND_SUCCESS`**, the addon prints **`[MGM_CONFIRM:UUID]`** (→ **`Sent`**, pool removal) and whispers the winner the **mail-completion** Russian line; the **EBS** **must** **attempt** the §11 Twitch broadcast line via **Helix** after **`Sent`** (Extension hardcoded template matches).
+This document translates **`docs/SPEC.md`** into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources.
 
-**References:** `README.md`, `CONTEXT.md`, `AGENTS.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md` (screen-level UX aligned to these flows), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
+**References:** [`README.md`](../README.md), [`CONTEXT.md`](../CONTEXT.md), [`AGENTS.md`](../AGENTS.md), [`docs/SPEC.md`](SPEC.md), [`docs/ROADMAP.md`](ROADMAP.md), [`docs/UI_SPEC.md`](UI_SPEC.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md), [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
+
+End-to-end narrative: **[WORKFLOWS.md](WORKFLOWS.md)** · product digest: **[MVP_PRODUCT_SUMMARY.md](MVP_PRODUCT_SUMMARY.md)**.
+
+<!-- Former long opening paragraph moved there. See: docs/WORKFLOWS.md · docs/MVP_PRODUCT_SUMMARY.md -->
 
 **Implementation scope (roadmap phases):** Treat **`docs/SPEC.md`** as the only normative contract for **what to build**. Scenarios in this file marked **future / not MVP**, **placeholder**, or **open** (e.g. SC-020 pause/resume, SC-022 retry-token speculation) **must not** be implemented — **no** speculative endpoints (retry tokens, pause APIs, etc.) unless/until **`docs/SPEC.md`** adds them. Each roadmap step should follow the **mandatory checklist** the owner supplies (SPEC § references, TC ids, **no endpoints outside SPEC**).
 

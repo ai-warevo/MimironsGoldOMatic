@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # Project Roadmap: Mimiron's Gold-o-Matic
 
@@ -23,7 +23,9 @@ Each step is executed with a checklist supplied by the project owner (often inli
 - **Not** add HTTP endpoints, DTOs, or product behaviors absent from **`docs/SPEC.md`**.
 - **Not** implement **`docs/INTERACTION_SCENARIOS.md`** scenarios marked **future / not MVP** or **placeholder** unless **`docs/SPEC.md`** explicitly adds the behavior (no speculative APIs — e.g. retry tokens, pause endpoints).
 
-**Payout model note:** **Subscribers** join by **`!twgold <CharacterName>`** in **broadcast Twitch chat** (monitored by the **EBS**); **character names** are **unique** in the pool. Gold is **not** paid instantly. A **visual roulette** (**every 5 minutes**, minimum **1** participant) picks **one winner**; **non-winners stay**; **winners are removed from the pool when `Sent`**, and may **re-enter** via chat. **Consent** is **WoW whisper `!twgold`** after the **winner notification whisper** (`docs/SPEC.md` §9). **`Sent`** only after **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`**.
+**Payout model note:** see **[MVP_PRODUCT_SUMMARY.md](MVP_PRODUCT_SUMMARY.md)** (digest) and **`docs/SPEC.md`** (normative).
+
+<!-- Former inline payout paragraph moved to MVP_PRODUCT_SUMMARY.md. See: docs/MVP_PRODUCT_SUMMARY.md -->
 
 ## MVP (End-to-end happy path)
 

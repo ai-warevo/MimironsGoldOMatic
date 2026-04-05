@@ -1,15 +1,13 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 ## MimironsGoldOMatic.Shared (.NET 10)
 
 - **Role:** Single source of truth for data structures used by both the **EBS** (`MimironsGoldOMatic.Backend`) and the Desktop app.
 - **Stack:** .NET 10 Class Library.
 
-## High-Level Patterns
-- **DDD (Domain-Driven Design):** The core logic, limits (10k gold), and state transitions must be encapsulated within the Domain layer (Aggregates/Value Objects).
-- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching **in `MimironsGoldOMatic.Backend` (EBS) only** — **not** in Shared. This project (`Shared`) holds **DTOs, validation, shared types**; **handlers/pipelines** live in the **EBS**.
-- **Event Sourcing (ES):** The system of record should be an Event Store (using **Marten** with PostgreSQL). Every change to a payout must be a persisted event for 100% auditability.
-- **Audit & Scalability:** Design for high availability and full transparency. A streamer should be able to see exactly when and why a payout failed or was delayed.
+## High-level patterns
+
+<!-- Content moved to ARCHITECTURE.md. See: docs/ARCHITECTURE.md -->
 
 ## Low-level Patterns
 - **FluentValidation:** Shared validators for `PayoutDto` and `CreatePayoutRequest`; **`CharacterNameRules`** for format checks.

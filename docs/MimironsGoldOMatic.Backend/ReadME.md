@@ -1,14 +1,17 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 ## MimironsGoldOMatic.Backend — EBS (Extension Backend Service) (ASP.NET Core | Bridge between Twitch Extension & WPF Desktop)
+
+<!-- System pipeline and EBS role: docs/ARCHITECTURE.md · Product digest: docs/MVP_PRODUCT_SUMMARY.md -->
 
 - **EBS:** This project **`MimironsGoldOMatic.Backend`** is the **EBS** — same as **`docs/SPEC.md`**. It owns **Twitch Extension JWT** validation (**HS256** via **`Twitch:ExtensionSecret`**; optional **`aud`** = **`ExtensionClientId`**), **EventSub** (`channel.chat.message` → **`POST /api/twitch/eventsub`**), **Helix** (§11 **`Send Chat Message`**, inline **3×** retry in **`HelixChatService`**, **no** Outbox in MVP), and Desktop **`X-MGM-ApiKey`** routes.
 - **Repository status:** `src/MimironsGoldOMatic.Backend` implements **MVP-2** per `docs/ROADMAP.md`: Marten on PostgreSQL, MediatR command/query handlers, Extension JWT + Desktop `X-MGM-ApiKey`, EventSub chat enrollment, roulette/pool/payout HTTP surface, Helix reward-sent announcement (inline retries), and hourly payout expiration. Set `ConnectionStrings:PostgreSQL`, `Mgm:ApiKey`, and `Twitch:*` in configuration (see `appsettings.Development.json` for a local Postgres example). **EF Core** is not used in this project yet (read models are Marten documents).
 - **UI spec (consumer-facing):** Extension/Desktop/Addon behaviors that the API supports are summarized in `docs/UI_SPEC.md`; API shapes remain canonical in `docs/SPEC.md`.
-- **Role:** Orchestrates the **participant pool**, **roulette spins**, **payout queue**, and persistent storage.
 - **Stack:** ASP.NET Core, Marten (Event Store), PostgreSQL. EF Core remains optional for future read-side tooling (`docs/SPEC.md` §6).
 
 ## Key Functions
+
+<!-- Pool / roulette / abuse rules summary: docs/MVP_PRODUCT_SUMMARY.md · End-to-end flow: docs/WORKFLOWS.md -->
 
 - **Authentication (phased):**
   - **MVP:** Extension **Bearer** JWT validated with symmetric key from **`Twitch:ExtensionSecret`**; **Development** fallback when secret empty. **Issuer** / JWKS-style rotation: roadmap.

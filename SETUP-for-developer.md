@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # Setup for developers
 
@@ -8,53 +8,9 @@ Normative product behavior remains in **`docs/SPEC.md`**. Implementation status 
 
 ---
 
-## 1. Prerequisites
+## 1–2. Prerequisites, clone, and first build
 
-Install the following on your machine (versions should match or exceed what the repo targets).
-
-| Tool | Used for | Notes |
-|------|-----------|--------|
-| **[.NET SDK 10](https://dotnet.microsoft.com/download)** | `MimironsGoldOMatic.Shared`, `MimironsGoldOMatic.Backend`, `MimironsGoldOMatic.Desktop` | Run `dotnet --version` and confirm a **10.x** SDK. |
-| **[Node.js](https://nodejs.org/)** (LTS recommended) | `src/MimironsGoldOMatic.TwitchExtension` (Vite + React) | Run `node --version` and `npm --version`. |
-| **PostgreSQL** | Backend persistence (Marten Event Store) | Local install, Docker, or a dev instance. **16+** is a reasonable default. |
-| **Git** | Cloning and contributing | — |
-
-Optional:
-
-- **Twitch [Developer Rig](https://dev.twitch.tv/docs/extensions/rig/)** — testing the Extension against real Twitch JWTs and your EBS.
-- **WoW 3.3.5a client** — addon and Desktop integration testing.
-
----
-
-## 2. Clone and restore
-
-```bash
-git clone <repository-url>
-cd MimironsGoldOMatic
-```
-
-**.NET**
-
-```bash
-dotnet restore src/MimironsGoldOMatic.slnx
-dotnet build src/MimironsGoldOMatic.slnx
-```
-
-**Twitch Extension (frontend)**
-
-```bash
-cd src/MimironsGoldOMatic.TwitchExtension
-npm install
-npm run build
-```
-
-For local UI development:
-
-```bash
-npm run dev
-```
-
-Copy **`.env.example`** to **`.env.local`** and set **`VITE_MGM_EBS_BASE_URL`** to your Backend base URL (no trailing slash), e.g. `http://localhost:5088`. The panel calls the EBS with the Twitch Extension JWT; use the **[Developer Rig](https://dev.twitch.tv/docs/extensions/rig/)** for real tokens. Without the Rig (plain Vite only), expect the unauthenticated / error state until a token is present.
+<!-- Content moved to SETUP_COMMON.md. See: docs/SETUP_COMMON.md -->
 
 ---
 

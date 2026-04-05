@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # Mimiron's Gold-o-Matic — Detailed UI/UX Specification
 
@@ -13,9 +13,10 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 | Area | Markdown |
 |------|----------|
 | Project overview | [README.md](../README.md) |
-| Architecture summary | [CONTEXT.md](../CONTEXT.md) |
+| Architecture summary | [CONTEXT.md](../CONTEXT.md) · [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Product rules (digest) | [MVP_PRODUCT_SUMMARY.md](MVP_PRODUCT_SUMMARY.md) |
 | Agent workflow & roles | [AGENTS.md](../AGENTS.md) |
-| Docs index (DDD/CQRS/stack) | [ReadME.md](ReadME.md) |
+| Docs index (Shared / pointers) | [ReadME.md](ReadME.md) |
 | **Canonical MVP contracts** | [SPEC.md](SPEC.md) |
 | MVP prompts & sequencing | [ROADMAP.md](ROADMAP.md) |
 | Interaction scenarios & TCs | [INTERACTION_SCENARIOS.md](INTERACTION_SCENARIOS.md) |
@@ -26,12 +27,9 @@ Keep this UI spec aligned with the rest of the repo (paths relative to this file
 | WoW addon | [MimironsGoldOMatic.WoWAddon/ReadME.md](MimironsGoldOMatic.WoWAddon/ReadME.md) |
 | Implementation readiness | [IMPLEMENTATION_READINESS.md](IMPLEMENTATION_READINESS.md) |
 
-**Global product rules (UI copy must reflect these):**
+**Global product rules (UI copy):** use **[MVP_PRODUCT_SUMMARY.md](MVP_PRODUCT_SUMMARY.md)** (digest) and **[SPEC.md](SPEC.md)** (normative) as the source of truth for pool, roulette, consent, and §11 copy constraints.
 
-- Viewers **must subscribe** and type **`!twgold <CharacterName>`** in **broadcast stream chat** to join the pool (**`!twgold`** prefix **case-insensitive**; **CharacterName** = server nickname; **unique** among pool participants). **Gold is not paid instantly** on enroll. Channel Points are **not** used.
-- A **visual roulette** runs on a **fixed 5-minute** cadence (**no** early or off-schedule spin). The **next spin** instant is **server-authoritative**; the Extension **must** show a **countdown / timer** using **`GET /api/roulette/state`** (`docs/SPEC.md` §5.1, §11). **Non-winners stay** in the pool; **winners are removed when `Sent`** and may **re-enter** with **`!twgold <CharacterName>`** again.
-- **Winners** are **online-verified** via **`/who`** before **`Pending` payout**; Extension shows **“You won”**; **in WoW**, winner gets the **notification whisper** and replies **`!twgold`** (**case-insensitive**; `docs/SPEC.md` §5, §9).
-- **Fixed 1,000g** per winning payout (`docs/SPEC.md` §2). **Desktop** holds **`X-MGM-ApiKey`**; Extension uses Twitch EBS/JWT to **Backend** (not the Desktop secret).
+<!-- Expanded bullet list previously here moved to MVP_PRODUCT_SUMMARY.md. See: docs/MVP_PRODUCT_SUMMARY.md -->
 
 > ⚠️ **DECISION (locked):** Streamer **Extension dashboard** screens (**UI-201–204**) are **out of MVP-5** — implement **viewer** panels **UI-101–106** only (`docs/ROADMAP.md` MVP-5). Layouts below remain **reference** for post-MVP when broadcaster JWT routes exist; MVP gold stays fixed per **`docs/SPEC.md`**.
 

@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # Setup for streamers and operators
 
@@ -12,12 +12,7 @@ Normative behavior (chat commands, mail flow, logs) is defined in **`docs/SPEC.m
 
 ## 1. What you need (conceptual)
 
-| Piece | Role |
-|--------|------|
-| **Backend (EBS)** | Hosted API: pool, roulette, payouts, Twitch chat ingestion (EventSub), Extension JWT, Desktop API key. **Requires PostgreSQL** and Twitch configuration. |
-| **Twitch Extension** | Panel viewers see: countdown, pool hints, winner status. Talks to the EBS over HTTPS with **Extension JWT**. |
-| **Desktop (WPF)** | Runs on the **streamer's PC**: tails **`WoWChatLog.txt`**, calls the EBS with **`X-MGM-ApiKey`**, injects `/run` commands into WoW. |
-| **WoW 3.3.5a addon** | In-game mail UI, whispers, **`[MGM_WHO]`**, **`[MGM_ACCEPT:UUID]`**, **`[MGM_CONFIRM:UUID]`** lines in the chat log. |
+<!-- Content moved to ARCHITECTURE.md (Runtime components + EBS). See: docs/ARCHITECTURE.md -->
 
 **MVP scope:** **One** broadcaster channel per Backend instance (`docs/SPEC.md` deployment scope).
 
