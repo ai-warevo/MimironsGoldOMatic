@@ -55,3 +55,8 @@ Cache/
 Interface/AddOns/*/WTF/
 Interface/AddOns/*/Cache/
 
+# --- Python ---
+.venv/
+.pytest_cache/
+.mypy_cache/
+__pycache__/

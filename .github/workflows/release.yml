@@ -129,6 +129,7 @@ jobs:
           ADDON_DIR="${STAGE}/MimironsGoldOMatic"
           rm -rf "${STAGE}"
           mkdir -p "${ADDON_DIR}"
+          cp src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.Core.lua "${ADDON_DIR}/"
           cp src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua "${ADDON_DIR}/"
           cp src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.toc "${ADDON_DIR}/"
           UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"

@@ -1,0 +1,5 @@
+- [x] Create `MimironsGoldOMatic.WoWAddon.Tests` with `UnitTests` and `IntegrationTests`
+- [x] LuaUnit + wow API mock + run_tests.lua / run_tests.ps1
+- [x] Core module + main addon wiring
+- [x] CI + release zip include Core.lua
+- [x] `checks.md` updated
