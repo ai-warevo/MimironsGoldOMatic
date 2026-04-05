@@ -1,0 +1,360 @@
+# Sequential release CI/CD: four parallel component builds → one GitHub Release + GHCR image.
+#
+# Optimization / ops notes:
+# - NuGet / npm: caches below reduce cold restores; refresh cache keys when lockfiles or TFMs change materially.
+# - Self-hosted runners: Windows agents can reduce queue time for WPF/Desktop or satisfy org policies; keep defaults portable.
+# - Artifacts: upload-artifact retention-days trades GitHub storage vs forensic retention — align with org policy.
+# - Future matrix: e.g. multiple RIDs for Desktop or multi-arch images once product supports it.
+#
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version without v prefix (e.g. 1.2.3). Leave empty to use v0.0.<run_number>.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: mimirons-release-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: "10.0.x"
+
+jobs:
+  build-desktop:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve RELEASE_VERSION
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
+        run: |
+          set -e
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            V="${INPUT_VERSION#v}"
+            echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Publish Desktop (win-x64)
+        run: >
+          dotnet publish src/MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj
+          -c Release -r win-x64 --self-contained false
+          -o "${{ runner.temp }}/mgm-desktop-publish"
+
+      - name: Pack desktop ZIP with README.txt
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pub = Join-Path $env:RUNNER_TEMP 'mgm-desktop-publish'
+          $utc = (Get-Date).ToUniversalTime().ToString('o')
+          $readme = @"
+          Mimiron's Gold-o-Matic — Desktop (Windows)
+          Version: $env:RELEASE_VERSION
+          Commit: $env:GITHUB_SHA
+          Repository: $env:GITHUB_REPOSITORY
+          Built (UTC): $utc
+          "@
+          Set-Content -Path (Join-Path $pub 'README.txt') -Value $readme -Encoding utf8
+          $zip = "MimironsGoldOMatic-Desktop-$env:RELEASE_VERSION-win.zip"
+          if (Test-Path $zip) { Remove-Item $zip }
+          Compress-Archive -Path (Join-Path $pub '*') -DestinationPath $zip
+
+      - name: Upload desktop artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-release
+          path: MimironsGoldOMatic-Desktop-${{ env.RELEASE_VERSION }}-win.zip
+          if-no-files-found: error
+          retention-days: 90
+
+  build-wowaddon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve RELEASE_VERSION
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
+        run: |
+          set -e
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            V="${INPUT_VERSION#v}"
+            echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Pack WoW addon ZIP with README.txt
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+        run: |
+          set -euo pipefail
+          STAGE="${RUNNER_TEMP}/wow-addon-stage"
+          ADDON_DIR="${STAGE}/MimironsGoldOMatic"
+          rm -rf "${STAGE}"
+          mkdir -p "${ADDON_DIR}"
+          cp src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua "${ADDON_DIR}/"
+          cp src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.toc "${ADDON_DIR}/"
+          UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          {
+            echo "Mimiron's Gold-o-Matic — WoW addon (3.3.5a)"
+            echo "Version: ${RELEASE_VERSION}"
+            echo "Commit: ${GITHUB_SHA}"
+            echo "Repository: ${GITHUB_REPOSITORY}"
+            echo "Built (UTC): ${UTC}"
+            echo ""
+            echo "Install: extract so the folder MimironsGoldOMatic/ (containing .toc and .lua) lives under Interface/AddOns/."
+          } > "${STAGE}/README.txt"
+          OUT="WoWAddon-${RELEASE_VERSION}.zip"
+          rm -f "${OUT}"
+          (cd "${STAGE}" && zip -r "${GITHUB_WORKSPACE}/${OUT}" MimironsGoldOMatic README.txt)
+
+      - name: Upload WoW addon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wow-addon-release
+          path: WoWAddon-${{ env.RELEASE_VERSION }}.zip
+          if-no-files-found: error
+          retention-days: 90
+
+  build-twitch-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve RELEASE_VERSION
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
+        run: |
+          set -e
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            V="${INPUT_VERSION#v}"
+            echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: src/MimironsGoldOMatic.TwitchExtension/package-lock.json
+
+      - name: Install and build Twitch Extension
+        working-directory: src/MimironsGoldOMatic.TwitchExtension
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+
+      - name: Pack Twitch Extension ZIP with README.txt
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+        run: |
+          set -euo pipefail
+          STAGE="${RUNNER_TEMP}/twitch-ext-stage"
+          rm -rf "${STAGE}"
+          mkdir -p "${STAGE}/dist"
+          cp -r src/MimironsGoldOMatic.TwitchExtension/dist/. "${STAGE}/dist/"
+          UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          {
+            echo "Mimiron's Gold-o-Matic — Twitch Extension (built output)"
+            echo "Version: ${RELEASE_VERSION}"
+            echo "Commit: ${GITHUB_SHA}"
+            echo "Repository: ${GITHUB_REPOSITORY}"
+            echo "Built (UTC): ${UTC}"
+            echo ""
+            echo "Contents: dist/ from npm run build (Vite). Host per Twitch Extension developer console requirements."
+          } > "${STAGE}/README.txt"
+          OUT="TwitchExtension-${RELEASE_VERSION}.zip"
+          rm -f "${OUT}"
+          (cd "${STAGE}" && zip -r "${GITHUB_WORKSPACE}/${OUT}" dist README.txt)
+
+      - name: Upload Twitch Extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twitch-extension-release
+          path: TwitchExtension-${{ env.RELEASE_VERSION }}.zip
+          if-no-files-found: error
+          retention-days: 90
+
+  build-backend-docker:
+    runs-on: ubuntu-latest
+    outputs:
+      image_repo: ${{ steps.image.outputs.image_repo }}
+      image_digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve RELEASE_VERSION
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
+        run: |
+          set -e
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            V="${INPUT_VERSION#v}"
+            echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Compute GHCR image name (lowercase)
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          owner_lc="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          echo "image_repo=ghcr.io/${owner_lc}/mimirons-goldomatic-backend" >> "${GITHUB_OUTPUT}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Backend image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: src
+          file: src/MimironsGoldOMatic.Backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.image.outputs.image_repo }}:${{ env.RELEASE_VERSION }}
+            ${{ steps.image.outputs.image_repo }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [build-desktop, build-wowaddon, build-twitch-extension, build-backend-docker]
+    steps:
+      - name: Checkout (full history for release notes)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve RELEASE_VERSION
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
+        run: |
+          set -e
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
+            V="${INPUT_VERSION#v}"
+            echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Collect ZIPs, checksums, and release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          find release-assets -type f -name '*.zip' -print0 | while IFS= read -r -d '' f; do
+            base="$(basename "$f")"
+            cp -f "$f" "upload/${base}"
+          done
+          zip_count="$(find upload -name '*.zip' | wc -l)"
+          zip_count="${zip_count//[[:space:]]/}"
+          if [ "${zip_count:-0}" -lt 1 ]; then
+            echo "No ZIP artifacts found under release-assets"
+            find release-assets -type f -maxdepth 4 || true
+            exit 1
+          fi
+          (cd upload && sha256sum *.zip > SHA256SUMS.txt)
+          PREV_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          NOTES_FILE="${GITHUB_WORKSPACE}/release-notes.md"
+          {
+            echo "## Changes"
+            echo ""
+            if [ -n "${PREV_TAG}" ]; then
+              git log --pretty=format:'- %s (%h)' "${PREV_TAG}..HEAD" || true
+            else
+              git log --pretty=format:'- %s (%h)' -n 50 || true
+            fi
+            echo ""
+            echo ""
+            echo "## Container image (GHCR)"
+            echo ""
+            echo "Repository: \`${{ needs.build-backend-docker.outputs.image_repo }}\`"
+            echo ""
+            echo "- \`${{ needs.build-backend-docker.outputs.image_repo }}:${{ env.RELEASE_VERSION }}\`"
+            echo "- \`${{ needs.build-backend-docker.outputs.image_repo }}:latest\`"
+            echo ""
+            if [ -n "${{ needs.build-backend-docker.outputs.image_digest }}" ]; then
+              echo "Digest: \`${{ needs.build-backend-docker.outputs.image_digest }}\`"
+            fi
+            echo ""
+            echo "## Artifacts"
+            echo ""
+            echo "ZIP bundles for Desktop, WoW addon, and Twitch Extension are attached. Verify with \`SHA256SUMS.txt\`."
+          } > "${NOTES_FILE}"
+          echo "NOTES_FILE=${NOTES_FILE}" >> "${GITHUB_ENV}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: ${{ env.RELEASE_VERSION }}
+          body_path: ${{ env.NOTES_FILE }}
+          files: |
+            upload/*.zip
+            upload/SHA256SUMS.txt
+          fail_on_unmatched_files: true
+          generate_release_notes: false

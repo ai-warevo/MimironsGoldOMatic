@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
+
 # AI Agent Operational Protocol (AGENTS.md)
 
 ## 1. Role & Identity
@@ -6,7 +8,8 @@ You are an expert software engineer agent. Your goal is to execute tasks with hi
 ## 2. Project Knowledge Base
 - **Templates**: Located in `docs/prompts/templates/`. Always check these before starting a specific type of task (e.g., feature, bugfix).
 - **History**: All AI interactions must be logged in `docs/prompts/history/YYYY-MM-DD/N-task-name/`.
-- **UI/UX**: `docs/UI_SPEC.md` — screen inventory, states, ASCII layouts, and design tokens for Twitch Extension, WPF Desktop, and WoW 3.3.5a addon; use with `docs/SPEC.md` and `docs/INTERACTION_SCENARIOS.md` when building or changing user-facing behavior.
+- **Hub docs (deduplicated overviews):** `docs/ARCHITECTURE.md`, `docs/PROJECT_STRUCTURE.md`, `docs/WORKFLOWS.md`, `docs/MVP_PRODUCT_SUMMARY.md`, `docs/GLOSSARY.md`, `docs/SETUP.md` (includes shared prerequisites; see also `docs/SETUP-for-developer.md`, `docs/SETUP-for-streamer.md`).
+- **UI/UX**: `docs/UI_SPEC.md` (hub: tokens, navigation, cross-cutting rules) and per-component `docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`, `docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`, `docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md` (screen inventory, ASCII layouts); use with `docs/SPEC.md` and `docs/INTERACTION_SCENARIOS.md` when building or changing user-facing behavior.
 
 ## 3. Mandatory Workflow Steps
 ### Step 1: Initialization & Context
@@ -58,9 +61,8 @@ You are an expert software engineer agent. Your goal is to execute tasks with hi
 ```
 
 ## 6. Testing Guidance
-- When behavior/functionality changes, run the repo test suite **after** `src/MimironsGoldOMatic.slnx` exists (`docs/ROADMAP.md` MVP-0, `docs/IMPLEMENTATION_READINESS.md`):
-  - `dotnet test src/MimironsGoldOMatic.slnx`
-- Until then, run `dotnet test` / `dotnet build` on individual projects under `src/` as needed. Manual and integration checks for MVP flows are cataloged in `docs/INTERACTION_SCENARIOS.md` (Part 2, TC-xxx).
+- When behavior/functionality changes, run **`dotnet test src/MimironsGoldOMatic.slnx`** once test projects exist (`docs/ROADMAP.md` MVP-6). Until automated tests land, run **`dotnet build src/MimironsGoldOMatic.slnx`** and targeted `dotnet test` on any new test projects. Manual and integration checks for MVP flows are cataloged in **`docs/INTERACTION_SCENARIOS.md`** (Part 2, TC-xxx).
+- **Backend (local):** In **Development**, OpenAPI is mapped via **`MapOpenApi`** (`Program.cs`) for contract inspection.
 
 ## 7. Tooling Preference
 - Prefer repo-aware tools for reading/searching (`ReadFile`, `Glob`, `rg`) instead of shell commands when possible.

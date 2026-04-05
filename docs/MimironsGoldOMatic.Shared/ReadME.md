@@ -1,18 +1,18 @@
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
+
 ## MimironsGoldOMatic.Shared (.NET 10)
 
 - **Role:** Single source of truth for data structures used by both the **EBS** (`MimironsGoldOMatic.Backend`) and the Desktop app.
 - **Stack:** .NET 10 Class Library.
 
-## High-Level Patterns
-- **DDD (Domain-Driven Design):** The core logic, limits (10k gold), and state transitions must be encapsulated within the Domain layer (Aggregates/Value Objects).
-- **CQRS (Command Query Responsibility Segregation):** Clear separation between write operations (Commands) and read operations (Queries). Use **MediatR** for dispatching **in `MimironsGoldOMatic.Backend` (EBS) only** — **not** in Shared. This project (`Shared`) holds **DTOs, validation, shared types**; **handlers/pipelines** live in the **EBS**.
-- **Event Sourcing (ES):** The system of record should be an Event Store (using **Marten** with PostgreSQL). Every change to a payout must be a persisted event for 100% auditability.
-- **Audit & Scalability:** Design for high availability and full transparency. A streamer should be able to see exactly when and why a payout failed or was delayed.
+## High-level patterns
+
+<!-- Content moved to ARCHITECTURE.md. See: docs/ARCHITECTURE.md -->
 
 ## Low-level Patterns
-- **FluentValidation:** Implement shared validation rules for `PayoutDto` and `CreatePayoutRequest`. Character name patterns and gold limits must be validated consistently across **EBS** and Desktop.
-- **Primary Constructors:** Use C# 14 / .NET 10 primary constructors for all DTOs and Records.
-- **Result Pattern:** Use `FluentResults` for domain and service layer responses instead of throwing exceptions.
+- **FluentValidation:** Shared validators for `PayoutDto` and `CreatePayoutRequest`; **`CharacterNameRules`** for format checks.
+- **Primary constructors / records:** DTOs such as **`PayoutDto`**, **`CreatePayoutRequest`** are **`record`** types in this assembly.
+- **Application results:** The **EBS** uses **`HandlerResult<T>`** + **`ApiErrorDto`** in MediatR handlers — **not** part of this library.
 
 ## Core Entities
 
@@ -50,4 +50,4 @@ Status and API semantics are normative in `docs/SPEC.md`:
 - `POST /api/payouts/claim`: `201` for new creation, `200` for idempotent duplicate replay.
 - `GET /api/payouts/my-last`: `404` when no payout exists for caller.
 
-Field labels and validation-driven UX are aligned with **`docs/UI_SPEC.md`**. **Enrollment** is primarily via Twitch chat **`!twgold <CharacterName>`**; optional **`CreatePayoutRequest`** / **`EnrollmentRequestId`** applies to Extension/Dev Rig paths only (see `docs/SPEC.md`).
+Field labels and validation-driven UX are aligned with **`docs/UI_SPEC.md`** (hub) and client **`docs/MimironsGoldOMatic.*/UI_SPEC.md`**. **Enrollment** is primarily via Twitch chat **`!twgold <CharacterName>`**; optional **`CreatePayoutRequest`** / **`EnrollmentRequestId`** applies to Extension/Dev Rig paths only (see `docs/SPEC.md`).

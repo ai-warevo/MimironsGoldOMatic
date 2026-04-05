@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Shared;
 using Marten;
@@ -6,10 +5,8 @@ using Marten;
 namespace MimironsGoldOMatic.Backend.Services;
 
 /// <summary>EventSub <c>!twgold &lt;CharacterName&gt;</c> enrollment (SPEC section 5).</summary>
-public sealed partial class ChatEnrollmentService(IDocumentStore store, ILogger<ChatEnrollmentService> log)
+public sealed class ChatEnrollmentService(IDocumentStore store, ILogger<ChatEnrollmentService> log)
 {
-    private static readonly Regex Enroll = EnrollRegex();
-
     public async Task IngestAsync(
         string messageId,
         string twitchUserId,
@@ -25,9 +22,7 @@ public sealed partial class ChatEnrollmentService(IDocumentStore store, ILogger<
         if (await session.LoadAsync<ChatMessageDedupDocument>(messageId, ct) != null)
             return;
 
-        var trimmed = chatText.Trim();
-        var m = Enroll.Match(trimmed);
-        if (!m.Success)
+        if (!TwGoldChatEnrollmentParser.TryGetCharacterName(chatText, out var characterName))
             return;
 
         if (!isSubscriber)
@@ -36,7 +31,6 @@ public sealed partial class ChatEnrollmentService(IDocumentStore store, ILogger<
             return;
         }
 
-        var characterName = m.Groups[1].Value;
         if (!CharacterNameRules.IsValid(characterName))
             return;
 
@@ -71,7 +65,4 @@ public sealed partial class ChatEnrollmentService(IDocumentStore store, ILogger<
         session.Store(new ChatMessageDedupDocument { Id = messageId, ProcessedAtUtc = DateTime.UtcNow });
         await session.SaveChangesAsync(ct);
     }
-
-    [GeneratedRegex("^!twgold\\s+(\\S+)\\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
-    private static partial Regex EnrollRegex();
 }

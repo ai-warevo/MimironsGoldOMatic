@@ -1,3 +1,5 @@
+<!-- Updated: 2026-04-05 -->
+
 # Setup for developers
 
 This document explains how to configure and run **Mimiron's Gold-o-Matic** from the repository: tooling, local services, and **Backend** configuration. For broadcaster-facing install steps (addon / Extension / Desktop), see **[SETUP-for-streamer.md](SETUP-for-streamer.md)**.
@@ -6,53 +8,9 @@ Normative product behavior remains in **`docs/SPEC.md`**. Implementation status 
 
 ---
 
-## 1. Prerequisites
+## 1–2. Prerequisites, clone, and first build
 
-Install the following on your machine (versions should match or exceed what the repo targets).
-
-| Tool | Used for | Notes |
-|------|-----------|--------|
-| **[.NET SDK 10](https://dotnet.microsoft.com/download)** | `MimironsGoldOMatic.Shared`, `MimironsGoldOMatic.Backend`, `MimironsGoldOMatic.Desktop` | Run `dotnet --version` and confirm a **10.x** SDK. |
-| **[Node.js](https://nodejs.org/)** (LTS recommended) | `src/MimironsGoldOMatic.TwitchExtension` (Vite + React) | Run `node --version` and `npm --version`. |
-| **PostgreSQL** | Backend persistence (Marten Event Store) | Local install, Docker, or a dev instance. **16+** is a reasonable default. |
-| **Git** | Cloning and contributing | — |
-
-Optional:
-
-- **Twitch [Developer Rig](https://dev.twitch.tv/docs/extensions/rig/)** — testing the Extension against real Twitch JWTs and your EBS.
-- **WoW 3.3.5a client** — addon and Desktop integration testing.
-
----
-
-## 2. Clone and restore
-
-```bash
-git clone <repository-url>
-cd MimironsGoldOMatic
-```
-
-**.NET**
-
-```bash
-dotnet restore src/MimironsGoldOMatic.slnx
-dotnet build src/MimironsGoldOMatic.slnx
-```
-
-**Twitch Extension (frontend)**
-
-```bash
-cd src/MimironsGoldOMatic.TwitchExtension
-npm install
-npm run build
-```
-
-For local UI development:
-
-```bash
-npm run dev
-```
-
-Copy **`.env.example`** to **`.env.local`** and set **`VITE_MGM_EBS_BASE_URL`** to your Backend base URL (no trailing slash), e.g. `http://localhost:5088`. The panel calls the EBS with the Twitch Extension JWT; use the **[Developer Rig](https://dev.twitch.tv/docs/extensions/rig/)** for real tokens. Without the Rig (plain Vite only), expect the unauthenticated / error state until a token is present.
+Complete **[SETUP.md](SETUP.md)** (shared prerequisites and first build) before continuing with PostgreSQL below.
 
 ---
 
@@ -112,7 +70,7 @@ The repo ships a **development** template so you can run the API locally. The bl
 | Key | What to put |
 |-----|-------------|
 | **`Mgm:ApiKey`** | Any strong secret you invent for local use (or replace the sample). The **Desktop** app must send the **same** value in header **`X-MGM-ApiKey`**. Not from Twitch. |
-| **`Mgm:DevSkipSubscriberCheck`** | **`true`** = treat non-subscribers like subscribers for **`!twgold`** enrollment (easier local testing). Use **`false`** when you want production-like subscriber gating. |
+| **`Mgm:DevSkipSubscriberCheck`** | **`true`** = allow **`POST /api/payouts/claim`** (Extension/Dev Rig) **without** Helix subscriber verification (**local testing only**). **`false`** = claim returns **`403 not_subscriber`** until Helix verification is implemented. **Does not** affect **EventSub** chat enrollment (subscriber badges from the chat payload only). |
 | **`Twitch:ExtensionClientId`** | Your Extension’s **Client ID** from the [Developer Console](https://dev.twitch.tv/console) → **Extensions** → your extension. Needed so JWT **`aud`** validation matches. |
 | **`Twitch:ExtensionSecret`** | **Base64** “Extension Secret” from the same Extension → **Secret Keys**. Backend decodes it for **HS256** JWT validation. In **Development**, if this is **empty**, a fixed dev key is used instead (see §4.5). |
 | **`Twitch:EventSubSecret`** | The **webhook secret** you set when creating the EventSub subscription for **`channel.chat.message`** (must match Twitch’s HMAC). If **empty**, signature checks are skipped (dev only). Callback: **`POST /api/twitch/eventsub`**. |
@@ -138,7 +96,7 @@ Longer explanations and Twitch doc links: **`Mgm`** in §4.4, **`Twitch`** in §
 | Key | Meaning |
 |-----|---------|
 | **`ApiKey`** | Shared secret for **Desktop** → Backend calls. Sent as HTTP header **`X-MGM-ApiKey`**. Choose a long random string; enter the **same** value in the Desktop app (**File → Settings**). |
-| **`DevSkipSubscriberCheck`** | **`true`** only in local dev if you want to bypass subscriber-only enrollment rules while testing. **`false`** in production-like configs. |
+| **`DevSkipSubscriberCheck`** | **`true`** only in local dev to exercise **`POST /api/payouts/claim`**. **`false`** in production-like configs. Chat enrollment remains subscriber-gated via **EventSub** regardless. |
 
 **Where to get `ApiKey`:** You generate it (password manager, `openssl rand -hex 32`, etc.). It is not issued by Twitch.
 

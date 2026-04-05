@@ -1,7 +1,11 @@
-## MimironsGoldOMatic.WoWAddon (Lua | Bridge between WPF Dekstop App & game)
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
-- **Repository status:** `src/MimironsGoldOMatic.WoWAddon` implements **MVP-3** per `docs/ROADMAP.md`: queue + **`MAIL_SHOW`** side panel, **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin`**, chat-log tags, and mail-send confirmation. **UI-405** debug frame and richer scroll UX are optional follow-ups (`docs/UI_SPEC.md`).
-- **UI spec:** `docs/UI_SPEC.md` §4 (addon **UI-401–405**: entry point, MAIL_SHOW panel, toasts, debug frame).
+## MimironsGoldOMatic.WoWAddon (Lua | Bridge between WPF Desktop App & game)
+
+**Cross-cutting:** [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md) · [`docs/MVP_PRODUCT_SUMMARY.md`](../MVP_PRODUCT_SUMMARY.md) · [`docs/WORKFLOWS.md`](../WORKFLOWS.md)
+
+- **Repository status:** `src/MimironsGoldOMatic.WoWAddon` implements **MVP-3** per `docs/ROADMAP.md`: queue + **`MAIL_SHOW`** side panel, **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin`**, chat-log tags, and mail-send confirmation. **UI-405** debug frame and richer scroll UX are optional follow-ups ([`UI_SPEC.md`](UI_SPEC.md)).
+- **UI spec:** [`UI_SPEC.md`](UI_SPEC.md) (addon **UI-401–405**: entry point, MAIL_SHOW panel, toasts, debug frame). Hub: [`docs/UI_SPEC.md`](../UI_SPEC.md).
 - **Role:** Receives injected commands and provides the final UX for the streamer; **detects `!twgold` whispers** (willingness to accept gold) and **prints `[MGM_CONFIRM:UUID]`** after mail is sent (**required** for **`Sent`** on the server).
 - **Target:** WoW 3.3.5a (WotLK).
 - **Files:** `MimironsGoldOMatic.toc` (Interface: 30300), `MimironsGoldOMatic.lua`.

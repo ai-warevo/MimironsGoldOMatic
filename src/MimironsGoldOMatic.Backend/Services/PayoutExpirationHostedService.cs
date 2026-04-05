@@ -1,5 +1,3 @@
-using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Shared;
 using Marten;
 
 namespace MimironsGoldOMatic.Backend.Services;
@@ -16,33 +14,9 @@ public sealed class PayoutExpirationHostedService(
         {
             try
             {
-                await using var write = store.LightweightSession();
-                var cutoff = DateTime.UtcNow.AddHours(-24);
-                var old = await write.Query<PayoutReadDocument>()
-                    .Where(p =>
-                        (p.Status == PayoutStatus.Pending || p.Status == PayoutStatus.InProgress) &&
-                        p.CreatedAt < cutoff)
-                    .ToListAsync(stoppingToken);
-
-                if (old.Count == 0)
-                    continue;
-
-                foreach (var p in old)
-                {
-                    var loaded = await write.LoadAsync<PayoutReadDocument>(p.Id, stoppingToken);
-                    if (loaded == null || (loaded.Status != PayoutStatus.Pending && loaded.Status != PayoutStatus.InProgress))
-                        continue;
-                    if (loaded.CreatedAt >= cutoff)
-                        continue;
-                    var from = loaded.Status;
-                    loaded.Status = PayoutStatus.Expired;
-                    loaded.UpdatedAt = DateTime.UtcNow;
-                    write.Store(loaded);
-                    write.Events.Append(loaded.Id, new PayoutStatusChanged(from, PayoutStatus.Expired, DateTime.UtcNow));
-                }
-
-                await write.SaveChangesAsync(stoppingToken);
-                log.LogInformation("Expired {Count} payouts older than 24h", old.Count);
+                var n = await PayoutExpirationProcessor.ExpireStalePayoutsAsync(store, stoppingToken);
+                if (n > 0)
+                    log.LogInformation("Expired {Count} payouts older than 24h", n);
             }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {

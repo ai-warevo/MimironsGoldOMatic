@@ -1,8 +1,14 @@
+<!-- Updated: 2026-04-05 (MVP-6 status sync; E2E cross-refs) -->
+
 # Mimiron's Gold-o-Matic — Interaction Scenarios & Test Cases
 
-This document translates **`docs/SPEC.md`** and related product docs into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources. **Gold is not paid on enroll:** **subscribers** join via **`!twgold <CharacterName>`** in **broadcast chat**; a **roulette** selects an **online-verified** winner; **WoW whisper reply `!twgold`** (after the **winner notification whisper**, `docs/SPEC.md` §9) leads the addon to print **`[MGM_ACCEPT:UUID]`** → Desktop **`confirm-acceptance`**; on **MGM-armed** mail **`MAIL_SEND_SUCCESS`**, the addon prints **`[MGM_CONFIRM:UUID]`** (→ **`Sent`**, pool removal) and whispers the winner the **mail-completion** Russian line; the **EBS** **must** **attempt** the §11 Twitch broadcast line via **Helix** after **`Sent`** (Extension hardcoded template matches).
+This document translates **`docs/SPEC.md`** into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources.
 
-**References:** `README.md`, `CONTEXT.md`, `AGENTS.md`, `docs/SPEC.md`, `docs/ROADMAP.md`, `docs/UI_SPEC.md` (screen-level UX aligned to these flows), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
+**References:** [`README.md`](../README.md), [`CONTEXT.md`](../CONTEXT.md), [`AGENTS.md`](../AGENTS.md), [`docs/SPEC.md`](SPEC.md), [`docs/ROADMAP.md`](ROADMAP.md), [`docs/UI_SPEC.md`](UI_SPEC.md) (hub) and [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md) / [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](MimironsGoldOMatic.Desktop/UI_SPEC.md) / [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](MimironsGoldOMatic.WoWAddon/UI_SPEC.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md), [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
+
+End-to-end narrative: **[WORKFLOWS.md](WORKFLOWS.md)** · product digest: **[MVP_PRODUCT_SUMMARY.md](MVP_PRODUCT_SUMMARY.md)**.
+
+<!-- Former long opening paragraph moved there. See: docs/WORKFLOWS.md · docs/MVP_PRODUCT_SUMMARY.md -->
 
 **Implementation scope (roadmap phases):** Treat **`docs/SPEC.md`** as the only normative contract for **what to build**. Scenarios in this file marked **future / not MVP**, **placeholder**, or **open** (e.g. SC-020 pause/resume, SC-022 retry-token speculation) **must not** be implemented — **no** speculative endpoints (retry tokens, pause APIs, etc.) unless/until **`docs/SPEC.md`** adds them. Each roadmap step should follow the **mandatory checklist** the owner supplies (SPEC § references, TC ids, **no endpoints outside SPEC**).
 
@@ -10,8 +16,33 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 - **TC-xxx** rows are **verification targets** derived from `docs/SPEC.md` and related docs. They are **not** bound to existing automated tests until those suites exist.
 - **When to run:** after the relevant MVP slice ships (e.g. **EBS** routes for TC-003+; Desktop WinAPI for TC-005+; addon mail path for TC-007+).
-- **Automation:** once `src/MimironsGoldOMatic.slnx` exists, prefer `dotnet test` for **EBS**/Desktop/Shared integration tests; Extension and WoW flows may remain manual or harness-driven until dedicated test projects exist.
+- **Automation:** **`dotnet test src/MimironsGoldOMatic.slnx`** — **Unit** slice: **`--filter Category=Unit`** (no Docker). **Integration** slice: **`--filter Category=Integration`** (**Testcontainers** / Docker). Full suite: all categories (Integration needs Docker). Extension UI and WoW/Desktop flows remain **Manual** unless a harness is added; see [Automated E2E Scenarios (MVP-6)](#automated-e2e-scenarios-mvp-6).
 - **Auth notes:** `docs/SPEC.md` requires **real Twitch-issued Extension JWTs** (Dev Rig and production). Tests must not rely on a long-term “mock JWT” bypass unless explicitly labeled as **temporary harness** and called out in test code.
+
+---
+
+## Automated E2E Scenarios (MVP-6)
+
+**Overall status:** **Manual** (**target: Automated** in **CI/CD**).
+
+This section maps the **intended** full product pipe — **Twitch chat message → Backend processing → WoW addon / Desktop behavior → Helix API outcome** — to how it is verified **today** vs what **automation** would add. It does **not** change **`docs/SPEC.md`** behavior. Roadmap alignment: **`docs/ROADMAP.md` MVP-6**; matrix: **`docs/IMPLEMENTATION_READINESS.md`** ([MVP-6 verification status](IMPLEMENTATION_READINESS.md#mvp-6-verification-status)).
+
+| Step | Flow segment | Manual verification (today) | Target automated check (CI/CD) | Prerequisites / notes |
+|---|---|---|---|---|
+| 1 | **Twitch chat** enrollment (`!twgold`) → **Backend** pool | Execute **SC-005** (live **EventSub**) or Dev Rig / operator sends chat; confirm pool via **`GET /api/pool/me`** or DB. Optional: **`POST /api/payouts/claim`** for Extension-shaped enrollment in dev. | **Integration** tests already exercise **Backend** HTTP + persistence (not live Twitch). A future **CI** job could add signed **EventSub** fixture posts or keep relying on HTTP enrollment tests. | Running Backend + Postgres; Twitch credentials for **Manual** path. |
+| 2 | **Backend** spin / **`verify-candidate`** / payout lifecycle | Operator aligns clock with spin grid; **Desktop** submits **`[MGM_WHO]`** payload via **`POST /api/roulette/verify-candidate`**; observe **`Pending`** and Extension state. | **`dotnet test`** **`Category=Integration`** (`PostClaimRulesIntegrationTests`, `RouletteVerifyCandidateIntegrationTests`, etc.). | **Docker** for **Testcontainers**. |
+| 3 | **WoW addon** UI / mail queue + **`WoWChatLog.txt`** tags + **Desktop** WinAPI | **SC-001**, **SC-003**, **SC-004**: real **WoW 3.3.5a**, **`[MGM_WHO]`**, **`[MGM_ACCEPT]`**, **`[MGM_CONFIRM]`**, inject **`/run`**, mail send. | No automated test in repo (would require client harness or simulator). | Stable WoW + log path; streamer Desktop **ApiKey**. |
+| 4 | **Helix** chat announcement (**§11**) after **`Sent`** | After **`PATCH` → `Sent`**, confirm chat line (**Russian** copy per **SPEC**) or inspect logs. | **CI** could mock **Helix** or use a test double; **not** implemented today. | **Twitch** app scopes + tokens for live check; **Backend** `Twitch:*` config. |
+
+For details on the automation approach, see [E2E Automation Plan](E2E_AUTOMATION_PLAN.md).
+
+### E2E Automation Progress
+
+- **Plan:** [E2E Automation Plan](E2E_AUTOMATION_PLAN.md).
+- **Tasks / ownership:** [E2E Automation Tasks](E2E_AUTOMATION_TASKS.md).
+- **Roadmap:** [`docs/ROADMAP.md`](ROADMAP.md) MVP-6 **Next steps** and **E2E Automation Progress**.
+
+**Related narrative:** **SC-001** (full end-to-end). **Next steps** for automation are listed under **`docs/ROADMAP.md` MVP-6 — Next steps**.
 
 ---
 
@@ -109,6 +140,25 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ---
 
+### SC-005: Twitch EventSub delivers chat enrollment to the EBS
+
+**Trigger:** A **subscriber** (badge on **`channel.chat.message`**) types **`!twgold Norinn`** in **broadcast** chat; Twitch POSTs an EventSub notification to the EBS.
+
+**Actor:** Viewer, System (Twitch → EBS)
+
+**Preconditions:** EventSub subscription **`channel.chat.message`** is **enabled**; callback URL reaches **`POST /api/twitch/eventsub`**; **`Twitch:EventSubSecret`** matches (or empty for local dev only); **`ConnectionStrings:PostgreSQL`** available.
+
+**Flow:**
+
+1. [Twitch] → [Backend]: `POST /api/twitch/eventsub` with signed headers and JSON body (`subscription.type` = `channel.chat.message`, `event` contains `message_id`, `chatter_user_id`, `message.text`, `badges`).
+2. [Backend] → [Backend]: verify HMAC when secret configured; parse **`!twgold <CharacterName>`**; if **not** subscriber per badges → log / ignore; else dedupe by **`message_id`**, validate name, update **pool** (replace same **`TwitchUserId`** row per `docs/SPEC.md` §5).
+
+**Postconditions:** Pool row exists for viewer; **no** `Pending` payout until a spin + **`verify-candidate`** path succeeds.
+
+**Failure exits:** wrong signature → **`401`**; malformed payload → ignored or minimal response; duplicate **`message_id`** → no-op; name taken by another user → silent reject (no pool change); active payout / lifetime cap → silent reject.
+
+---
+
 ### SC-010: API receives enrollment / spin updates but WPF Desktop App is offline
 
 **Trigger:** Viewers enroll; Backend creates `Pending` winner payout; Desktop not running.
@@ -119,7 +169,7 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 **Flow:**
 
-1. [TwitchExtension] → [Backend]: enroll + spin flows complete → `Pending` payout exists
+1. [Viewer] → [Twitch Chat] / [System]: enrollment + scheduled spin complete → **`Pending`** payout exists on **EBS** (Extension may only poll for status — not required to create the payout).
 2. [Backend] → [Desktop]: **no** poll — queue grows in DB only
 
 **Postconditions:** Payouts stay `Pending` until Desktop polls or **hourly job** may later `Expired` if >24h (`docs/SPEC.md` §7).
@@ -151,17 +201,17 @@ This document translates **`docs/SPEC.md`** and related product docs into **inte
 
 ### SC-012: WoW character name in the request does not exist on the realm
 
-**Trigger:** Viewer submits enrollment with a name that is not a real character on the streamer’s realm/faction context.
+**Trigger:** Viewer enrolls with a name that is not a real character on the streamer’s realm/faction context (format-valid).
 
 **Actor:** Viewer
 
-**Preconditions:** Backend validates **format** (shared validation). MVP does **not** call external realm/Armory APIs.
+**Preconditions:** Backend validates **format** only (shared **`CharacterNameRules`**). MVP does **not** call external realm/Armory APIs.
 
 **Flow:**
 
-1. [TwitchExtension] → [Backend]: `POST /api/payouts/claim` with bogus name (format-valid)
-2. [Backend] → [Backend]: may accept enrollment if only regex rules apply (`docs/SPEC.md` §4, §5)
-3. At **spin / win** time, **`/who <Name>`** in-game is the **online / presence** check (`docs/SPEC.md` glossary). A non-existent name will typically fail **`/who`** / mail UX; otherwise streamer uses **manual** fail path (`Failed`) (faction/manual handling).
+1. [Viewer] → [Twitch Chat]: **`!twgold <Name>`** (primary path) **or** [TwitchExtension] → [Backend]: **`POST /api/payouts/claim`** (optional; requires **`Mgm:DevSkipSubscriberCheck`** for local Dev Rig while Helix subscriber check on claim is unimplemented — see `docs/SPEC.md` §5).
+2. [Backend] → [Backend]: if rules pass, **pool** row may be stored (`docs/SPEC.md` §4, §5).
+3. At **spin / win** time, **`/who <Name>`** in-game is the **online / presence** check (`docs/SPEC.md` glossary). A non-existent or offline name yields **no `Pending` payout** that cycle (**no** re-draw). If a payout still reaches mail UX incorrectly, streamer may use **manual** **`Failed`**.
 
 **Postconditions:** Possible **enrollment** stored; payout delivery may hit **Failed** in Desktop or streamer correction.
 

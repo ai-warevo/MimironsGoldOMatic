@@ -1,16 +1,21 @@
+<!-- Updated: 2026-04-05 (Tier A validation + Tier B plan) -->
+
 ## MimironsGoldOMatic.Backend — EBS (Extension Backend Service) (ASP.NET Core | Bridge between Twitch Extension & WPF Desktop)
 
-- **EBS:** This project **`MimironsGoldOMatic.Backend`** is the **EBS** — same as **`docs/SPEC.md`**. It owns **Twitch Extension JWT** validation, **EventSub** (`channel.chat.message`), **Helix** (§11 **`Send Chat Message`**, inline **3×** retry, **no** Outbox in MVP), and Desktop **`ApiKey`** routes.
+<!-- System pipeline and EBS role: docs/ARCHITECTURE.md · Product digest: docs/MVP_PRODUCT_SUMMARY.md -->
+
+- **EBS:** This project **`MimironsGoldOMatic.Backend`** is the **EBS** — same as **`docs/SPEC.md`**. It owns **Twitch Extension JWT** validation (**HS256** via **`Twitch:ExtensionSecret`**; optional **`aud`** = **`ExtensionClientId`**), **EventSub** (`channel.chat.message` → **`POST /api/twitch/eventsub`**), **Helix** (§11 **`Send Chat Message`**, inline **3×** retry in **`HelixChatService`**, **no** Outbox in MVP), and Desktop **`X-MGM-ApiKey`** routes.
 - **Repository status:** `src/MimironsGoldOMatic.Backend` implements **MVP-2** per `docs/ROADMAP.md`: Marten on PostgreSQL, MediatR command/query handlers, Extension JWT + Desktop `X-MGM-ApiKey`, EventSub chat enrollment, roulette/pool/payout HTTP surface, Helix reward-sent announcement (inline retries), and hourly payout expiration. Set `ConnectionStrings:PostgreSQL`, `Mgm:ApiKey`, and `Twitch:*` in configuration (see `appsettings.Development.json` for a local Postgres example). **EF Core** is not used in this project yet (read models are Marten documents).
-- **UI spec (consumer-facing):** Extension/Desktop/Addon behaviors that the API supports are summarized in `docs/UI_SPEC.md`; API shapes remain canonical in `docs/SPEC.md`.
-- **Role:** Orchestrates the **participant pool**, **roulette spins**, **payout queue**, and persistent storage.
+- **UI spec (consumer-facing):** [`docs/UI_SPEC.md`](../UI_SPEC.md) (hub) and per-client [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](../MimironsGoldOMatic.TwitchExtension/UI_SPEC.md), [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](../MimironsGoldOMatic.Desktop/UI_SPEC.md), [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](../MimironsGoldOMatic.WoWAddon/UI_SPEC.md); API shapes remain canonical in `docs/SPEC.md`.
 - **Stack:** ASP.NET Core, Marten (Event Store), PostgreSQL. EF Core remains optional for future read-side tooling (`docs/SPEC.md` §6).
 
 ## Key Functions
 
+<!-- Pool / roulette / abuse rules summary: docs/MVP_PRODUCT_SUMMARY.md · End-to-end flow: docs/WORKFLOWS.md -->
+
 - **Authentication (phased):**
-  - **MVP:** optimize for Twitch Dev Rig debugging; production-ready Twitch JWT validation (issuer/audience + key rotation) is a roadmap milestone.
-  - **Desktop security (MVP):** Desktop-to-**EBS** uses a pre-shared `ApiKey` (locally trusted Desktop app).
+  - **MVP:** Extension **Bearer** JWT validated with symmetric key from **`Twitch:ExtensionSecret`**; **Development** fallback when secret empty. **Issuer** / JWKS-style rotation: roadmap.
+  - **Desktop security (MVP):** **`X-MGM-ApiKey`** matching **`Mgm:ApiKey`** (`ApiKeyAuthenticationHandler`).
 - **Persistence model (MVP):**
   - Write-side source of truth: Marten Event Store in PostgreSQL.
   - Read-side query model: projections/read tables (EF Core optional for mapping/querying projections).
@@ -36,13 +41,72 @@
 
 ## API Endpoints
 
-- **POST** `/api/payouts/claim` (optional): Extension/Dev Rig enrollment; same rules as **`!twgold <CharacterName>`** (**subscriber**, **unique** name). Primary enrollment is **Twitch chat** (see `docs/SPEC.md`).
+- **POST** `/api/twitch/eventsub`: **EventSub** webhook (**AllowAnonymous** + HMAC when secret set). **`channel.chat.message`** → **`ChatEnrollmentService`** (`docs/SPEC.md` §5).
+- **POST** `/api/payouts/claim` (optional): Extension/Dev Rig pool enrollment; **`Mgm:DevSkipSubscriberCheck`** gates Helix-less dev use (**`docs/SPEC.md`** §5). Returns **`PoolEnrollmentResponse`** JSON on success.
 - **GET** `/api/payouts/pending`: Fetched by the Desktop App. Returns **winner** payouts available for sync/injection (primarily `Pending`).
-- **PATCH** `/api/payouts/{id}/status`: Updates payout status where allowed (Desktop), including **`Sent`** after mail-send confirmation.
+- **PATCH** `/api/payouts/{id}/status`: Updates payout status where allowed (Desktop); response body **`PayoutDto`**.
 - **POST** `/api/payouts/{id}/confirm-acceptance` (recommended): Desktop reports **`!twgold`** matched the winner → record **acceptance** (not **`Sent`**).
 - **GET** `/api/payouts/my-last`: Used by the Twitch Extension (pull model) to show the viewer their latest payout status.
   - Returns `404 Not Found` when no payout exists for caller.
 - **Pool / spin endpoints (MVP):** **`GET /api/roulette/state`**, **`GET /api/pool/me`** (Extension **JWT-only**); **`POST /api/roulette/verify-candidate`** (Desktop **ApiKey**) — see `docs/SPEC.md` §5–5.1.
+
+## Automated tests (MVP-6)
+
+- Project: **`src/MimironsGoldOMatic.Backend.Tests`** (referenced from **`MimironsGoldOMatic.slnx`**).
+- **Unit (no Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit`** — `RouletteTime`, `SpinPhaseResolver`, `TwGoldChatEnrollmentParser` (`!twgold` line shape).
+- **Integration (Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Integration`** — PostgreSQL via **Testcontainers**, Marten + MediatR (`PostClaim`, `verify-candidate`, expiration sweep, **`Sent`** pool removal).
+- **All tests:** **`dotnet test src/MimironsGoldOMatic.slnx`** — runs unit + integration; full suite needs Docker. Not a substitute for Twitch/WoW manual scenarios.
+- **CI Tier A (E2E mocks):** GitHub Actions **`.github/workflows/e2e-test.yml`** runs Backend + Postgres + **`src/Mocks/MockEventSubWebhook`** + **`src/Mocks/MockExtensionJwt`**, sends a synthetic **`channel.chat.message`**, asserts **`GET /api/pool/me`**. See [`docs/E2E_AUTOMATION_PLAN.md`](../E2E_AUTOMATION_PLAN.md) ([How to run Tier A E2E tests](../E2E_AUTOMATION_PLAN.md#how-to-run-tier-a-e2e-tests-github-actions)).
+
+### Running Tier A E2E locally (manual)
+
+Mirror the workflow on one machine (Linux/macOS/WSL or separate terminals on Windows):
+
+1. Start **PostgreSQL 16** with database **`mgm`**, user/password matching your connection string (same shape as CI: `Host=localhost;Port=5432;Database=mgm;Username=postgres;Password=postgres`).
+2. **Terminal A — Backend:**  
+   `ASPNETCORE_ENVIRONMENT=Development`  
+   `ASPNETCORE_URLS=http://127.0.0.1:8080`  
+   `ConnectionStrings__PostgreSQL=Host=localhost;Port=5432;Database=mgm;Username=postgres;Password=postgres`  
+   `Mgm__ApiKey=ci-desktop-api-key`  
+   `Mgm__DevSkipSubscriberCheck=true`  
+   `Twitch__EventSubSecret=<same secret as mocks>`  
+   then `dotnet run --project src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj -c Release` (or Debug).
+3. **Terminal B — MockEventSubWebhook:**  
+   `ASPNETCORE_URLS=http://127.0.0.1:9051`  
+   `Backend__BaseUrl=http://127.0.0.1:8080`  
+   `Twitch__EventSubSecret=<same as Backend>`  
+   then `dotnet run --project src/Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj`.
+4. **Terminal C — MockExtensionJwt:**  
+   `ASPNETCORE_URLS=http://127.0.0.1:9052`  
+   Leave **`Twitch:ExtensionSecret`** empty only if Backend is in **Development** (shared dev key); otherwise set the **same** base64 **`Twitch:ExtensionSecret`** on both.  
+   `dotnet run --project src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj`.
+5. Send the synthetic EventSub notification:  
+   `python3 .github/scripts/send_e2e_eventsub.py --url http://127.0.0.1:9051 --secret "<secret>" --user-id e2e-viewer-1 --login e2eviewer1 --text "!twgold Etoehero"`
+6. Fetch a token and call the API:  
+   `curl -s "http://127.0.0.1:9052/token?userId=e2e-viewer-1&displayName=E2EViewer"` → use **`access_token`** as **`Authorization: Bearer …`** on **`GET http://127.0.0.1:8080/api/pool/me`**.
+
+Full checklist: [`docs/E2E_AUTOMATION_TASKS.md`](../E2E_AUTOMATION_TASKS.md) (**Tier A Validation Checklist**).
+
+### Debugging mock services
+
+- **`MockEventSubWebhook` returns 401:** HMAC failed — align **`Twitch__EventSubSecret`** with **`--secret`** in **`send_e2e_eventsub.py`**; ensure the script’s JSON body is unchanged between signing and POST (compact JSON as in the script).
+- **Forward fails / 502 from mock:** Backend not listening on **`Backend:BaseUrl`** or wrong path; check mock logs for EBS **`StatusCode`**.
+- **`GET /api/pool/me` 401:** JWT signing key mismatch — in **Development**, both Backend and **MockExtensionJwt** must use empty **`ExtensionSecret`** (dev SHA256 fallback) **or** the same base64 secret; if **`Twitch:ExtensionClientId`** is set on Backend, set the same **`Twitch:ExtensionClientId`** on the mock so **`aud`** validates.
+- **Health checks:** **`GET /health`** on **9051** / **9052** should return JSON with **`status`** **`ok`**.
+
+### Environment variables (local E2E)
+
+| Variable | Component | Purpose |
+|----------|-----------|---------|
+| `ASPNETCORE_ENVIRONMENT` | Backend | **`Development`** for dev Extension JWT key when secret empty. |
+| `ASPNETCORE_URLS` | All ASP.NET processes | Bind addresses (**8080**, **9051**, **9052**). |
+| `ConnectionStrings__PostgreSQL` | Backend | Marten / PostgreSQL. |
+| `Mgm__ApiKey` | Backend | Desktop **`X-MGM-ApiKey`** routes (set for parity with Desktop tests). |
+| `Mgm__DevSkipSubscriberCheck` | Backend | **`true`** so synthetic subscriber payload enrolls without Helix. |
+| `Twitch__EventSubSecret` | Backend + MockEventSubWebhook | HMAC verification (empty = skip verification). |
+| `Backend__BaseUrl` | MockEventSubWebhook | EBS root URL for forward. |
+| `Twitch__ExtensionSecret` | Backend + MockExtensionJwt | Base64 symmetric key; empty + **Development** uses shared dev fallback string. |
+| `Twitch__ExtensionClientId` | Backend + MockExtensionJwt | Optional JWT **`aud`**; must match if set. |
 
 ## Additional Libraries
 
@@ -50,7 +114,7 @@
 - `MediatR`
 - `FluentValidation.DependencyInjectionExtensions`
 - `Microsoft.AspNetCore.Authentication.JwtBearer`
-- `Polly.Extensions.Http` (Helix HTTP resilience)
+- `Polly.Extensions.Http` (referenced; **Helix** retries are implemented as a simple **3-attempt** loop in **`HelixChatService`** today)
 
 ## Architecture & Patterns
 - **Idempotency Pattern:**
@@ -65,4 +129,4 @@
   This makes business rules readable, testable, and reusable.
 
 ## Event Sourcing
-- **Marten Integration:** Persist every state change as a sequence of events (`ClaimCreated`, `InjectedByDesktop`, `WinnerAcceptedGold`, `MailSendConfirmed`, etc.). This provides a full audit trail for both the streamer and developers.
+- **Marten Integration:** Payout streams use registered event types such as **`PayoutCreated`**, **`PayoutStatusChanged`**, **`WinnerAcceptanceRecorded`**, **`HelixRewardSentAnnouncementSucceeded`** (`Program.cs`). This provides an append-only audit trail for payout lifecycle changes.

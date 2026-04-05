@@ -1,10 +1,14 @@
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
+
 # Mimiron's Gold-o-Matic — Technical Specification (MVP)
 
 This document is the **canonical implementation contract** for the MVP.  
 `docs/ROADMAP.md` contains step-by-step prompts and links into this spec.  
-**User-facing UI** (Twitch Extension, WPF, WoW addon screens, states, ASCII layouts): `docs/UI_SPEC.md`.
+**User-facing UI:** hub [`docs/UI_SPEC.md`](UI_SPEC.md) (tokens, navigation); per-surface screens in [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md), [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](MimironsGoldOMatic.Desktop/UI_SPEC.md), [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](MimironsGoldOMatic.WoWAddon/UI_SPEC.md).
 
-**Implementation parity:** For gaps between **this specification** and the **current** `src/` tree (scaffolds, partial Shared library, missing solution file), see `docs/IMPLEMENTATION_READINESS.md`.
+**Code alignment:** MVP slices **MVP-1 … MVP-5** are implemented under `src/` (Shared, Backend, Desktop, Twitch Extension, WoW addon). Remaining gaps (automated tests, packaging, production hardening) are summarized in `docs/IMPLEMENTATION_READINESS.md`.
+
+**Non-normative digests (do not override this file):** [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), [`docs/GLOSSARY.md`](GLOSSARY.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md), [`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ### EBS — Extension Backend Service (normative, MVP)
 
@@ -57,7 +61,7 @@ This document is the **canonical implementation contract** for the MVP.
 - **GoldAmount**: fixed at **1,000g** per winning payout (enforce per `TwitchUserId` / enrollment idempotency as in §4).
 - **Lifetime cap**: max **10,000g total** per `TwitchUserId`.
 - **Concurrency**: only **one active payout** per `TwitchUserId` at a time (same as before; applies once a viewer becomes a spin winner and a payout record exists). A second win/spin finalize while a non-terminal payout exists **must** be rejected with **`active_payout_exists`** (or equivalent); **do not** auto-expire or replace an existing active payout to make room.
-- **Rate limiting**: ASP.NET Core rate limiting, target ~**5 requests/min** per IP/user (implementation detail).
+- **Rate limiting**: ASP.NET Core **partitioned** fixed-window limiter — **5 requests / minute** per authenticated Extension user id (JWT `user_id` claim) or client IP; **`POST /api/twitch/eventsub`** is **not** rate-limited (separate partition with no limiter).
 
 ## 3) Statuses & lifecycle transitions
 
@@ -121,6 +125,18 @@ This section defines the MVP endpoints and semantics. **`GET /api/roulette/state
   - Required for Desktop endpoints (pool sync, status updates, spin triggers if server-authoritative, whisper-forward).
   - The **EBS** stores the key in configuration (global static key for MVP).
 
+### Twitch EventSub webhook — chat enrollment (MVP, implemented)
+
+- **Route:** `POST /api/twitch/eventsub`
+- **Auth:** **AllowAnonymous** at the ASP.NET layer. **Signature verification** uses `Twitch-Eventsub-Message-Id`, `Twitch-Eventsub-Message-Timestamp`, and `Twitch-Eventsub-Message-Signature` with HMAC-SHA256 when **`Twitch:EventSubSecret`** is configured; if the secret is **empty**, verification is **skipped** (convenient for local tunnel testing — **do not** use an empty secret in production).
+- **Behavior:** Responds to EventSub **`challenge`** with plain-text body for subscription verification. For **`channel.chat.message`** notifications, the EBS parses the payload and calls the same enrollment rules as chat (**`!twgold <CharacterName>`**, subscriber badges from payload: `subscriber`, `founder`, `premium`), with **`message_id`** deduplication.
+- **Rate limiting:** This path is **exempt** from the global fixed-window limiter in `Program.cs` so Twitch deliveries are not throttled as viewer traffic.
+
+### Development configuration — Extension `POST /api/payouts/claim` vs chat enrollment
+
+- **Chat (`EventSub`):** Subscriber gating uses **only** the EventSub payload (**§1**, **EBS** section). There is **no** `DevSkipSubscriberCheck` branch on this path.
+- **Extension claim (`POST /api/payouts/claim`):** The handler enforces **`Mgm:DevSkipSubscriberCheck`**. When **`false`** (default), the API returns **`403`** with **`not_subscriber`** — Helix-based subscriber verification for this path is **not** implemented yet; set **`DevSkipSubscriberCheck`** to **`true`** in **Development** only to exercise the claim API (e.g. Dev Rig). **Product intent:** eventual Helix verification for claim should match chat enrollment rules.
+
 ### Participant pool & roulette (normative behavior)
 
 - **Enrollment (primary):** When EventSub indicates a **subscriber** and they send **`!twgold <CharacterName>`** in **broadcast Twitch chat** (prefix **case-insensitive**), and **`CharacterName`** is valid and **not already held** by another active pool entry, **add** or **update** that viewer’s pool row (**§1** glossary: same **`TwitchUserId`** may **replace** their previous **`CharacterName`**). **No payout** is created at this step. **MVP:** subscriber eligibility comes from the **`channel.chat.message`** EventSub payload only (no Helix lookup). If they are **not** a subscriber per that payload: **do not** add to pool; **log server-side only** (no chat bot reply required). If the name is taken by **another** viewer, reject (`character_name_taken_in_pool` or equivalent).
@@ -179,7 +195,9 @@ Recommended `code` values (MVP):
 
 **Purpose**: optional path to **add a subscriber to the participant pool** when not using chat-only enrollment (same rules as **`!twgold <CharacterName>`**).
 
-**Request** (illustrative):
+**Auth:** Twitch Extension JWT (**Bearer**), same scheme as **`GET /api/roulette/state`**.
+
+**Request** (normative shape; camelCase JSON):
 
 ```json
 {
@@ -188,14 +206,22 @@ Recommended `code` values (MVP):
 }
 ```
 
-**Behavior**:
+**Behavior** (as implemented):
 
-- Verify the caller is a **subscriber** (server-side; Twitch API — implementation detail).
-- Validate `characterName` and **pool uniqueness** of the name.
-- Enforce lifetime cap and idempotency for `enrollmentRequestId`.
+- **Subscriber check:** When **`Mgm:DevSkipSubscriberCheck`** is **`false`**, the EBS returns **`403`** with **`not_subscriber`** (Helix verification for this path not wired yet). When **`true`** (**local dev only**), the check is skipped so Dev Rig / tests can call the endpoint.
+- Validate `characterName` (**FluentValidation** / **`CharacterNameRules`**) and **pool uniqueness** of the name; enforce **one active payout** per user, **lifetime cap**, and **`EnrollmentRequestId`** idempotency (same as **§4**).
 - **Do not** create a `Pending` payout from this call; only **spin winner** yields a payout row.
 
-**Response**: implementation-specific enrollment DTO; `201`/`200` idempotent patterns still apply.
+**Response** (`201` new enrollment, `200` idempotent replay for same user + same **`enrollmentRequestId`**):
+
+```json
+{
+  "characterName": "Somecharacter",
+  "enrollmentRequestId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+(Error responses use **`ApiErrorDto`**: `code`, `message`, `details` — see **§5** error model.)
 
 ### GET `/api/payouts/my-last`
 
@@ -215,6 +241,10 @@ Recommended `code` values (MVP):
 ### PATCH `/api/payouts/{id}/status` (Desktop)
 
 **Purpose**: Desktop updates lifecycle state where allowed (see §3), including the **`InProgress` → `Pending`** escape hatch (streamer unlock after failed inject).
+
+**Request body** (camelCase): `{ "status": "Pending" | "InProgress" | "Sent" | "Failed" | "Cancelled" | "Expired" }` (string enum; must be an allowed transition).
+
+**Response:** **`200 OK`** with **`PayoutDto`** JSON (same fields as **Shared** / **`GET /api/payouts/my-last`**: `id`, `twitchUserId`, `twitchDisplayName`, `characterName`, `goldAmount`, `enrollmentRequestId`, `status`, `createdAt`, `isRewardSentAnnouncedToChat`).
 
 ### POST `/api/payouts/{id}/confirm-acceptance` (Desktop) — **recommended**
 
@@ -302,7 +332,7 @@ These routes supply **server-authoritative** spin scheduling and pool hints for 
 - **`serverNow`**: ISO-8601 UTC “now” on the server (helps correct client drift when computing remaining time).
 - **`spinIntervalSeconds`**: **300** in MVP.
 - **`poolParticipantCount`**: non-negative integer; number of **active** pool entries for the current channel.
-- **`spinPhase`**: **closed enum** for MVP — exactly one of: **`idle`**, **`collecting`**, **`spinning`**, **`verification`**, **`completed`**. **Transitions** between phases for a cycle are **Backend-defined** (implementation detail), as long as responses remain consistent with this contract and **`docs/UI_SPEC.md`** UX.
+- **`spinPhase`**: **closed enum** for MVP — exactly one of: **`idle`**, **`collecting`**, **`spinning`**, **`verification`**, **`completed`**. **Transitions** between phases for a cycle are **Backend-defined** (implementation detail), as long as responses remain consistent with this contract and **`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`** UX.
 - **`currentSpinCycleId`**: UUID string for the **active** spin cycle (omit or `null` when **`spinPhase`** is **`idle`**); used to correlate **`POST /api/roulette/verify-candidate`** and **`[MGM_WHO]`** log payloads.
 
 #### GET `/api/pool/me`
@@ -329,7 +359,7 @@ These routes supply **server-authoritative** spin scheduling and pool hints for 
 
 #### Extension resilience (overload / errors)
 
-- On **`429`**, **`503`**, or network failure when polling **`GET /api/roulette/state`**, **`GET /api/pool/me`**, or **`GET /api/payouts/my-last`**, the Extension **should** show a **friendly error** (see **`docs/UI_SPEC.md`**) and **exponential backoff** between retries (cap the maximum interval, e.g. **≤ 60s**), plus a **Retry** control so the viewer is not stuck in a tight loop. **`503`** indicates temporary overload or dependency failure; behavior is **host-defined** beyond this client guidance (**§5** error model).
+- On **`429`**, **`503`**, or network failure when polling **`GET /api/roulette/state`**, **`GET /api/pool/me`**, or **`GET /api/payouts/my-last`**, the Extension **should** show a **friendly error** (see **`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`**) and **exponential backoff** between retries (cap the maximum interval, e.g. **≤ 60s**), plus a **Retry** control so the viewer is not stuck in a tight loop. **`503`** indicates temporary overload or dependency failure; behavior is **host-defined** beyond this client guidance (**§5** error model).
 
 ## 6) Persistence model (MVP, ES-first)
 

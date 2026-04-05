@@ -1,81 +1,11 @@
-# Mimiron's Gold-o-Matic — Twitch Extension
+<!-- Updated: 2026-04-05 (Deduplication pass) -->
 
-Target viewer UI for **pool enrollment**, **visual roulette** (**`/who`‑gated** winners per [`docs/SPEC.md`](../../docs/SPEC.md)), **“You won”** notifications with **whisper `!twgold`** instructions (**required** to receive gold mail), and status polling. **`Sent`** follows **`[MGM_CONFIRM:UUID]`** in **`WoWChatLog.txt`** after mail is sent. Screen-level layout and element IDs: [`docs/UI_SPEC.md`](../../docs/UI_SPEC.md) (**UI-101–106**).
+# Mimiron's Gold-o-Matic — Twitch Extension (source)
 
-**Current code:** default Vite/React template only — implement panels against `docs/UI_SPEC.md` and APIs in `docs/SPEC.md`. See [`docs/IMPLEMENTATION_READINESS.md`](../../docs/IMPLEMENTATION_READINESS.md).
+MVP **viewer** panel: **Vite + React + TypeScript** (Zustand, axios, EBS polling). **Behavior and APIs:** [`docs/SPEC.md`](../../docs/SPEC.md), [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](../../docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md) (**UI-101–106**), hub [`docs/UI_SPEC.md`](../../docs/UI_SPEC.md). **Product digest:** [`docs/MVP_PRODUCT_SUMMARY.md`](../../docs/MVP_PRODUCT_SUMMARY.md). **Architecture:** [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md). **Full component doc:** [`docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`](../../docs/MimironsGoldOMatic.TwitchExtension/ReadME.md).
 
----
+**Setup:** [`docs/SETUP.md`](../../docs/SETUP.md) (prerequisites + first build); **Backend / Twitch keys:** [`docs/SETUP-for-developer.md`](../../docs/SETUP-for-developer.md). **Env:** copy `.env.example` → `.env.local`, set **`VITE_MGM_EBS_BASE_URL`**.
 
-## Tooling: React + TypeScript + Vite
+**Scripts:** `npm run dev`, `npm run build`, `npm run lint` — see **`package.json`**.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+<!-- Generic Vite / React / ESLint template guidance: https://vite.dev/ -->
