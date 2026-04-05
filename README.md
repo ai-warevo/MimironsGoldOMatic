@@ -9,7 +9,7 @@ It connects a Twitch Extension UI to an ASP.NET Core API, a local WPF desktop ap
 
 ## Implementation status
 
-Normative contracts live in **`docs/SPEC.md`**, **`docs/ROADMAP.md`**, **`docs/UI_SPEC.md`**, and **`docs/INTERACTION_SCENARIOS.md`**. **MVP-1 … MVP-5** code exists under **`src/`** (Shared, Backend with Marten + EventSub + Helix hooks, WPF Desktop, Vite/React Extension, WoW addon). **MVP-6** (automated API/integration tests, packaged release story) is not done. Details: **`docs/IMPLEMENTATION_READINESS.md`**.
+Normative contracts live in **`docs/SPEC.md`**, **`docs/ROADMAP.md`**, **`docs/UI_SPEC.md`** (UI hub; per-surface screens under **`docs/MimironsGoldOMatic.*/UI_SPEC.md`**), and **`docs/INTERACTION_SCENARIOS.md`**. **MVP-1 … MVP-5** code exists under **`src/`** (Shared, Backend with Marten + EventSub + Helix hooks, WPF Desktop, Vite/React Extension, WoW addon). **MVP-6** (automated API/integration tests, packaged release story) is not done. Details: **`docs/IMPLEMENTATION_READINESS.md`**.
 
 <!-- Content moved to MVP_PRODUCT_SUMMARY.md. See: docs/MVP_PRODUCT_SUMMARY.md -->
 
@@ -45,7 +45,7 @@ Normative contracts live in **`docs/SPEC.md`**, **`docs/ROADMAP.md`**, **`docs/U
 - **Technical specification (canonical contracts):** [`docs/SPEC.md`](docs/SPEC.md)
 - **Roadmap:** [`docs/ROADMAP.md`](docs/ROADMAP.md)
 - **Interaction scenarios & test cases:** [`docs/INTERACTION_SCENARIOS.md`](docs/INTERACTION_SCENARIOS.md)
-- **UI/UX specification (screens, states, ASCII mocks):** [`docs/UI_SPEC.md`](docs/UI_SPEC.md)
+- **UI/UX specification:** [`docs/UI_SPEC.md`](docs/UI_SPEC.md) (hub) · [Twitch Extension screens](docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md) · [Desktop screens](docs/MimironsGoldOMatic.Desktop/UI_SPEC.md) · [WoW addon screens](docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md)
 - **Context (short pointer doc):** [`CONTEXT.md`](CONTEXT.md)
 
 **Component READMEs:**

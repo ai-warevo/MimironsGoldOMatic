@@ -128,6 +128,6 @@ The Desktop and Extension must point at the **same** EBS URL (different auth: JW
 ## 7. Further reading
 
 - **`docs/SPEC.md`** — full MVP contracts.
-- **`docs/UI_SPEC.md`** — panel layouts (Extension, Desktop, addon).
+- **`docs/UI_SPEC.md`** (hub) and **`docs/MimironsGoldOMatic.*/UI_SPEC.md`** — panel layouts (Extension, Desktop, addon).
 - **`docs/INTERACTION_SCENARIOS.md`** — scenarios and test cases.
 - **`SETUP-for-developer.md`** — filling `appsettings` and running services locally.

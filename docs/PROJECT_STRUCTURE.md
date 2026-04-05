@@ -16,11 +16,11 @@ MimironsGoldOMatic/
 ├── .github/
 │   └── workflows/          (placeholder until CI is added)
 ├── docs/
-│   ├── SPEC.md, ROADMAP.md, UI_SPEC.md, INTERACTION_SCENARIOS.md
+│   ├── SPEC.md, ROADMAP.md, UI_SPEC.md (hub), INTERACTION_SCENARIOS.md
 │   ├── ARCHITECTURE.md, PROJECT_STRUCTURE.md, WORKFLOWS.md
 │   ├── MVP_PRODUCT_SUMMARY.md, GLOSSARY.md, SETUP.md, SETUP-for-developer.md, SETUP-for-streamer.md
 │   ├── IMPLEMENTATION_READINESS.md, ReadME.md
-│   ├── MimironsGoldOMatic.*/ReadME.md
+│   ├── MimironsGoldOMatic.*/ReadME.md, MimironsGoldOMatic.*/UI_SPEC.md (per component)
 │   └── prompts/            (Cursor templates + task history — not part of product docs)
 ├── src/
 │   ├── MimironsGoldOMatic.slnx

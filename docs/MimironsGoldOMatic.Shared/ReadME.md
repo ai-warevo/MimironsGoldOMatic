@@ -50,4 +50,4 @@ Status and API semantics are normative in `docs/SPEC.md`:
 - `POST /api/payouts/claim`: `201` for new creation, `200` for idempotent duplicate replay.
 - `GET /api/payouts/my-last`: `404` when no payout exists for caller.
 
-Field labels and validation-driven UX are aligned with **`docs/UI_SPEC.md`**. **Enrollment** is primarily via Twitch chat **`!twgold <CharacterName>`**; optional **`CreatePayoutRequest`** / **`EnrollmentRequestId`** applies to Extension/Dev Rig paths only (see `docs/SPEC.md`).
+Field labels and validation-driven UX are aligned with **`docs/UI_SPEC.md`** (hub) and client **`docs/MimironsGoldOMatic.*/UI_SPEC.md`**. **Enrollment** is primarily via Twitch chat **`!twgold <CharacterName>`**; optional **`CreatePayoutRequest`** / **`EnrollmentRequestId`** applies to Extension/Dev Rig paths only (see `docs/SPEC.md`).

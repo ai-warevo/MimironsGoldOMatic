@@ -7,7 +7,7 @@
 1. **Documentation / spec alignment** — The table below checks that MVP decisions are **reflected consistently** across normative docs (`docs/SPEC.md`, READMEs, roadmap). A **Ready** row means the **written contracts** agree; it does **not** mean the feature is **implemented in code**.
 2. **Source tree parity** — See [Source code parity (MVP track)](#source-code-parity-mvp-track) for **what exists today** under `src/` versus MVP-0…MVP-6 in `docs/ROADMAP.md`.
 
-Canonical normative source remains **`docs/SPEC.md`**. For **user-visible** behavior and layout, cross-check **`docs/UI_SPEC.md`** (UI-1xx–4xx) alongside component READMEs. **Conceptual overviews** (architecture, MVP digest, workflows): [`docs/ARCHITECTURE.md`](ARCHITECTURE.md), [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md).
+Canonical normative source remains **`docs/SPEC.md`**. For **user-visible** behavior and layout, cross-check **`docs/UI_SPEC.md`** (hub: tokens, navigation) and **`docs/MimironsGoldOMatic.*/UI_SPEC.md`** (UI-1xx–4xx screens) alongside component READMEs. **Conceptual overviews** (architecture, MVP digest, workflows): [`docs/ARCHITECTURE.md`](ARCHITECTURE.md), [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md).
 
 | Decision | Required state | Fixed in docs | Doc / spec alignment |
 |---|---|---|---|
@@ -21,7 +21,7 @@ Canonical normative source remains **`docs/SPEC.md`**. For **user-visible** beha
 | Desktop injection strategy | Primary `PostMessage`, fallback `SendInput` | `docs/SPEC.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/ROADMAP.md` | Ready |
 | Addon payload format | `UUID:CharacterName:GoldCopper;` | `docs/SPEC.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md` | Ready |
 | Mail-send tag format | **`[MGM_CONFIRM:UUID]`** on **`MAIL_SEND_SUCCESS`** (MGM-armed send only) + winner whisper **`Награда отправлена тебе на почту, проверяй ящик!`** | `docs/SPEC.md`, `README.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`, `docs/ROADMAP.md` | Ready |
-| Twitch chat reward-sent line | **`Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** (Extension hardcodes; Helix/EBS per §11) | `docs/SPEC.md` §11, `docs/UI_SPEC.md` UI-104, `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md` | Ready |
+| Twitch chat reward-sent line | **`Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** (Extension hardcodes; Helix/EBS per §11) | `docs/SPEC.md` §11, `docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md` UI-104, `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md` | Ready |
 | Acceptance tag format | **`[MGM_ACCEPT:UUID]`** — **required** in **`WoWChatLog.txt`** for automated **`confirm-acceptance`** | `docs/SPEC.md` §9–10, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md` | Ready |
 | Roulette behavior | Visual roulette; **5-minute** spin only (**no** early spin); **min 1** participant; **non-winners stay**; **winners removed on `Sent`**; **`/who`** before finalize; **Twitch chat** enroll **`!twgold <CharacterName>`**; **WoW** winner whisper + reply **`!twgold`**; **subscriber**-gated | `docs/SPEC.md`, `README.md`, `docs/ROADMAP.md`, `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`, `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md` | Ready |
 | Chat prefix & whisper consent | Enrollment **`!twgold`** prefix **case-insensitive**; WoW whisper **`!twgold`** consent **case-insensitive** (after trim) | `docs/SPEC.md` §1, §5, §9–11; `README.md`; `AGENTS.md` | Ready |
@@ -36,7 +36,7 @@ Canonical normative source remains **`docs/SPEC.md`**. For **user-visible** beha
 | `verify-candidate` grace | **30s** after **UTC** spin boundary that **closes** the cycle’s verification window | `docs/SPEC.md` §5 | Ready |
 | Winner whisper trigger | Desktop **`/run NotifyWinnerWhisper(id,name)`** → addon sends §9 **`/whisper`** | `docs/SPEC.md` §8–9 | Ready |
 | MediatR placement | Handlers in **Backend** only; **Shared** = contracts/validation | `docs/MimironsGoldOMatic.Shared/ReadME.md` | Ready |
-| MVP-5 Extension scope | **Viewer** UI only; **no** UI-201–204 | `docs/ROADMAP.md`, `docs/UI_SPEC.md` | Ready |
+| MVP-5 Extension scope | **Viewer** UI only; **no** UI-201–204 | `docs/ROADMAP.md`, `docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md` | Ready |
 | Shared DTO field names | `PayoutDto` / `CreatePayoutRequest` use **`EnrollmentRequestId`** (idempotency for Extension claim path) per `docs/SPEC.md` §4 | `docs/SPEC.md`, `docs/MimironsGoldOMatic.Shared/ReadME.md`, `src/MimironsGoldOMatic.Shared` | Ready |
 | Shared `CharacterName` validation | **2–12** characters (after trim), **Latin/Cyrillic script letters only** in Shared (`CharacterNameRules` + FluentValidation) | `docs/SPEC.md` §4, `docs/MimironsGoldOMatic.Shared/ReadME.md` | Ready |
 
@@ -51,7 +51,7 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 | MVP-2 | Backend API + Marten/PostgreSQL | **Implemented:** Marten event store + read docs, MVP routes (`claim`, pool/roulette, payouts pending/status/confirm, verify-candidate), EventSub webhook, JWT + ApiKey auth, global rate limit (5/min per user/IP; EventSub exempt), Helix announcement + expiration job. Requires local Postgres + `appsettings` (`Mgm`, `Twitch`, connection string). |
 | MVP-3 | WoW addon | **Implemented (MVP):** globals **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin`**; **`[MGM_WHO]`** JSON, **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`**; **`MAIL_SHOW`** queue panel + **Prepare Mail** (`SendMail*` + **`MoneyInputFrame_SetCopper`**); minimap + **`/mgm`**. **Optional / later:** UI-405 debug frame, scroll list polish, `MimironsGoldOMatic` singleton table refactor. |
 | MVP-4 | WPF Desktop + WinAPI | **Implemented (MVP):** pending poll, **`NotifyWinnerWhisper`** + **Sync/Inject** (`ReceiveGold` chunking), **`WoWChatLog.txt`** tail (`[MGM_WHO]` / `[MGM_ACCEPT]` / `[MGM_CONFIRM]`), EBS **`PATCH`** overrides + **`InProgress`→`Pending`**, PostMessage→SendInput fallback, settings + DPAPI ApiKey. Manual verification on **WoW 3.3.5a** recommended. |
-| MVP-5 | Twitch Extension UI | **Implemented (MVP):** viewer panel (Twitch `onAuthorized`, EBS polling for roulette/pool/`my-last`), server-skew countdown, `spinPhase` UX per `docs/UI_SPEC.md` UI-101–106, Zustand + backoff on 429/503/network. Configure **`VITE_MGM_EBS_BASE_URL`** (see `src/MimironsGoldOMatic.TwitchExtension/.env.example`); use Dev Rig for real JWTs. |
+| MVP-5 | Twitch Extension UI | **Implemented (MVP):** viewer panel (Twitch `onAuthorized`, EBS polling for roulette/pool/`my-last`), server-skew countdown, `spinPhase` UX per `docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md` UI-101–106, Zustand + backoff on 429/503/network. Configure **`VITE_MGM_EBS_BASE_URL`** (see `src/MimironsGoldOMatic.TwitchExtension/.env.example`); use Dev Rig for real JWTs. |
 | MVP-6 | E2E demo + tests | **Not started** (depends on MVP-2…5 + tests). |
 
 ## Residual implementation risks (not contradictions)

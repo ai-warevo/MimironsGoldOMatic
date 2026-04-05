@@ -24,7 +24,7 @@ Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/R
 ## Technical specification (canonical)
 
 - [`SPEC.md`](SPEC.md) — APIs, DTOs, transitions, persistence, payloads, log parsing
-- [`UI_SPEC.md`](UI_SPEC.md) — screens, states, ASCII layouts, design tokens
+- [`UI_SPEC.md`](UI_SPEC.md) — UI hub: design tokens, navigation, accessibility; links to [`MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md), [`MimironsGoldOMatic.Desktop/UI_SPEC.md`](MimironsGoldOMatic.Desktop/UI_SPEC.md), [`MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](MimironsGoldOMatic.WoWAddon/UI_SPEC.md)
 
 ## Core components (pointers)
 

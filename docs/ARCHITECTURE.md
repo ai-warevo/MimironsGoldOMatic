@@ -2,7 +2,7 @@
 
 # Architecture — Mimiron's Gold-o-Matic
 
-Non-normative overview. **Canonical contracts:** [`docs/SPEC.md`](SPEC.md). **UI:** [`docs/UI_SPEC.md`](UI_SPEC.md).
+Non-normative overview. **Canonical contracts:** [`docs/SPEC.md`](SPEC.md). **UI:** [`docs/UI_SPEC.md`](UI_SPEC.md) (hub) · [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md) · [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](MimironsGoldOMatic.Desktop/UI_SPEC.md) · [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](MimironsGoldOMatic.WoWAddon/UI_SPEC.md).
 
 ## System pipeline
 

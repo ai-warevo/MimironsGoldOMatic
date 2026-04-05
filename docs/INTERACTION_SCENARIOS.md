@@ -4,7 +4,7 @@
 
 This document translates **`docs/SPEC.md`** into **interaction scenarios (SC-)** and **test cases (TC-)**. It does **not** invent behavior beyond those sources.
 
-**References:** [`README.md`](../README.md), [`CONTEXT.md`](../CONTEXT.md), [`AGENTS.md`](../AGENTS.md), [`docs/SPEC.md`](SPEC.md), [`docs/ROADMAP.md`](ROADMAP.md), [`docs/UI_SPEC.md`](UI_SPEC.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md), [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
+**References:** [`README.md`](../README.md), [`CONTEXT.md`](../CONTEXT.md), [`AGENTS.md`](../AGENTS.md), [`docs/SPEC.md`](SPEC.md), [`docs/ROADMAP.md`](ROADMAP.md), [`docs/UI_SPEC.md`](UI_SPEC.md) (hub) and [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md) / [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](MimironsGoldOMatic.Desktop/UI_SPEC.md) / [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](MimironsGoldOMatic.WoWAddon/UI_SPEC.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md), [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), component `ReadME.md` files under `docs/MimironsGoldOMatic.*/`.
 
 End-to-end narrative: **[WORKFLOWS.md](WORKFLOWS.md)** · product digest: **[MVP_PRODUCT_SUMMARY.md](MVP_PRODUCT_SUMMARY.md)**.
 

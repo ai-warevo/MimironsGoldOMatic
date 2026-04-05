@@ -7,7 +7,7 @@
 | Term | Meaning | Primary spec |
 |------|---------|----------------|
 | **EBS** | **Extension Backend Service** — `MimironsGoldOMatic.Backend` (JWT, EventSub, Helix, REST). | SPEC (EBS section), [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-| **Extension** | Twitch panel (React) calling the EBS with **Bearer** JWT. | SPEC §5, §11; [`UI_SPEC.md`](UI_SPEC.md) |
+| **Extension** | Twitch panel (React) calling the EBS with **Bearer** JWT. | SPEC §5, §11; [`MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md) |
 | **Desktop** | WPF app: API key, log tail, WoW injection. | SPEC §8–10; [`MimironsGoldOMatic.Desktop/ReadME.md`](MimironsGoldOMatic.Desktop/ReadME.md) |
 | **Addon** | WoW 3.3.5a Lua: mail queue, whispers, MGM log tags. | SPEC §8–10; [`MimironsGoldOMatic.WoWAddon/ReadME.md`](MimironsGoldOMatic.WoWAddon/ReadME.md) |
 | **Participant pool** | Subscribers enrolled via **`!twgold <CharacterName>`** (and optional claim); unique **CharacterName** among others. | SPEC §1, §5 |

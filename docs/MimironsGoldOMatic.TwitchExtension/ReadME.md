@@ -4,8 +4,8 @@
 
 **Cross-cutting:** [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md) · [`docs/MVP_PRODUCT_SUMMARY.md`](../MVP_PRODUCT_SUMMARY.md) · [`docs/WORKFLOWS.md`](../WORKFLOWS.md)
 
-- **Repository status:** `src/MimironsGoldOMatic.TwitchExtension` is **MVP-5** — Vite + React + TypeScript viewer panel with **`window.Twitch.ext`**, Zustand (`mgmPanelStore`), axios EBS client, **`mgmEbsRepository`** calling **`/api/roulette/state`**, **`/api/pool/me`**, **`/api/payouts/my-last`**, visual roulette + countdown from **`nextSpinAt`/`serverNow`**, and **UI-101–106**-aligned UX (`docs/UI_SPEC.md`). See `docs/IMPLEMENTATION_READINESS.md`.
-- **UI spec:** `docs/UI_SPEC.md` §1 — **MVP:** viewer panel **UI-101–106** only. Broadcaster **UI-201–204** are **post-MVP** (see `docs/ROADMAP.md` MVP-5).
+- **Repository status:** `src/MimironsGoldOMatic.TwitchExtension` is **MVP-5** — Vite + React + TypeScript viewer panel with **`window.Twitch.ext`**, Zustand (`mgmPanelStore`), axios EBS client, **`mgmEbsRepository`** calling **`/api/roulette/state`**, **`/api/pool/me`**, **`/api/payouts/my-last`**, visual roulette + countdown from **`nextSpinAt`/`serverNow`**, and **UI-101–106**-aligned UX ([`UI_SPEC.md`](UI_SPEC.md)). See `docs/IMPLEMENTATION_READINESS.md`.
+- **UI spec:** [`UI_SPEC.md`](UI_SPEC.md) in this folder — **MVP:** viewer **UI-101–106** only. Broadcaster **UI-201–204** are **post-MVP** (see `docs/ROADMAP.md` MVP-5). Cross-cutting tokens: [`docs/UI_SPEC.md`](../UI_SPEC.md).
 - **Role:** Viewer-facing **roulette**, pool display, and **winner / payout status**. **Pool enrollment is driven by Twitch chat** (`!twgold <CharacterName>` per `docs/SPEC.md`), not by a form-only flow.
 - **Stack:** React 19, Vite 8, TypeScript 5.9, Zustand, axios (no Tailwind in this package — panel styling is component CSS).
 

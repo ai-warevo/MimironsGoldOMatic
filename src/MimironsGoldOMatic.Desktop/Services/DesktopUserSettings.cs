@@ -4,7 +4,7 @@ public sealed class DesktopUserSettings
 {
     public string BaseUrl { get; set; } = "https://localhost:5001";
 
-    /// <summary>Polling interval for <c>GET /api/payouts/pending</c> (<c>docs/UI_SPEC.md</c> UI-306 default 15s).</summary>
+    /// <summary>Polling interval for <c>GET /api/payouts/pending</c> (<c>docs/MimironsGoldOMatic.Desktop/UI_SPEC.md</c> UI-306 default 15s).</summary>
     public int PollIntervalSeconds { get; set; } = 15;
 
     public int HttpRetryCount { get; set; } = 3;

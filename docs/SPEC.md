@@ -4,7 +4,7 @@
 
 This document is the **canonical implementation contract** for the MVP.  
 `docs/ROADMAP.md` contains step-by-step prompts and links into this spec.  
-**User-facing UI** (Twitch Extension, WPF, WoW addon screens, states, ASCII layouts): `docs/UI_SPEC.md`.
+**User-facing UI:** hub [`docs/UI_SPEC.md`](UI_SPEC.md) (tokens, navigation); per-surface screens in [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md), [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](MimironsGoldOMatic.Desktop/UI_SPEC.md), [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](MimironsGoldOMatic.WoWAddon/UI_SPEC.md).
 
 **Code alignment:** MVP slices **MVP-1 … MVP-5** are implemented under `src/` (Shared, Backend, Desktop, Twitch Extension, WoW addon). Remaining gaps (automated tests, packaging, production hardening) are summarized in `docs/IMPLEMENTATION_READINESS.md`.
 
@@ -332,7 +332,7 @@ These routes supply **server-authoritative** spin scheduling and pool hints for 
 - **`serverNow`**: ISO-8601 UTC “now” on the server (helps correct client drift when computing remaining time).
 - **`spinIntervalSeconds`**: **300** in MVP.
 - **`poolParticipantCount`**: non-negative integer; number of **active** pool entries for the current channel.
-- **`spinPhase`**: **closed enum** for MVP — exactly one of: **`idle`**, **`collecting`**, **`spinning`**, **`verification`**, **`completed`**. **Transitions** between phases for a cycle are **Backend-defined** (implementation detail), as long as responses remain consistent with this contract and **`docs/UI_SPEC.md`** UX.
+- **`spinPhase`**: **closed enum** for MVP — exactly one of: **`idle`**, **`collecting`**, **`spinning`**, **`verification`**, **`completed`**. **Transitions** between phases for a cycle are **Backend-defined** (implementation detail), as long as responses remain consistent with this contract and **`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`** UX.
 - **`currentSpinCycleId`**: UUID string for the **active** spin cycle (omit or `null` when **`spinPhase`** is **`idle`**); used to correlate **`POST /api/roulette/verify-candidate`** and **`[MGM_WHO]`** log payloads.
 
 #### GET `/api/pool/me`
@@ -359,7 +359,7 @@ These routes supply **server-authoritative** spin scheduling and pool hints for 
 
 #### Extension resilience (overload / errors)
 
-- On **`429`**, **`503`**, or network failure when polling **`GET /api/roulette/state`**, **`GET /api/pool/me`**, or **`GET /api/payouts/my-last`**, the Extension **should** show a **friendly error** (see **`docs/UI_SPEC.md`**) and **exponential backoff** between retries (cap the maximum interval, e.g. **≤ 60s**), plus a **Retry** control so the viewer is not stuck in a tight loop. **`503`** indicates temporary overload or dependency failure; behavior is **host-defined** beyond this client guidance (**§5** error model).
+- On **`429`**, **`503`**, or network failure when polling **`GET /api/roulette/state`**, **`GET /api/pool/me`**, or **`GET /api/payouts/my-last`**, the Extension **should** show a **friendly error** (see **`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`**) and **exponential backoff** between retries (cap the maximum interval, e.g. **≤ 60s**), plus a **Retry** control so the viewer is not stuck in a tight loop. **`503`** indicates temporary overload or dependency failure; behavior is **host-defined** beyond this client guidance (**§5** error model).
 
 ## 6) Persistence model (MVP, ES-first)
 

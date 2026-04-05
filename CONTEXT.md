@@ -24,7 +24,7 @@ Mimiron's Gold-o-Matic is an end-to-end system for distributing gold in WoW 3.3.
 
 - Shared contracts: **`MimironsGoldOMatic.Shared`** (DTOs / enums / validation).
 - WoW payload / chunking: [`docs/SPEC.md`](docs/SPEC.md) §8–9.
-- **UI/UX:** [`docs/UI_SPEC.md`](docs/UI_SPEC.md) (**UI-1xx–4xx**).
+- **UI/UX:** [`docs/UI_SPEC.md`](docs/UI_SPEC.md) (hub) · per-surface [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md), [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](docs/MimironsGoldOMatic.Desktop/UI_SPEC.md), [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md) (**UI-1xx–4xx**).
 - Engineering workflow artifacts: **`docs/prompts/`** (templates + history).
 
 ## Test topology

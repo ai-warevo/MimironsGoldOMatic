@@ -10,7 +10,7 @@ Canonical implementation contracts live in:
 
 **Interaction scenarios & test cases (for implementation / verification):** When executing MVP steps below, agents should use [`docs/INTERACTION_SCENARIOS.md`](INTERACTION_SCENARIOS.md) for scenario IDs (SC-001, …), paired test cases (TC-001, …), and the **Component Contracts** section at each boundary.
 
-**UI/UX (screens, element inventory, flows):** Use [`docs/UI_SPEC.md`](UI_SPEC.md) for **UI-1xx–UI-4xx** panel definitions, Twitch panel constraints (~318px), WPF window layouts, and WoW 3.3.5a frame notes while implementing MVP-3 / MVP-4 / MVP-5.
+**UI/UX (screens, element inventory, flows):** Hub [`docs/UI_SPEC.md`](UI_SPEC.md) (tokens, navigation); implement against [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md), [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](MimironsGoldOMatic.Desktop/UI_SPEC.md), and [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](MimironsGoldOMatic.WoWAddon/UI_SPEC.md) for **UI-1xx–UI-4xx** (Twitch ~318px panel, WPF windows, WoW frames) while building MVP-3 / MVP-4 / MVP-5.
 
 **Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today versus **MVP-6** (tests, E2E harness) and residual risks, see [`docs/IMPLEMENTATION_READINESS.md`](IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*.
 
@@ -244,7 +244,7 @@ Acting as **[Frontend/Twitch Expert]**:
 - Implement **visual roulette** + **5-minute** countdown (aligned with the **EBS**; **no** early spin).
 - Implement pull status UX:
   - Call `GET /api/payouts/my-last` (and any pool APIs)
-- **MVP-5 scope (locked):** **viewer panel only** (`docs/UI_SPEC.md` **UI-101–106**). **Do not** implement broadcaster dashboard panels **UI-201–204** in MVP-5 (post-MVP / when the **EBS** adds broadcaster JWT routes).
+- **MVP-5 scope (locked):** **viewer panel only** ([`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md) **UI-101–106**). **Do not** implement broadcaster dashboard panels **UI-201–204** in MVP-5 (post-MVP / when the **EBS** adds broadcaster JWT routes).
 - Ensure alignment with Twitch Dev Rig for MVP debugging (**real** Extension JWTs per `docs/SPEC.md`).
 
 ### MVP-6: End-to-end demo & verification
