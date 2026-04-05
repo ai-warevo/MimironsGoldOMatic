@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (MVP-6 status sync) -->
+<!-- Updated: 2026-04-05 (MVP-6 status sync; E2E cross-refs) -->
 
 # Project Roadmap: Mimiron's Gold-o-Matic
 
@@ -270,6 +270,14 @@ Acting as **[Frontend/Twitch Expert]**:
 
 - **Automate full E2E demo in CI/CD** — extend automation beyond Backend integration tests (e.g. workflow jobs, harnesses, or mocks) only when an approach is chosen; `.github/workflows/` remains a placeholder today.
 - **Validate complete operator workflow** — run the full manual scenario end-to-end and record results against **TC-** rows in **`docs/INTERACTION_SCENARIOS.md`**.
+
+For details on the automation approach, see [E2E Automation Plan](E2E_AUTOMATION_PLAN.md). Actionable work items: [E2E Automation Tasks](E2E_AUTOMATION_TASKS.md).
+
+### E2E Automation Progress
+
+- **Plan:** [E2E Automation Plan](E2E_AUTOMATION_PLAN.md) (Tier A **CI** vs Tier B self-hosted; mocks and **SyntheticDesktop**).
+- **Task list:** [E2E Automation Tasks](E2E_AUTOMATION_TASKS.md) (ownership, estimates).
+- **Status:** documentation linked; implementation pending (see task file).
 
 **Solution layout:** `MimironsGoldOMatic.slnx` includes **Backend.Tests**; **Twitch Extension** and **WoW addon** stay non-MSBuild trees (same as MVP-0).
 

@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (MVP-6 status sync) -->
+<!-- Updated: 2026-04-05 (MVP-6 status sync; E2E cross-refs) -->
 
 # MVP Implementation Readiness Matrix
 
@@ -64,6 +64,13 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 | Live Twitch EventSub → EBS enrollment | **Manual** | Real Twitch/Dev Rig; not covered as live traffic in **CI/CD**. |
 | WoW 3.3.5a addon + `WoWChatLog.txt` tags + Desktop WinAPI inject | **Manual** | SC-001, SC-003, SC-004, etc.; no headless WoW harness in repo. |
 | Helix **Send Chat Message** after **`Sent`** | **Manual** (target: **Automated** / mocked in **CI**) | Inline retries in Backend; **CI** does not assert live Helix today. |
+
+## E2E Automation Progress
+
+For details on the automation approach, see [E2E Automation Plan](E2E_AUTOMATION_PLAN.md). Developer checklist and ownership: [E2E Automation Tasks](E2E_AUTOMATION_TASKS.md).
+
+- **Status:** Plan and tasks documented; **CI/CD** Tier A (**mock Helix**, **SyntheticDesktop**, optional signed **EventSub** posts) not implemented yet.
+- **Baseline:** [`docs/INTERACTION_SCENARIOS.md`](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6) (manual vs target **Automated**).
 
 ## Residual implementation risks (not contradictions)
 
