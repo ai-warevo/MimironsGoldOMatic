@@ -377,8 +377,8 @@ jobs:
             "${REPO}:latest"
           docker push "${REPO}:latest"
 
-      # GHCR defaults to private. PATCH /orgs/... only exists for real orgs; user accounts need /user/packages/...
-      # Package name in the API may differ (and must be path-encoded, e.g. slashes → %2F).
+      # GHCR defaults to private. Avoid list ?package_type=container (can return 400 Invalid argument for some orgs).
+      # Resolve package via GET .../packages/{container|docker}/{name}, then PATCH the same path segment as package_type.
       - name: Make Backend GHCR package public via API
         run: |
           set -euo pipefail
@@ -389,34 +389,107 @@ jobs:
           API_VERSION="2022-11-28"
           HDR=(-H "Authorization: Bearer ${TOKEN}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: ${API_VERSION}")
 
+          enc() { python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=\"\"))" "$1"; }
+
           OWNER_TYPE="$(curl -sS "${HDR[@]}" "${API}/users/${OWNER}" | jq -r .type)"
           echo "Owner ${OWNER} account type: ${OWNER_TYPE}"
 
+          PACKAGE_TYPE=""
+          PKG_NAME=""
+          ENC_WANT="$(enc "${WANT}")"
+
+          # Try direct GET (works for private org packages with packages:read/write); try container then docker.
           if [ "${OWNER_TYPE}" = "Organization" ]; then
-            LIST_URL="${API}/orgs/${OWNER}/packages?package_type=container&per_page=100"
-            PATCH_PREFIX="${API}/orgs/${OWNER}/packages/container/"
+            for PT in container docker; do
+              code="$(curl -sS -w "%{http_code}" -o /tmp/gh_pkg_probe.json \
+                "${HDR[@]}" \
+                "${API}/orgs/${OWNER}/packages/${PT}/${ENC_WANT}")"
+              if [ "${code}" = "200" ]; then
+                PACKAGE_TYPE="${PT}"
+                PKG_NAME="$(jq -r .name /tmp/gh_pkg_probe.json)"
+                echo "Resolved via GET: package_type=${PACKAGE_TYPE} name=${PKG_NAME}"
+                break
+              fi
+            done
+            if [ -z "${PACKAGE_TYPE}" ]; then
+              for PT in docker container; do
+                list_http="$(curl -sS -w "%{http_code}" -o /tmp/gh_pkg_list.json \
+                  "${HDR[@]}" \
+                  "${API}/orgs/${OWNER}/packages?package_type=${PT}&per_page=100")"
+                if [ "${list_http}" != "200" ]; then
+                  echo "::warning::List org packages package_type=${PT} HTTP ${list_http}"
+                  cat /tmp/gh_pkg_list.json || true
+                  continue
+                fi
+                PKG_NAME="$(jq -r --arg w "${WANT}" '
+                  [.[] | select(.name == $w or (.name | endswith("/" + $w)) or (.name | contains($w))) | .name] | .[0] // empty
+                ' /tmp/gh_pkg_list.json)"
+                if [ -n "${PKG_NAME}" ] && [ "${PKG_NAME}" != "null" ]; then
+                  PACKAGE_TYPE="${PT}"
+                  echo "Resolved via list: package_type=${PACKAGE_TYPE} name=${PKG_NAME}"
+                  break
+                fi
+              done
+            fi
           else
-            LIST_URL="${API}/users/${OWNER}/packages?package_type=container&per_page=100"
-            PATCH_PREFIX="${API}/user/packages/container/"
+            for PT in container docker; do
+              code="$(curl -sS -w "%{http_code}" -o /tmp/gh_pkg_probe.json \
+                "${HDR[@]}" \
+                "${API}/user/packages/${PT}/${ENC_WANT}")"
+              if [ "${code}" = "200" ]; then
+                PACKAGE_TYPE="${PT}"
+                PKG_NAME="$(jq -r .name /tmp/gh_pkg_probe.json)"
+                echo "Resolved via GET /user/packages: package_type=${PACKAGE_TYPE} name=${PKG_NAME}"
+                break
+              fi
+            done
+            if [ -z "${PACKAGE_TYPE}" ]; then
+              for PT in container docker; do
+                code="$(curl -sS -w "%{http_code}" -o /tmp/gh_pkg_probe.json \
+                  "${HDR[@]}" \
+                  "${API}/users/${OWNER}/packages/${PT}/${ENC_WANT}")"
+                if [ "${code}" = "200" ]; then
+                  PACKAGE_TYPE="${PT}"
+                  PKG_NAME="$(jq -r .name /tmp/gh_pkg_probe.json)"
+                  echo "Resolved via GET /users/.../packages: package_type=${PACKAGE_TYPE} name=${PKG_NAME}"
+                  break
+                fi
+              done
+            fi
+            if [ -z "${PACKAGE_TYPE}" ]; then
+              for PT in docker container; do
+                list_http="$(curl -sS -w "%{http_code}" -o /tmp/gh_pkg_list.json \
+                  "${HDR[@]}" \
+                  "${API}/users/${OWNER}/packages?package_type=${PT}&per_page=100")"
+                if [ "${list_http}" != "200" ]; then
+                  echo "::warning::List user packages package_type=${PT} HTTP ${list_http}"
+                  cat /tmp/gh_pkg_list.json || true
+                  continue
+                fi
+                PKG_NAME="$(jq -r --arg w "${WANT}" '
+                  [.[] | select(.name == $w or (.name | endswith("/" + $w)) or (.name | contains($w))) | .name] | .[0] // empty
+                ' /tmp/gh_pkg_list.json)"
+                if [ -n "${PKG_NAME}" ] && [ "${PKG_NAME}" != "null" ]; then
+                  PACKAGE_TYPE="${PT}"
+                  echo "Resolved via list: package_type=${PACKAGE_TYPE} name=${PKG_NAME}"
+                  break
+                fi
+              done
+            fi
           fi
 
-          LIST_JSON="$(curl -sS "${HDR[@]}" "${LIST_URL}")"
-          PKG_NAME="$(echo "${LIST_JSON}" | jq -r --arg w "${WANT}" '
-            if type == "array" then
-              [.[] | select(.name == $w or (.name | endswith("/" + $w)) or (.name | contains($w))) | .name] | .[0] // empty
-            else
-              empty
-            end
-          ')"
-          if [ -z "${PKG_NAME}" ]; then
-            echo "::warning::Package list did not match ${WANT}; using ${WANT}. List response (names):"
-            echo "${LIST_JSON}" | jq -r 'if type == "array" then [.[] | .name] else . end' || echo "${LIST_JSON}"
-            PKG_NAME="${WANT}"
+          if [ -z "${PACKAGE_TYPE}" ] || [ -z "${PKG_NAME}" ]; then
+            echo "::error::Could not resolve GHCR package ${WANT} (GET and list failed). Check packages: permissions and image name."
+            exit 1
           fi
-          echo "Patching package name: ${PKG_NAME}"
 
-          ENC_NAME="$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=\"\"))" "${PKG_NAME}")"
-          PATCH_URL="${PATCH_PREFIX}${ENC_NAME}"
+          ENC_PKG="$(enc "${PKG_NAME}")"
+          if [ "${OWNER_TYPE}" = "Organization" ]; then
+            PATCH_URL="${API}/orgs/${OWNER}/packages/${PACKAGE_TYPE}/${ENC_PKG}"
+          else
+            PATCH_URL="${API}/user/packages/${PACKAGE_TYPE}/${ENC_PKG}"
+          fi
+          echo "PATCH ${PATCH_URL}"
 
           HTTP="$(curl -sS -w "%{http_code}" -o /tmp/gh_pkg_patch.json \
             -X PATCH \
