@@ -18,8 +18,9 @@ local ROOT_PREFIX = (TEST_ROOT == "." and "" or TEST_ROOT)
 
 package.path = ROOT_PREFIX .. "lib/?.lua;" .. package.path
 
-CORE_LUA = ROOT_PREFIX .. "../MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.Core.lua"
-ADDON_LUA = ROOT_PREFIX .. "../MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua"
+-- Addon lives under src/MimironsGoldOMatic.WoWAddon; this project is src/Tests/<name>, so go up twice.
+CORE_LUA = ROOT_PREFIX .. "../../MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.Core.lua"
+ADDON_LUA = ROOT_PREFIX .. "../../MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua"
 MOCK_LUA = ROOT_PREFIX .. "wow_api_mock.lua"
 
 local lu = require("luaunit")
