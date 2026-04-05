@@ -1,9 +1,9 @@
 using Npgsql;
 
-namespace MimironsGoldOMatic.Backend.IntegrationTests.Support;
+namespace MimironsGoldOMatic.IntegrationTesting;
 
 /// <summary>Clears all tables in the Marten <c>mgm</c> schema between tests (Docker PostgreSQL).</summary>
-internal static class PostgresMgmTruncate
+public static class PostgresMgmTruncate
 {
     private const string Sql =
         """
@@ -17,7 +17,7 @@ internal static class PostgresMgmTruncate
         END $$;
         """;
 
-    internal static async Task TruncateAllAsync(string connectionString, CancellationToken cancellationToken = default)
+    public static async Task TruncateAllAsync(string connectionString, CancellationToken cancellationToken = default)
     {
         await using var conn = new NpgsqlConnection(connectionString);
         await conn.OpenAsync(cancellationToken);

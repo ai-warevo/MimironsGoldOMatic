@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>MimironsGoldOMatic.Desktop.IntegrationTests</RootNamespace>
+    <AssemblyName>MimironsGoldOMatic.Desktop.IntegrationTests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.5" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.IntegrationTesting\MimironsGoldOMatic.IntegrationTesting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Api\ConfirmAcceptanceBody.cs" Link="DesktopSources\Api\ConfirmAcceptanceBody.cs" />
+    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Api\PatchPayoutStatusBody.cs" Link="DesktopSources\Api\PatchPayoutStatusBody.cs" />
+    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Api\VerifyCandidateRequestDto.cs" Link="DesktopSources\Api\VerifyCandidateRequestDto.cs" />
+    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Services\EbsDesktopClient.cs" Link="DesktopSources\EbsDesktopClient.cs" />
+    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Services\IEbsDesktopClient.cs" Link="DesktopSources\IEbsDesktopClient.cs" />
+    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Services\PayoutSnapshotCache.cs" Link="DesktopSources\PayoutSnapshotCache.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

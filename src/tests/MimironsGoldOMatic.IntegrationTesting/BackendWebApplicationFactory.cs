@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace MimironsGoldOMatic.Backend.IntegrationTests.Support;
+namespace MimironsGoldOMatic.IntegrationTesting;
 
 /// <summary>Full ASP.NET Core host over a Testcontainers PostgreSQL connection string (matches <c>Program.cs</c> configuration keys).</summary>
 public sealed class BackendWebApplicationFactory : WebApplicationFactory<Program>
@@ -22,12 +22,13 @@ public sealed class BackendWebApplicationFactory : WebApplicationFactory<Program
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        // Highest-priority override so appsettings.Development.json / env cannot point at a local PostgreSQL during tests.
+        builder.UseSetting("ConnectionStrings:PostgreSQL", _connectionString);
         builder.ConfigureAppConfiguration((_, config) =>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:PostgreSQL"] = _connectionString,
-                ["Mgm:ApiKey"] = "integration-test-desktop-api-key",
+                ["Mgm:ApiKey"] = IntegrationTestConstants.DesktopApiKey,
                 ["Mgm:DevSkipSubscriberCheck"] = "true",
                 ["Twitch:ExtensionClientId"] = "test-extension-client-id",
                 ["Twitch:EventSubSecret"] = "",

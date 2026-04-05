@@ -1,5 +1,5 @@
 using System.Net;
-using MimironsGoldOMatic.Backend.IntegrationTests.Support;
+using MimironsGoldOMatic.IntegrationTesting;
 using Xunit;
 
 namespace MimironsGoldOMatic.Backend.IntegrationTests;
@@ -19,7 +19,7 @@ public sealed class DesktopApiKeyAuthenticationIntegrationTests : HttpApiFixture
     public async Task TC003_SC002_Should_ReturnOk_WhenValidApiKeyOnPending()
     {
         var client = await CreateCleanClientAsync();
-        client.DefaultRequestHeaders.Add("X-MGM-ApiKey", "integration-test-desktop-api-key");
+        client.DefaultRequestHeaders.Add("X-MGM-ApiKey", IntegrationTestConstants.DesktopApiKey);
         var res = await client.GetAsync("/api/payouts/pending");
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
     }

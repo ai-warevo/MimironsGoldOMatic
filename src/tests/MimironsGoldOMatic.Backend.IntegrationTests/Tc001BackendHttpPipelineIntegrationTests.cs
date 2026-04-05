@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using MimironsGoldOMatic.Backend.Api;
 using MimironsGoldOMatic.Backend.IntegrationTests.Support;
+using MimironsGoldOMatic.IntegrationTesting;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
 using MimironsGoldOMatic.Shared;
@@ -91,7 +92,7 @@ public sealed class Tc001BackendHttpPipelineIntegrationTests : HttpApiFixtureBas
 
         var spinId = await GetSpinCycleIdAsync();
         var desk = Host.CreateClient();
-        desk.DefaultRequestHeaders.Add("X-MGM-ApiKey", "integration-test-desktop-api-key");
+        desk.DefaultRequestHeaders.Add("X-MGM-ApiKey", IntegrationTestConstants.DesktopApiKey);
         var vr = await desk.PostAsJsonAsync("/api/roulette/verify-candidate",
             new VerifyCandidateRequest(1, spinId, "Hero", true, DateTime.UtcNow));
         Assert.Equal(HttpStatusCode.OK, vr.StatusCode);

@@ -2,6 +2,8 @@
 
 End-to-end Backend tests: **Testcontainers PostgreSQL**, real **Marten** persistence, **ASP.NET Core** via `WebApplicationFactory<Program>`, and **MediatR** / services where tests target handlers directly.
 
+Shared infrastructure (`BackendWebApplicationFactory`, Postgres fixture, `PostgresMgmTruncate`, `HttpApiFixtureBase`) lives in **`MimironsGoldOMatic.IntegrationTesting`** and is reused by **`MimironsGoldOMatic.Desktop.IntegrationTests`** (Desktop EBS client vs the same host).
+
 ## Prerequisites
 
 - **Docker** running locally (Testcontainers starts `postgres:16-alpine`).
@@ -42,7 +44,7 @@ Performance smoke tests are tagged `Kind=Performance` (see `CriticalPathPerforma
 
 ## Isolation and cleanup
 
-- **One shared Postgres container** per test collection (`PostgresCollection`); **xunit.runner.json** forces **single-threaded** execution so DB state does not race between tests.
+- **One shared Postgres container** per test collection (`PostgresCollection`, defined in this assembly as `ICollectionFixture<PostgresContainerFixture>` from `MimironsGoldOMatic.IntegrationTesting`); **xunit.runner.json** forces **single-threaded** execution so DB state does not race between tests.
 - **`PostgresMgmTruncate`** runs before/after host boot (`HttpApiFixtureBase`) and again via **`CreateCleanClientAsync()`** for HTTP scenarios.
 - JWT / EventSub / pool rows use **unique IDs** where collisions would otherwise occur across the ordered suite.
 

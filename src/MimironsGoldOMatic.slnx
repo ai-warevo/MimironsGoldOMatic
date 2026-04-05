@@ -4,6 +4,8 @@
   <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj" />
   <Project Path="tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj" />
   <Project Path="tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj" />
+  <Project Path="tests/MimironsGoldOMatic.IntegrationTesting/MimironsGoldOMatic.IntegrationTesting.csproj" />
+  <Project Path="tests/MimironsGoldOMatic.Desktop.IntegrationTests/MimironsGoldOMatic.Desktop.IntegrationTests.csproj" />
   <Project Path="MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj" />
   <Project Path="MimironsGoldOMatic.Desktop.Tests/MimironsGoldOMatic.Desktop.Tests.csproj" />
   <Project Path="tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj" />

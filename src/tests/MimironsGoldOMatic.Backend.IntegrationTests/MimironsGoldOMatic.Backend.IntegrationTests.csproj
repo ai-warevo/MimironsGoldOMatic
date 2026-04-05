@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.IntegrationTesting\MimironsGoldOMatic.IntegrationTesting.csproj" />
   </ItemGroup>
 
   <ItemGroup>

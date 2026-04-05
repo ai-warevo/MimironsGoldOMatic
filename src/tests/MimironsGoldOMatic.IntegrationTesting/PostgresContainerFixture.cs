@@ -1,7 +1,7 @@
 using Testcontainers.PostgreSql;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.IntegrationTests.Support;
+namespace MimironsGoldOMatic.IntegrationTesting;
 
 /// <summary>One PostgreSQL container per test collection (requires Docker).</summary>
 public sealed class PostgresContainerFixture : IAsyncLifetime
@@ -16,6 +16,3 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
 }
-
-[CollectionDefinition(nameof(PostgresCollection), DisableParallelization = true)]
-public sealed class PostgresCollection : ICollectionFixture<PostgresContainerFixture>;

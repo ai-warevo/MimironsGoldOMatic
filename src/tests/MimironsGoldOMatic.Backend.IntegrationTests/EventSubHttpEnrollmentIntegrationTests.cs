@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using MimironsGoldOMatic.Backend.IntegrationTests.Support;
+using MimironsGoldOMatic.IntegrationTesting;
 using MimironsGoldOMatic.Backend.Persistence;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
