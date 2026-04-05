@@ -180,6 +180,9 @@ Acting as **[WoW Addon/Lua Expert]**:
     - **Mark as Sent**
     - **Fail**
     - **Cancel**
+    - **InProgress → Pending** escape hatch (`docs/SPEC.md` §3)
+
+**Status — implemented (code):** `src/MimironsGoldOMatic.Desktop` — MVVM main window + settings (API URL, DPAPI ApiKey, WoW log path, poll interval, PostMessage vs SendInput preference), `GET /api/payouts/pending` poll, auto **`NotifyWinnerWhisper`** for new **`Pending`** rows when WoW is foreground (persisted ids), **Sync/Inject** → **`PATCH` `InProgress`** + chunked **`/run ReceiveGold`**, single **`WoWChatLog.txt`** tail → **`verify-candidate`** / **`confirm-acceptance`** / **`PATCH` `Sent`**, Polly retries on **`HttpClient`**. Runtime WinAPI behavior on real **3.3.5a** clients is manual.
 
 Spec links:
 

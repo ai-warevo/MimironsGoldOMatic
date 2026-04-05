@@ -3,10 +3,67 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MimironsGoldOMatic.Desktop"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-
+        Title="Mimiron's Gold-o-Matic — Desktop"
+        Height="560" Width="920">
+  <DockPanel>
+    <Menu DockPanel.Dock="Top">
+      <MenuItem Header="_File">
+        <MenuItem Header="_Settings…" Click="MenuSettings_Click"/>
+        <Separator/>
+        <MenuItem Header="E_xit" Click="MenuExit_Click"/>
+      </MenuItem>
+      <MenuItem Header="_View">
+        <MenuItem Header="_Event log…" Click="MenuLog_Click"/>
+      </MenuItem>
+    </Menu>
+    <StatusBar DockPanel.Dock="Bottom">
+      <StatusBarItem>
+        <TextBlock Text="{Binding WowStatus}"/>
+      </StatusBarItem>
+      <Separator/>
+      <StatusBarItem>
+        <TextBlock Text="{Binding ApiStatus}"/>
+      </StatusBarItem>
+      <Separator/>
+      <StatusBarItem>
+        <TextBlock Text="Injection: PostMessage → SendInput fallback (see Settings)"/>
+      </StatusBarItem>
+    </StatusBar>
+    <Grid Margin="12">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="120"/>
+      </Grid.RowDefinitions>
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+        <Button Content="Refresh" Width="96" Margin="0,0,8,0" Command="{Binding RefreshCommand}"/>
+        <Button Content="Sync / Inject" Width="120" Margin="0,0,8,0" Command="{Binding SyncInjectCommand}"
+                ToolTip="PATCH Pending → InProgress, then /run ReceiveGold (requires foreground WoW)"/>
+        <TextBlock VerticalAlignment="Center" Foreground="Gray"
+                   Text="Winner whisper: auto-injected for new Pending rows when WoW is focused."/>
+      </StackPanel>
+      <DataGrid Grid.Row="1" ItemsSource="{Binding Payouts}" SelectedItem="{Binding SelectedPayout}"
+                AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="Character" Binding="{Binding CharacterName}" Width="140"/>
+          <DataGridTextColumn Header="Gold" Binding="{Binding GoldAmount}" Width="72"/>
+          <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+          <DataGridTextColumn Header="Twitch" Binding="{Binding TwitchDisplayName}" Width="140"/>
+          <DataGridTextColumn Header="Payout Id" Binding="{Binding Id}" Width="*"/>
+        </DataGrid.Columns>
+      </DataGrid>
+      <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,8">
+        <Button Content="Mark Sent" Width="96" Margin="0,0,8,0" Command="{Binding MarkSentCommand}"/>
+        <Button Content="Mark Failed" Width="96" Margin="0,0,8,0" Command="{Binding MarkFailedCommand}"/>
+        <Button Content="Cancel" Width="80" Margin="0,0,8,0" Command="{Binding MarkCancelledCommand}"/>
+        <Button Content="Unlock → Pending" Width="130" Command="{Binding UnlockToPendingCommand}"
+                ToolTip="InProgress → Pending (escape hatch)"/>
+      </StackPanel>
+      <GroupBox Grid.Row="3" Header="Recent log (see View → Event log for full)">
+        <ListBox ItemsSource="{Binding DeliveryLog}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+      </GroupBox>
     </Grid>
+  </DockPanel>
 </Window>

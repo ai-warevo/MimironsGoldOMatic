@@ -1,0 +1,13 @@
+<Window x:Class="MimironsGoldOMatic.Desktop.EventLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Delivery / event log"
+        Height="420" Width="640"
+        WindowStartupLocation="CenterOwner">
+  <DockPanel Margin="8">
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+      <Button Content="Clear" Width="72" Click="Clear_Click"/>
+    </StackPanel>
+    <ListBox ItemsSource="{Binding DeliveryLog}"/>
+  </DockPanel>
+</Window>
