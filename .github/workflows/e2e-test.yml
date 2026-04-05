@@ -120,7 +120,7 @@ jobs:
             --secret "${{ env.E2E_EVENTSUB_SECRET }}" \
             --user-id e2e-viewer-1 \
             --login e2eviewer1 \
-            --text "!twgold E2EHero"
+            --text "!twgold Etoehero"
 
       - name: Verify pool enrollment (Extension JWT)
         run: |
@@ -129,7 +129,7 @@ jobs:
           echo "Got JWT (${#TOKEN} chars)"
           BODY=$(curl -sS -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8080/api/pool/me)
           echo "GET /api/pool/me => $BODY"
-          python3 -c "import json,sys; d=json.loads(sys.argv[1]); assert d.get('isEnrolled') is True, d; assert d.get('characterName')=='E2EHero', d" "$BODY"
+          python3 -c "import json,sys; d=json.loads(sys.argv[1]); assert d.get('isEnrolled') is True, d; assert d.get('characterName')=='Etoehero', d" "$BODY"
           echo "E2E Tier A: pool enrollment verified."
 
       - name: Logs (on failure)

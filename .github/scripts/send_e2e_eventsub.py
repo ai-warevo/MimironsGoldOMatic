@@ -40,7 +40,7 @@ def main() -> int:
     p.add_argument("--secret", default="", help="EventSub secret (empty = EBS/mocks skip HMAC)")
     p.add_argument("--user-id", default="e2e-viewer-1", dest="user_id")
     p.add_argument("--login", default="e2eviewer1")
-    p.add_argument("--text", default="!twgold E2EHero")
+    p.add_argument("--text", default="!twgold Etoehero")
     args = p.parse_args()
 
     msg_id = str(uuid.uuid4())

@@ -25,7 +25,7 @@ Use this before relying on **CI Tier A** as a gate or when debugging a red workf
 - [ ] Test **HMAC** end-to-end: run [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) with the **same** `--secret` as **`Twitch__EventSubSecret`** on mock + Backend; expect **no** **401** from mock or EBS.
 - [ ] Validate **JWT**: **`GET http://127.0.0.1:9052/token?userId=…&displayName=…`** returns **`access_token`**; Backend in **Development** with empty **`Twitch:ExtensionSecret`** must share the **dev** signing material with **MockExtensionJwt** (see [ReadME](MimironsGoldOMatic.Backend/ReadME.md)).
 - [ ] Confirm **event forwarding**: mock logs show forward to **`{Backend}/api/twitch/eventsub`**; EBS returns success for synthetic **`channel.chat.message`**.
-- [ ] Verify **`GET /api/pool/me`**: Bearer from the mock token for **`e2e-viewer-1`** yields **`isEnrolled: true`** and expected **`characterName`** after a synthetic **`!twgold …`** line (workflow uses **`!twgold E2EHero`**).
+- [ ] Verify **`GET /api/pool/me`**: Bearer from the mock token for **`e2e-viewer-1`** yields **`isEnrolled: true`** and expected **`characterName`** after a synthetic **`!twgold …`** line (workflow uses **`!twgold Etoehero`**).
 
 ---
 

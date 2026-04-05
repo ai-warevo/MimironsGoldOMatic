@@ -81,7 +81,7 @@ Mirror the workflow on one machine (Linux/macOS/WSL or separate terminals on Win
    Leave **`Twitch:ExtensionSecret`** empty only if Backend is in **Development** (shared dev key); otherwise set the **same** base64 **`Twitch:ExtensionSecret`** on both.  
    `dotnet run --project src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj`.
 5. Send the synthetic EventSub notification:  
-   `python3 .github/scripts/send_e2e_eventsub.py --url http://127.0.0.1:9051 --secret "<secret>" --user-id e2e-viewer-1 --login e2eviewer1 --text "!twgold E2EHero"`
+   `python3 .github/scripts/send_e2e_eventsub.py --url http://127.0.0.1:9051 --secret "<secret>" --user-id e2e-viewer-1 --login e2eviewer1 --text "!twgold Etoehero"`
 6. Fetch a token and call the API:  
    `curl -s "http://127.0.0.1:9052/token?userId=e2e-viewer-1&displayName=E2EViewer"` → use **`access_token`** as **`Authorization: Bearer …`** on **`GET http://127.0.0.1:8080/api/pool/me`**.
 
