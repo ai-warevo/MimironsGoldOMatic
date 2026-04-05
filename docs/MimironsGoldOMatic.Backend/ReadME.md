@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Tier A validation + Tier B plan) -->
+<!-- Updated: 2026-04-05 (Tier A finalization + Tier B detailed plan) -->
 
 ## MimironsGoldOMatic.Backend — EBS (Extension Backend Service) (ASP.NET Core | Bridge between Twitch Extension & WPF Desktop)
 
@@ -85,7 +85,33 @@ Mirror the workflow on one machine (Linux/macOS/WSL or separate terminals on Win
 6. Fetch a token and call the API:  
    `curl -s "http://127.0.0.1:9052/token?userId=e2e-viewer-1&displayName=E2EViewer"` → use **`access_token`** as **`Authorization: Bearer …`** on **`GET http://127.0.0.1:8080/api/pool/me`**.
 
-Full checklist: [`docs/E2E_AUTOMATION_TASKS.md`](../E2E_AUTOMATION_TASKS.md) (**Tier A Validation Checklist**).
+Full checklist: [`docs/E2E_AUTOMATION_TASKS.md`](../E2E_AUTOMATION_TASKS.md) (**Tier A Validation Checklist** — all items verified; see [Tier A Test Results](../E2E_AUTOMATION_PLAN.md#tier-a-test-results--verification)).
+
+### Running Tier B E2E locally (planned — not in CI yet)
+
+Tier B adds **MockHelixApi** (loopback Helix stub), **SyntheticDesktop** (HTTP stand-in for [`DesktopPayoutsController`](../../src/MimironsGoldOMatic.Backend/Controllers/DesktopPayoutsController.cs) flows), and a **configurable Helix base URL** in [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs). Until implemented, treat this as a **developer preview** checklist.
+
+1. Complete **Tier A** local steps (Postgres + Backend + **MockEventSubWebhook** + **MockExtensionJwt**).
+2. Start **MockHelixApi** on e.g. **`http://127.0.0.1:9053`** (see [`docs/TIER_B_IMPLEMENTATION_TASKS.md`](../TIER_B_IMPLEMENTATION_TASKS.md)).
+3. Configure Backend with **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`** (after `HelixApiBaseUrl` lands in [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/Configuration/TwitchOptions.cs)) plus non-empty dummy values so [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) does not skip the outbound call:
+   - **`Twitch__BroadcasterAccessToken`** — any non-empty string accepted by the mock.
+   - **`Twitch__BroadcasterUserId`** — stable test ID (e.g. broadcaster id string).
+   - **`Twitch__HelixClientId`** — must match mock expectations if the mock validates **`Client-Id`**.
+4. Seed or drive **roulette + `Pending` payout** (same domain order as production: enrollment → spin/tick → **`POST /api/roulette/verify-candidate`** with **`X-MGM-ApiKey`**), then run **SyntheticDesktop** (or **`curl`** the same endpoints in order: **`POST .../confirm-acceptance`**, **`PATCH .../status`** **`InProgress`**, **`PATCH .../status`** **`Sent`**).
+5. Verify **MockHelixApi** received **`POST /helix/chat/messages`** with Russian §11 template text for the winner character name.
+
+**References:** [`docs/E2E_AUTOMATION_PLAN.md`](../E2E_AUTOMATION_PLAN.md) (**[Tier B Implementation Plan](../E2E_AUTOMATION_PLAN.md#tier-b-implementation-plan-ci-extension)**), **[Tier B Troubleshooting](../E2E_AUTOMATION_PLAN.md#tier-b-troubleshooting-guide)**.
+
+### Tier B environment variables (add when implementing)
+
+| Variable | Component | Purpose |
+|----------|-----------|---------|
+| `Twitch__HelixApiBaseUrl` | Backend | Points **`Helix`** `HttpClient` at **MockHelixApi** (e.g. `http://127.0.0.1:9053`). |
+| `Twitch__BroadcasterAccessToken` | Backend | Dummy Bearer for mock; avoids early-return in `HelixChatService`. |
+| `Twitch__BroadcasterUserId` | Backend | `broadcaster_id` / `sender_id` in JSON body. |
+| `Twitch__HelixClientId` | Backend | `Client-Id` header; align with mock. |
+| `SyntheticDesktop__BackendBaseUrl` (optional) | SyntheticDesktop | If the harness uses its own config — default `http://127.0.0.1:8080`. |
+| `Mgm__ApiKey` | Backend + SyntheticDesktop | Must match for **`X-MGM-ApiKey`**. |
 
 ### Debugging mock services
 

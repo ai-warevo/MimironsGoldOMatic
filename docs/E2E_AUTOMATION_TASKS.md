@@ -1,5 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation tasks) -->
-<!-- Updated: 2026-04-05 (Sequential release CI/CD pipeline) -->
+<!-- Updated: 2026-04-05 (Tier A checklist complete + Tier B task file link) -->
 
 # E2E automation tasks (MVP-6)
 
@@ -7,7 +7,7 @@
 
 Tasks to implement the E2E automation plan described in [E2E Automation Plan](E2E_AUTOMATION_PLAN.md).
 
-- **Current status:** **CI Tier A:** **`src/Mocks/MockEventSubWebhook`**, **`src/Mocks/MockExtensionJwt`**, **`.github/workflows/e2e-test.yml`**, **`.github/scripts/send_e2e_eventsub.py`** — synthetic chat → EBS pool → **`GET /api/pool/me`** on **PRs to `main`** with a **scoped** dotnet build (no Desktop / addon / Extension / test projects). **CD:** **`.github/workflows/release.yml`** — parallel **Desktop / WoW addon / Twitch Extension** ZIP artifacts + **Backend** GHCR image, then sequential **`create-release`** (see [CI/CD Pipeline Architecture](E2E_AUTOMATION_PLAN.md#cicd-pipeline-architecture)). **Not started (CI Tier B):** **MockHelixApi**, **SyntheticDesktop**, configurable **Helix** base URL in **`HelixChatService`**; optional in-repo **xUnit** E2E chain (A1–A3, B2–B3).
+- **Current status:** **CI Tier A:** **`src/Mocks/MockEventSubWebhook`**, **`src/Mocks/MockExtensionJwt`**, **`.github/workflows/e2e-test.yml`**, **`.github/scripts/send_e2e_eventsub.py`** — synthetic chat → EBS pool → **`GET /api/pool/me`** on **PRs to `main`** with a **scoped** dotnet build (no Desktop / addon / Extension / test projects). **Validation record:** [Tier A Test Results & Verification](E2E_AUTOMATION_PLAN.md#tier-a-test-results--verification). **CD:** **`.github/workflows/release.yml`** — parallel **Desktop / WoW addon / Twitch Extension** ZIP artifacts + **Backend** GHCR image, then sequential **`create-release`** (see [CI/CD Pipeline Architecture](E2E_AUTOMATION_PLAN.md#cicd-pipeline-architecture)). **Not started (CI Tier B):** **MockHelixApi**, **SyntheticDesktop**, configurable **Helix** base URL in **`HelixChatService`** — see **[`docs/TIER_B_IMPLEMENTATION_TASKS.md`](TIER_B_IMPLEMENTATION_TASKS.md)** and [Tier B Implementation Plan](E2E_AUTOMATION_PLAN.md#tier-b-implementation-plan-ci-extension); optional in-repo **xUnit** E2E chain (A1–A3, B2–B3).
 - **Target completion:** **CI Tier B** extends automation through **`Sent`** + captured Helix announcement. **Operational** real WoW + Desktop remains optional (see plan **§1** / [Optimization](E2E_AUTOMATION_PLAN.md#optimization-and-scalability-ci)).
 
 **Normative product behavior:** unchanged — still defined in **`docs/SPEC.md`**. This file is execution tracking only.
@@ -18,14 +18,14 @@ Tasks to implement the E2E automation plan described in [E2E Automation Plan](E2
 
 Use this before relying on **CI Tier A** as a gate or when debugging a red workflow. Details and mitigations: [Predictive issue analysis](E2E_AUTOMATION_PLAN.md#predictive-issue-analysis-tier-a-ci).
 
-- [ ] Confirm the workflow run is a **`pull_request`** targeting **`main`** (Tier A does **not** run on arbitrary branches unless **`on:`** is extended).
-- [ ] Confirm **PR validation** builds only **Shared + Backend + both mocks** (no **Desktop**, **WoW addon**, **Twitch Extension**, **Backend.UnitTests**) — see **`Restore and build (Backend + mocks only)`** in [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml).
-- [ ] Confirm **PostgreSQL 16** runs in the job via the **`services.postgres`** container (**`postgres:16-alpine`**) and **`pg_isready`** health checks succeed (not the host image—**`ubuntu-latest`** does not need a local `postgres` package).
-- [ ] Verify **mock services** start: **`GET http://127.0.0.1:9051/health`** (**MockEventSubWebhook**) and **`GET http://127.0.0.1:9052/health`** (**MockExtensionJwt**) return **200** with JSON **`status`** / **`service`** fields.
-- [ ] Test **HMAC** end-to-end: run [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) with the **same** `--secret` as **`Twitch__EventSubSecret`** on mock + Backend; expect **no** **401** from mock or EBS.
-- [ ] Validate **JWT**: **`GET http://127.0.0.1:9052/token?userId=…&displayName=…`** returns **`access_token`**; Backend in **Development** with empty **`Twitch:ExtensionSecret`** must share the **dev** signing material with **MockExtensionJwt** (see [ReadME](MimironsGoldOMatic.Backend/ReadME.md)).
-- [ ] Confirm **event forwarding**: mock logs show forward to **`{Backend}/api/twitch/eventsub`**; EBS returns success for synthetic **`channel.chat.message`**.
-- [ ] Verify **`GET /api/pool/me`**: Bearer from the mock token for **`e2e-viewer-1`** yields **`isEnrolled: true`** and expected **`characterName`** after a synthetic **`!twgold …`** line (workflow uses **`!twgold Etoehero`**).
+- [x] Confirm the workflow run is a **`pull_request`** targeting **`main`** (Tier A does **not** run on arbitrary branches unless **`on:`** is extended).
+- [x] Confirm **PR validation** builds only **Shared + Backend + both mocks** (no **Desktop**, **WoW addon**, **Twitch Extension**, **Backend.UnitTests**) — see **`Restore and build (Backend + mocks only)`** in [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml).
+- [x] Confirm **PostgreSQL 16** runs in the job via the **`services.postgres`** container (**`postgres:16-alpine`**) and **`pg_isready`** health checks succeed (not the host image—**`ubuntu-latest`** does not need a local `postgres` package).
+- [x] Verify **mock services** start: **`GET http://127.0.0.1:9051/health`** (**MockEventSubWebhook**) and **`GET http://127.0.0.1:9052/health`** (**MockExtensionJwt**) return **200** with JSON **`status`** / **`service`** fields.
+- [x] Test **HMAC** end-to-end: run [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) with the **same** `--secret` as **`Twitch__EventSubSecret`** on mock + Backend; expect **no** **401** from mock or EBS.
+- [x] Validate **JWT**: **`GET http://127.0.0.1:9052/token?userId=…&displayName=…`** returns **`access_token`**; Backend in **Development** with empty **`Twitch:ExtensionSecret`** must share the **dev** signing material with **MockExtensionJwt** (see [ReadME](MimironsGoldOMatic.Backend/ReadME.md)).
+- [x] Confirm **event forwarding**: mock logs show forward to **`{Backend}/api/twitch/eventsub`**; EBS returns success for synthetic **`channel.chat.message`**.
+- [x] Verify **`GET /api/pool/me`**: Bearer from the mock token for **`e2e-viewer-1`** yields **`isEnrolled: true`** and expected **`characterName`** after a synthetic **`!twgold …`** line (workflow uses **`!twgold Etoehero`**).
 
 ---
 
@@ -129,3 +129,4 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 | 1.1 | 2026-04-05 | Tier A mocks + **`e2e-test.yml`** + Python sender; tasks file status updated |
 | 1.2 | 2026-04-05 | **Tier A Validation Checklist**; **CI Tier A / CI Tier B** wording aligned with [E2E_AUTOMATION_PLAN.md](E2E_AUTOMATION_PLAN.md) |
 | 1.3 | 2026-04-05 | PR scoped Tier A build; **`release.yml`** validation tasks (**V3–V7**); cross-link to [CI/CD Pipeline Architecture](E2E_AUTOMATION_PLAN.md#cicd-pipeline-architecture) |
+| 1.4 | 2026-04-05 | **Tier A Validation Checklist** marked complete; link to [Tier A Test Results](E2E_AUTOMATION_PLAN.md#tier-a-test-results--verification) and [`TIER_B_IMPLEMENTATION_TASKS.md`](TIER_B_IMPLEMENTATION_TASKS.md) |
