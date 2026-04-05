@@ -5,7 +5,7 @@
 - `src/Mocks/MockHelixApi/` — health, POST `/helix/chat/messages`, GET `/last-request`, optional `MockHelix:StrictAuth`
 - `src/Mocks/SyntheticDesktop/` — health, POST `/run-sequence`, GET `/last-run`; references Shared for enum JSON
 - `src/MimironsGoldOMatic.slnx` — both mock projects
-- `scripts/tier_b_verification/` — three scripts + `requirements.txt`
+- `.github/scripts/tier_b_verification/` — three scripts + `requirements.txt`
 - `docs/e2e/E2E_AUTOMATION_PLAN.md` — Tier B Readiness, First Run Guide, troubleshooting expansion, mock table updates
 - `docs/components/backend/ReadME.md` — Setting up Tier B Environment, env table, debugging
 - `docs/e2e/TIER_B_PRELAUNCH_CHECKLIST.md`

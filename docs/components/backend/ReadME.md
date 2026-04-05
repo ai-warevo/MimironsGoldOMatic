@@ -57,7 +57,7 @@
 - **Integration (Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Integration`** — PostgreSQL via **Testcontainers**, Marten + MediatR (claims, chat enrollment, `verify-candidate`, expiration, payout status, roulette tick).
 - **All tests:** **`dotnet test src/MimironsGoldOMatic.slnx`** — runs unit + integration; full suite needs Docker. Not a substitute for Twitch/WoW manual scenarios.
 - **CI Tier A + B (E2E mocks):** GitHub Actions **`.github/workflows/e2e-test.yml`** runs Backend + Postgres + **`MockEventSubWebhook`** + **`MockExtensionJwt`** + **`MockHelixApi`** + **`SyntheticDesktop`**, synthetic EventSub enrollment, then **[`.github/scripts/run_e2e_tier_b.py`](../../../.github/scripts/run_e2e_tier_b.py)** for **`Sent`** + Helix capture + pool removal. See [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) ([Tier B Integration Results](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-integration-results)).
-- **Tier B verification scripts:** [`scripts/tier_b_verification/`](../../../scripts/tier_b_verification/) — health + **MockHelixApi** POST probe + optional **SyntheticDesktop** sequence (see **Setting up Tier B Environment** below).
+- **Tier B verification scripts:** [`.github/scripts/tier_b_verification/`](../../../.github/scripts/tier_b_verification/) — health + **MockHelixApi** POST probe + optional **SyntheticDesktop** sequence (see **Setting up Tier B Environment** below).
 
 ### Running Tier A E2E locally (manual)
 
@@ -93,20 +93,20 @@ Full checklist: [`docs/e2e/E2E_AUTOMATION_TASKS.md`](../../e2e/E2E_AUTOMATION_TA
 Tier B adds **MockHelixApi** (loopback Helix stub on **9053**), **SyntheticDesktop** (HTTP harness on **9054**), and (when **A1–A2** land) a **configurable Helix base URL** in [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs). Use this sequence for local integration and for [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) **[Tier B First Run Guide](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-first-run-guide)**.
 
 1. Complete **Tier A** local steps above (Postgres + Backend + **9051** + **9052** + synthetic enrollment).
-2. **Python deps:** `pip install -r scripts/tier_b_verification/requirements.txt`
+2. **Python deps:** `pip install -r .github/scripts/tier_b_verification/requirements.txt`
 3. **MockHelixApi:**  
    `ASPNETCORE_URLS=http://127.0.0.1:9053`  
    `dotnet run --project src/Mocks/MockHelixApi/MimironsGoldOMatic.Mocks.MockHelixApi.csproj -c Release`  
-   Verify: `python3 scripts/tier_b_verification/check_mockhelixapi.py`
+   Verify: `python3 .github/scripts/tier_b_verification/check_mockhelixapi.py`
 4. **SyntheticDesktop:**  
    `ASPNETCORE_URLS=http://127.0.0.1:9054`  
    `Mgm__ApiKey=ci-desktop-api-key` (must match Backend)  
    `SyntheticDesktop__BackendBaseUrl=http://127.0.0.1:8080`  
    `dotnet run --project src/Mocks/SyntheticDesktop/MimironsGoldOMatic.Mocks.SyntheticDesktop.csproj -c Release`  
-   Verify: `python3 scripts/tier_b_verification/check_syntheticdesktop.py`  
-   Full sequence (needs **`Pending`** payout): `python3 scripts/tier_b_verification/check_syntheticdesktop.py --payout-id <GUID>`
+   Verify: `python3 .github/scripts/tier_b_verification/check_syntheticdesktop.py`  
+   Full sequence (needs **`Pending`** payout): `python3 .github/scripts/tier_b_verification/check_syntheticdesktop.py --payout-id <GUID>`
 5. **Backend Helix → mock (after `Twitch:HelixApiBaseUrl` exists):** set **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, plus non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`** so [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) does not skip the outbound call. Restart Backend.
-6. **Sweep:** `python3 scripts/tier_b_verification/check_workflow_integration.py` (or **`--skip-tier-b`** if Tier B processes are stopped).
+6. **Sweep:** `python3 .github/scripts/tier_b_verification/check_workflow_integration.py` (or **`--skip-tier-b`** if Tier B processes are stopped).
 
 **References:** [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) (**[Tier B Readiness Verification](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-readiness-verification)**), **[Tier B Troubleshooting](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-troubleshooting-guide)**, [`docs/e2e/TIER_B_PRELAUNCH_CHECKLIST.md`](../../e2e/TIER_B_PRELAUNCH_CHECKLIST.md).
 

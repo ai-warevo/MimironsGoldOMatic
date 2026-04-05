@@ -10,7 +10,7 @@ Checklist and follow-ups after **CI Tier B** is enabled in [`.github/workflows/e
 
 - [ ] PR to **`main`** triggers workflow **E2E Tier A+B (mocks)**.
 - [ ] Job **`e2e-tier-a-b`** passes: build (Shared + Backend + four mocks) → all **`GET /health`** probes (8080 root + 9051–9054).
-- [ ] **`scripts/tier_b_verification/check_workflow_integration.py`** exits **0** (no **`--skip-tier-b`**).
+- [ ] **`.github/scripts/tier_b_verification/check_workflow_integration.py`** exits **0** (no **`--skip-tier-b`**).
 - [ ] Tier A: **`send_e2e_eventsub.py`** → **`GET /api/pool/me`** shows **`isEnrolled: true`**, **`characterName: Etoehero`**.
 - [ ] Tier B: **`run_e2e_tier_b.py`** prints Pending payout id, SyntheticDesktop OK, MockHelix message OK, **`isEnrolled: false`** after flow.
 - [ ] On intentional failure of a Tier B step, **`Logs (on failure)`** includes **MockHelix** **`/last-request`** and **SyntheticDesktop** **`/last-run`**.

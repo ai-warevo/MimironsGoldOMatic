@@ -68,7 +68,7 @@ jobs:
         run: echo "E2E_JOB_START_SEC=$(date +%s)" >> "$GITHUB_ENV"
 
       - name: Install Tier B verification Python deps
-        run: python3 -m pip install --user -r scripts/tier_b_verification/requirements.txt
+        run: python3 -m pip install --user -r .github/scripts/tier_b_verification/requirements.txt
 
       - name: Start Backend (background)
         env:
@@ -156,7 +156,13 @@ jobs:
       - name: Workflow integration probe (Tier A + B health)
         run: |
           set -e
-          python3 scripts/tier_b_verification/check_workflow_integration.py
+          python3 .github/scripts/tier_b_verification/check_workflow_integration.py
+
+      - name: Tier B verification scripts (MockHelix POST + SyntheticDesktop health)
+        run: |
+          set -e
+          python3 .github/scripts/tier_b_verification/check_mockhelixapi.py
+          python3 .github/scripts/tier_b_verification/check_syntheticdesktop.py
 
       - name: Send synthetic channel.chat.message via MockEventSubWebhook
         run: |
