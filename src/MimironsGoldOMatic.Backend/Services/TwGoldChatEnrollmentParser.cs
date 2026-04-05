@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace MimironsGoldOMatic.Backend.Services;
 
-/// <summary>Parses EventSub chat lines for <c>!twgold &lt;CharacterName&gt;</c> (<c>docs/SPEC.md</c> §5).</summary>
+/// <summary>Parses EventSub chat lines for <c>!twgold &lt;CharacterName&gt;</c> (<c>docs/overview/SPEC.md</c> §5).</summary>
 public static partial class TwGoldChatEnrollmentParser
 {
     /// <summary>

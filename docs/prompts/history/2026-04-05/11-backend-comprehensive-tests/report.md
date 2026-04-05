@@ -1,6 +1,6 @@
 ## Summary
 
-- Moved **Backend** automated tests to **`src/tests/MimironsGoldOMatic.Backend.UnitTests`** (project **MimironsGoldOMatic.Backend.UnitTests**); updated **`MimironsGoldOMatic.slnx`**, **`MimironsGoldOMatic.sln`**, **`.github/workflows/unit-integration-tests.yml`**, and **`docs/MimironsGoldOMatic.Backend/ReadME.md`**.
+- Moved **Backend** automated tests to **`src/tests/MimironsGoldOMatic.Backend.UnitTests`** (project **MimironsGoldOMatic.Backend.UnitTests**); updated **`MimironsGoldOMatic.slnx`**, **`MimironsGoldOMatic.sln`**, **`.github/workflows/unit-integration-tests.yml`**, and **`docs/components/backend/ReadME.md`**.
 - Added **Moq**-based unit tests for controllers, **ApiKey** auth, **HelixChatService**, **TwitchEventSubController**; expanded parser/spin/time tests; **FluentValidation** tests for **`CreatePayoutRequestValidator`**.
 - Added integration coverage: **MediatR** edge cases, **ChatEnrollmentService**, **RouletteCycleTick**, **PostClaim** subscriber gate, **Patch** transitions, **PayoutExpiration** for **InProgress**.
 - Production: **`IChatEnrollmentIngest`** + DI registration for mockable EventSub ingestion.

@@ -1,6 +1,6 @@
 ## Plan
 
-1. Обновить `docs/SPEC.md`:
+1. Обновить `docs/overview/SPEC.md`:
    - зафиксировать ES-first MVP модель хранения;
    - зафиксировать HTTP semantics: `POST /claim` (201/200), `GET /my-last` (404);
    - зафиксировать `Sent` как подтверждение фактической отправки;
@@ -9,11 +9,11 @@
 2. Выровнять документацию компонентов и общий docs entrypoint:
    - `docs/ReadME.md`
    - `README.md`
-   - `docs/MimironsGoldOMatic.Backend/ReadME.md`
-   - `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-   - `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`
-   - `docs/MimironsGoldOMatic.Shared/ReadME.md`
-   - `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
+   - `docs/components/backend/ReadME.md`
+   - `docs/components/desktop/ReadME.md`
+   - `docs/components/twitch-extension/ReadME.md`
+   - `docs/components/shared/ReadME.md`
+   - `docs/components/wow-addon/ReadME.md`
 
 3. Убрать формулировки, противоречащие спецификации:
    - EF как source of truth;
@@ -26,4 +26,4 @@
 
 ## Риски
 
-- Возможны будущие расхождения с `docs/ROADMAP.md`, если там останутся старые формулировки (в рамках текущего scope не меняется).
+- Возможны будущие расхождения с `docs/overview/ROADMAP.md`, если там останутся старые формулировки (в рамках текущего scope не меняется).

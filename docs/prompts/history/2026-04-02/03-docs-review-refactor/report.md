@@ -3,11 +3,11 @@
 ## Modified files
 - `0-init.md` (simplify + remove escaped markdown + update `.cursor/rules` references)
 - `docs/ReadME.md` (deduplicate/reformat; fix repo layout snippet)
-- `docs/MimironsGoldOMatic.Backend/ReadME.md` (format consistency sweep)
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md` (format consistency sweep)
-- `docs/MimironsGoldOMatic.Shared/ReadME.md` (format consistency sweep)
-- `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md` (format consistency sweep)
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md` (format consistency sweep)
+- `docs/components/backend/ReadME.md` (format consistency sweep)
+- `docs/components/desktop/ReadME.md` (format consistency sweep)
+- `docs/components/shared/ReadME.md` (format consistency sweep)
+- `docs/components/twitch-extension/ReadME.md` (format consistency sweep)
+- `docs/components/wow-addon/ReadME.md` (format consistency sweep)
 - `docs/prompts/history/2026-04-02/03-docs-review-refactor/` (workflow artifacts: `prompt.md`, `plan.md`, `checks.md`, this `report.md`)
 
 ## Verification results

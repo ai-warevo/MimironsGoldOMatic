@@ -6,9 +6,9 @@
 - `src/MimironsGoldOMatic.Shared/PayoutDto.cs`
 - `src/MimironsGoldOMatic.Shared/PayoutDtoValidator.cs`
 - `src/MimironsGoldOMatic.Shared/CreatePayoutRequestValidator.cs`
-- `docs/MimironsGoldOMatic.Shared/ReadME.md`
-- `docs/ROADMAP.md`
-- `docs/IMPLEMENTATION_READINESS.md`
+- `docs/components/shared/ReadME.md`
+- `docs/overview/ROADMAP.md`
+- `docs/reference/IMPLEMENTATION_READINESS.md`
 
 ### Verification
 
@@ -17,8 +17,8 @@
 
 ### MVP-2 readiness (no MVP-2 work started)
 
-- Shared contracts and §4 validation are aligned with `docs/SPEC.md` for MVP-1 scope.
-- Backend remains scaffold-only; next milestone is still MVP-2 (EBS, Marten, endpoints, EventSub, etc.) per `docs/ROADMAP.md`.
+- Shared contracts and §4 validation are aligned with `docs/overview/SPEC.md` for MVP-1 scope.
+- Backend remains scaffold-only; next milestone is still MVP-2 (EBS, Marten, endpoints, EventSub, etc.) per `docs/overview/ROADMAP.md`.
 
 ### Technical debt / follow-ups
 

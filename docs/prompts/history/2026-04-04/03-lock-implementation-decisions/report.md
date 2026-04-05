@@ -2,7 +2,7 @@
 
 ## Source
 
-User answers to the clarification questionnaire (sections A–J), applied to **`docs/SPEC.md`** and aligned docs.
+User answers to the clarification questionnaire (sections A–J), applied to **`docs/overview/SPEC.md`** and aligned docs.
 
 ## Summary of normative decisions
 
@@ -27,15 +27,15 @@ User answers to the clarification questionnaire (sections A–J), applied to **`
 
 - `AGENTS.md`
 - `README.md`
-- `docs/SPEC.md`
-- `docs/ROADMAP.md`
-- `docs/UI_SPEC.md`
-- `docs/INTERACTION_SCENARIOS.md`
-- `docs/IMPLEMENTATION_READINESS.md`
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/MimironsGoldOMatic.Shared/ReadME.md`
+- `docs/overview/SPEC.md`
+- `docs/overview/ROADMAP.md`
+- `docs/reference/UI_SPEC.md`
+- `docs/overview/INTERACTION_SCENARIOS.md`
+- `docs/reference/IMPLEMENTATION_READINESS.md`
+- `docs/components/backend/ReadME.md`
+- `docs/components/desktop/ReadME.md`
+- `docs/components/wow-addon/ReadME.md`
+- `docs/components/shared/ReadME.md`
 - `docs/prompts/history/2026-04-04/03-lock-implementation-decisions/plan.md`, `checks.md`
 
 ## Verification

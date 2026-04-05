@@ -11,15 +11,15 @@
 - `AGENTS.md`
 - `README.md`
 - `CONTEXT.md`
-- `docs/SPEC.md`
+- `docs/overview/SPEC.md`
 - `docs/ReadME.md`
-- `docs/ROADMAP.md`
-- `docs/UI_SPEC.md`
-- `docs/INTERACTION_SCENARIOS.md`
-- `docs/IMPLEMENTATION_READINESS.md`
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
+- `docs/overview/ROADMAP.md`
+- `docs/reference/UI_SPEC.md`
+- `docs/overview/INTERACTION_SCENARIOS.md`
+- `docs/reference/IMPLEMENTATION_READINESS.md`
+- `docs/components/backend/ReadME.md`
+- `docs/components/desktop/ReadME.md`
+- `docs/components/wow-addon/ReadME.md`
 
 ## Verification
 

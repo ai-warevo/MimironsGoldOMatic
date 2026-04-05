@@ -15,4 +15,4 @@
 
 - `src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua` (replace scaffold)
 - `MimironsGoldOMatic.toc` (notes)
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`, `docs/IMPLEMENTATION_READINESS.md`, `docs/ROADMAP.md`
+- `docs/components/wow-addon/ReadME.md`, `docs/reference/IMPLEMENTATION_READINESS.md`, `docs/overview/ROADMAP.md`

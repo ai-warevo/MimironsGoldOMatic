@@ -1,6 +1,6 @@
 # MimironsGoldOMatic.Desktop.IntegrationTests
 
-End-to-end checks that the **Desktop HTTP client** (`EbsDesktopClient` / `IEbsDesktopClient`) works against a **real ASP.NET Core Backend** host and **PostgreSQL** (Testcontainers), matching `docs/SPEC.md` and `docs/INTERACTION_SCENARIOS.md` (Desktop API key, pending polling, verify-candidate, patch/confirm).
+End-to-end checks that the **Desktop HTTP client** (`EbsDesktopClient` / `IEbsDesktopClient`) works against a **real ASP.NET Core Backend** host and **PostgreSQL** (Testcontainers), matching `docs/overview/SPEC.md` and `docs/overview/INTERACTION_SCENARIOS.md` (Desktop API key, pending polling, verify-candidate, patch/confirm).
 
 ## How this project is wired
 

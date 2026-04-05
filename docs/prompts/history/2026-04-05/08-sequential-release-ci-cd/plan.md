@@ -8,8 +8,8 @@
 
 ## Docs
 
-- Insert **CI/CD Pipeline Architecture** into `docs/E2E_AUTOMATION_PLAN.md` (triggers, jobs, artifacts, diagram, benefits, discussion hooks).
-- Extend `docs/E2E_AUTOMATION_TASKS.md` checklist + validation tasks V3–V7.
+- Insert **CI/CD Pipeline Architecture** into `docs/e2e/E2E_AUTOMATION_PLAN.md` (triggers, jobs, artifacts, diagram, benefits, discussion hooks).
+- Extend `docs/e2e/E2E_AUTOMATION_TASKS.md` checklist + validation tasks V3–V7.
 
 ## Risks
 

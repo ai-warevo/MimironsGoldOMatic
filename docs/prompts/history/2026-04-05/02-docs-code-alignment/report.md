@@ -2,16 +2,16 @@
 
 ## Modified files
 
-- `docs/SPEC.md` — EventSub route, rate limiter behavior, Extension `claim` vs `DevSkipSubscriberCheck`, `PoolEnrollmentResponse`, `PATCH` returns `PayoutDto`, code-alignment blurb.
-- `docs/ROADMAP.md` — Auth/status text, CI placeholder note, implementation snapshot wording.
-- `docs/UI_SPEC.md` — Implementation note reflects MVP-5/4/3 code.
-- `docs/INTERACTION_SCENARIOS.md` — `dotnet test` note, SC-012 fix, new **SC-005** (EventSub).
-- `docs/IMPLEMENTATION_READINESS.md` — Residual risk: Helix + `claim` gap.
+- `docs/overview/SPEC.md` — EventSub route, rate limiter behavior, Extension `claim` vs `DevSkipSubscriberCheck`, `PoolEnrollmentResponse`, `PATCH` returns `PayoutDto`, code-alignment blurb.
+- `docs/overview/ROADMAP.md` — Auth/status text, CI placeholder note, implementation snapshot wording.
+- `docs/reference/UI_SPEC.md` — Implementation note reflects MVP-5/4/3 code.
+- `docs/overview/INTERACTION_SCENARIOS.md` — `dotnet test` note, SC-012 fix, new **SC-005** (EventSub).
+- `docs/reference/IMPLEMENTATION_READINESS.md` — Residual risk: Helix + `claim` gap.
 - `README.md`, `CONTEXT.md`, `AGENTS.md`, `SETUP.md`, `SETUP-for-developer.md`, `SETUP-for-streamer.md` — status, auth, roulette offline rule, `DevSkipSubscriberCheck` accuracy.
 - `docs/ReadME.md` — Removed incorrect `FluentResults` guidance; EBS result pattern.
-- `docs/MimironsGoldOMatic.Backend/ReadME.md` — Endpoints, auth, Helix retries, event types.
-- `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md` — Implemented stack/patterns; `claim` caveat.
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`, `docs/MimironsGoldOMatic.Shared/ReadME.md`, `docs/MimironsGoldOMatic.WoWAddon/ReadME.md` — Banner + accuracy fixes.
+- `docs/components/backend/ReadME.md` — Endpoints, auth, Helix retries, event types.
+- `docs/components/twitch-extension/ReadME.md` — Implemented stack/patterns; `claim` caveat.
+- `docs/components/desktop/ReadME.md`, `docs/components/shared/ReadME.md`, `docs/components/wow-addon/ReadME.md` — Banner + accuracy fixes.
 
 ## Unchanged (no edit needed or out of scope)
 

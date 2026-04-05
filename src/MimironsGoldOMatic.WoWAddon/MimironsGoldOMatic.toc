@@ -1,5 +1,5 @@
 ## Interface: 30300
 ## Title: MimironsGoldOMatic
-## Notes: MVP-3 — pool mail queue, roulette /who bridge, chat log tags (docs/SPEC.md §8–10)
+## Notes: MVP-3 — pool mail queue, roulette /who bridge, chat log tags (docs/overview/SPEC.md §8–10)
 MimironsGoldOMatic.Core.lua
 MimironsGoldOMatic.lua

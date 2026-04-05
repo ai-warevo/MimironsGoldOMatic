@@ -2,16 +2,16 @@
 
 ### Modified files
 
-- `docs/SPEC.md`
+- `docs/overview/SPEC.md`
 - `docs/ReadME.md`
 - `README.md`
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-- `docs/MimironsGoldOMatic.Shared/ReadME.md`
-- `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/ROADMAP.md`
-- `docs/IMPLEMENTATION_READINESS.md`
+- `docs/components/backend/ReadME.md`
+- `docs/components/desktop/ReadME.md`
+- `docs/components/shared/ReadME.md`
+- `docs/components/twitch-extension/ReadME.md`
+- `docs/components/wow-addon/ReadME.md`
+- `docs/overview/ROADMAP.md`
+- `docs/reference/IMPLEMENTATION_READINESS.md`
 
 ### What was aligned
 

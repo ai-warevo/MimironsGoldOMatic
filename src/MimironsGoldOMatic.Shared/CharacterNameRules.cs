@@ -4,7 +4,7 @@ using System.Text;
 namespace MimironsGoldOMatic.Shared;
 
 /// <summary>
-/// Shared rules for <c>CharacterName</c> per <c>docs/SPEC.md</c> §4 (length, Latin/Cyrillic letters only).
+/// Shared rules for <c>CharacterName</c> per <c>docs/overview/SPEC.md</c> §4 (length, Latin/Cyrillic letters only).
 /// </summary>
 public static class CharacterNameRules
 {

@@ -9,7 +9,7 @@
 - `MimironsGoldOMatic.slnx` / `.sln`: IntegrationTests project entry.
 - `Backend.UnitTests.csproj`: removed Testcontainers/Npgsql.
 - `.github/workflows/unit-integration-tests.yml`: `dotnet test` on `slnx`.
-- `docs/INTERACTION_SCENARIOS.md`: automation bullets reference IntegrationTests project.
+- `docs/overview/INTERACTION_SCENARIOS.md`: automation bullets reference IntegrationTests project.
 - `Backend.UnitTests/README.md`: points to IntegrationTests for Docker-backed tests.
 
 ## Verification

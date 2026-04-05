@@ -8,8 +8,8 @@ You are an expert software engineer agent. Your goal is to execute tasks with hi
 ## 2. Project Knowledge Base
 - **Templates**: Located in `docs/prompts/templates/`. Always check these before starting a specific type of task (e.g., feature, bugfix).
 - **History**: All AI interactions must be logged in `docs/prompts/history/YYYY-MM-DD/N-task-name/`.
-- **Hub docs (deduplicated overviews):** `docs/ARCHITECTURE.md`, `docs/PROJECT_STRUCTURE.md`, `docs/WORKFLOWS.md`, `docs/MVP_PRODUCT_SUMMARY.md`, `docs/GLOSSARY.md`, `docs/SETUP.md` (includes shared prerequisites; see also `docs/SETUP-for-developer.md`, `docs/SETUP-for-streamer.md`).
-- **UI/UX**: `docs/UI_SPEC.md` (hub: tokens, navigation, cross-cutting rules) and per-component `docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`, `docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`, `docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md` (screen inventory, ASCII layouts); use with `docs/SPEC.md` and `docs/INTERACTION_SCENARIOS.md` when building or changing user-facing behavior.
+- **Hub docs (deduplicated overviews):** `docs/overview/ARCHITECTURE.md`, `docs/reference/PROJECT_STRUCTURE.md`, `docs/reference/WORKFLOWS.md`, `docs/overview/MVP_PRODUCT_SUMMARY.md`, `docs/reference/GLOSSARY.md`, `docs/setup/SETUP.md` (includes shared prerequisites; see also `docs/setup/SETUP-for-developer.md`, `docs/setup/SETUP-for-streamer.md`).
+- **UI/UX**: `docs/reference/UI_SPEC.md` (hub: tokens, navigation, cross-cutting rules) and per-component `docs/components/twitch-extension/UI_SPEC.md`, `docs/components/desktop/UI_SPEC.md`, `docs/components/wow-addon/UI_SPEC.md` (screen inventory, ASCII layouts); use with `docs/overview/SPEC.md` and `docs/overview/INTERACTION_SCENARIOS.md` when building or changing user-facing behavior.
 
 ## 3. Mandatory Workflow Steps
 ### Step 1: Initialization & Context
@@ -61,7 +61,7 @@ You are an expert software engineer agent. Your goal is to execute tasks with hi
 ```
 
 ## 6. Testing Guidance
-- When behavior/functionality changes, run **`dotnet test src/MimironsGoldOMatic.slnx`** once test projects exist (`docs/ROADMAP.md` MVP-6). Until automated tests land, run **`dotnet build src/MimironsGoldOMatic.slnx`** and targeted `dotnet test` on any new test projects. Manual and integration checks for MVP flows are cataloged in **`docs/INTERACTION_SCENARIOS.md`** (Part 2, TC-xxx).
+- When behavior/functionality changes, run **`dotnet test src/MimironsGoldOMatic.slnx`** once test projects exist (`docs/overview/ROADMAP.md` MVP-6). Until automated tests land, run **`dotnet build src/MimironsGoldOMatic.slnx`** and targeted `dotnet test` on any new test projects. Manual and integration checks for MVP flows are cataloged in **`docs/overview/INTERACTION_SCENARIOS.md`** (Part 2, TC-xxx).
 - **Backend (local):** In **Development**, OpenAPI is mapped via **`MapOpenApi`** (`Program.cs`) for contract inspection.
 
 ## 7. Tooling Preference
@@ -75,8 +75,8 @@ This repository uses multiple AI specialist “roles” for implementation consi
 
 Responsibilities:
 - Design ASP.NET Core API endpoints for **participant pool / roulette spins** (including **`/who`‑gated** winner finalization), **Twitch chat ingestion** for **`!twgold <CharacterName>`** (enroll) only, **`confirm-acceptance`** from Desktop after **WoW whisper `!twgold`**, **winner notification** state for the Extension, **payouts** (validation, auth, status updates), **pool removal** when **`Sent`**, and **`Sent`** after **`[MGM_CONFIRM:UUID]`** from the Desktop log watcher.
-- Persist the **write model** with **Marten Event Store on PostgreSQL** (canonical source of truth): **one stream per payout id**; **separate** **Pool** vs **Payout** aggregates (see `docs/SPEC.md` §6). **EF Core** is **optional** and **read-model / projections only**. **Outbox** only when the first external side-effect integration is added (`docs/SPEC.md` §6).
-- **Chat:** **EventSub** `channel.chat.message` for enrollment; **`POST /api/roulette/verify-candidate`** for **`/who`** results (from **`[MGM_WHO]`** in **`WoWChatLog.txt`**); **single broadcaster** MVP (`docs/SPEC.md` deployment scope).
+- Persist the **write model** with **Marten Event Store on PostgreSQL** (canonical source of truth): **one stream per payout id**; **separate** **Pool** vs **Payout** aggregates (see `docs/overview/SPEC.md` §6). **EF Core** is **optional** and **read-model / projections only**. **Outbox** only when the first external side-effect integration is added (`docs/overview/SPEC.md` §6).
+- **Chat:** **EventSub** `channel.chat.message` for enrollment; **`POST /api/roulette/verify-candidate`** for **`/who`** results (from **`[MGM_WHO]`** in **`WoWChatLog.txt`**); **single broadcaster** MVP (`docs/overview/SPEC.md` deployment scope).
 - Define shared DTOs/enums and ensure backward-compatible API contracts.
 - Integrate JWT auth for the Twitch Extension flow.
 
@@ -85,18 +85,18 @@ Responsibilities:
 Responsibilities:
 - Implement the WPF MVVM client UI and view models.
 - Handle Win32 integration for WoW 3.3.5a (process discovery, window focus, and message/posting).
-- Bridge **addon-originated `!twgold` acceptance** to the Backend: tail **`WoWChatLog.txt`** (default + override path) for **`[MGM_ACCEPT:UUID]`** → **`POST .../confirm-acceptance`**; tail the **same** log for **`[MGM_CONFIRM:UUID]`** → **`Sent`**; parse **`[MGM_WHO]`** lines from the **same** log → **`POST /api/roulette/verify-candidate`** (see `docs/SPEC.md` §8–10).
-- Ensure payload conversion into WoW-compatible command strings (including 255-char chunking). After **`Pending`**, inject **`/run NotifyWinnerWhisper(...)`** per **`docs/SPEC.md` §8–9** before **`ReceiveGold`** mail flow.
+- Bridge **addon-originated `!twgold` acceptance** to the Backend: tail **`WoWChatLog.txt`** (default + override path) for **`[MGM_ACCEPT:UUID]`** → **`POST .../confirm-acceptance`**; tail the **same** log for **`[MGM_CONFIRM:UUID]`** → **`Sent`**; parse **`[MGM_WHO]`** lines from the **same** log → **`POST /api/roulette/verify-candidate`** (see `docs/overview/SPEC.md` §8–10).
+- Ensure payload conversion into WoW-compatible command strings (including 255-char chunking). After **`Pending`**, inject **`/run NotifyWinnerWhisper(...)`** per **`docs/overview/SPEC.md` §8–9** before **`ReceiveGold`** mail flow.
 - Document WinAPI behaviors/timing and provide reliability notes specific to 3.3.5a.
 
 ### [WoW Addon/Lua Expert]
 
 Responsibilities:
 - Implement WoW 3.3.5a addon scaffolding (`.toc` + Lua).
-- Expose **`NotifyWinnerWhisper(payoutId, characterName)`** (global) for Desktop-injected **`/run`** per **`docs/SPEC.md` §8–9.
+- Expose **`NotifyWinnerWhisper(payoutId, characterName)`** (global) for Desktop-injected **`/run`** per **`docs/overview/SPEC.md` §8–9.
 - Hook into the mail interface (event hooking / frame integration) to receive queued payout payloads.
-- Send the **winner notification whisper** per `docs/SPEC.md` §9 (`/whisper <Winner_InGame_Nickname> …` Russian text); intercept **whisper/private messages** where the body matches **`!twgold`** (**case-insensitive**, no extra text) and **print `[MGM_ACCEPT:UUID]`** to chat so Desktop can read **`WoWChatLog.txt`**. On **`MAIL_SEND_SUCCESS`** for an **MGM-armed** send only, **print `[MGM_CONFIRM:UUID]`** and whisper the winner **`Награда отправлена тебе на почту, проверяй ящик!`**; **do not** run that path for unrelated manual mail (`docs/SPEC.md` §9–10).
-- Run **`/who`**, parse **3.3.5a**, emit **`[MGM_WHO]`** + JSON to the default chat frame so it appears in **`WoWChatLog.txt`** (`docs/SPEC.md` §8); support mail flow as before.
+- Send the **winner notification whisper** per `docs/overview/SPEC.md` §9 (`/whisper <Winner_InGame_Nickname> …` Russian text); intercept **whisper/private messages** where the body matches **`!twgold`** (**case-insensitive**, no extra text) and **print `[MGM_ACCEPT:UUID]`** to chat so Desktop can read **`WoWChatLog.txt`**. On **`MAIL_SEND_SUCCESS`** for an **MGM-armed** send only, **print `[MGM_CONFIRM:UUID]`** and whisper the winner **`Награда отправлена тебе на почту, проверяй ящик!`**; **do not** run that path for unrelated manual mail (`docs/overview/SPEC.md` §9–10).
+- Run **`/who`**, parse **3.3.5a**, emit **`[MGM_WHO]`** + JSON to the default chat frame so it appears in **`WoWChatLog.txt`** (`docs/overview/SPEC.md` §8); support mail flow as before.
 - Provide a robust mail queue processor and UI population logic.
 - Keep code compatible with FrameXML and the 3.3.5a Lua environment constraints.
 
@@ -104,7 +104,7 @@ Responsibilities:
 
 Responsibilities:
 - Scaffold the Twitch Extension UI using React + Vite + TypeScript.
-- Implement **visual roulette** (fixed **5-minute** spin; **no** early spins) and copy that directs viewers to **`!twgold <CharacterName>`** in **stream chat** (subscriber); show a **countdown to the next spin** using **server-authoritative** schedule fields from the API (`docs/SPEC.md` §5, §11). **“You won”** UX and instructions that **in-game whisper reply `!twgold`** (case-insensitive) is **required** for consent before gold mail (`docs/SPEC.md` §9–11). Hardcode **`Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** for **`Sent`** panel copy and coordinate **broadcast chat** announcement per **`docs/SPEC.md` §11** (Backend Helix and/or Extension-triggered API).
+- Implement **visual roulette** (fixed **5-minute** spin; **no** early spins) and copy that directs viewers to **`!twgold <CharacterName>`** in **stream chat** (subscriber); show a **countdown to the next spin** using **server-authoritative** schedule fields from the API (`docs/overview/SPEC.md` §5, §11). **“You won”** UX and instructions that **in-game whisper reply `!twgold`** (case-insensitive) is **required** for consent before gold mail (`docs/overview/SPEC.md` §9–11). Hardcode **`Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** for **`Sent`** panel copy and coordinate **broadcast chat** announcement per **`docs/overview/SPEC.md` §11** (Backend Helix and/or Extension-triggered API).
 - Integrate with the expected Twitch auth/token mechanism for the API.
 - Align client-side types with shared DTOs produced/consumed by the backend.
 

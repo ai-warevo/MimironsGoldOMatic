@@ -1,3 +1,4 @@
+// <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 namespace MimironsGoldOMatic.Backend.Configuration;
 
 public sealed class TwitchOptions
@@ -15,6 +16,12 @@ public sealed class TwitchOptions
 
     public string HelixClientId { get; set; } = "";
     public string HelixClientSecret { get; set; } = "";
+
+    /// <summary>
+    /// Optional root URL for Helix HTTP calls (scheme + host + port, no path). Empty = production <c>https://api.twitch.tv</c>.
+    /// MockHelixApi maps <c>POST /helix/chat/messages</c> under this root.
+    /// </summary>
+    public string HelixApiBaseUrl { get; set; } = "";
 
     /// <summary>Broadcaster OAuth token with channel:bot or moderator scope for Send Chat Message.</summary>
     public string BroadcasterAccessToken { get; set; } = "";

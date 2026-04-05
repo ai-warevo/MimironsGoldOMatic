@@ -10,7 +10,7 @@ using Xunit;
 namespace MimironsGoldOMatic.Backend.IntegrationTests;
 
 /// <summary>
-/// <see cref="docs/INTERACTION_SCENARIOS.md"/> <b>TC-016</b>, <b>TC-017</b> — Extension JWT Bearer vs roulette/pool routes (Development signing key).
+/// <see cref="docs/overview/INTERACTION_SCENARIOS.md"/> <b>TC-016</b>, <b>TC-017</b> — Extension JWT Bearer vs roulette/pool routes (Development signing key).
 /// </summary>
 [Collection(nameof(PostgresCollection))]
 [Trait("Category", "Integration")]

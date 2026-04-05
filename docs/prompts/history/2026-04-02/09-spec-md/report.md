@@ -2,15 +2,15 @@
 
 Implemented documentation structure option A:
 
-- Added `docs/SPEC.md` as the canonical MVP technical specification (API/DTOs, idempotency, statuses/transitions, persistence notes, expiration job, payload format, chunking guidance, and chat log parsing).
-- Updated `docs/ROADMAP.md` to link each MVP phase to the relevant SPEC sections and to treat SPEC as the canonical contract.
-- Updated `README.md` and `docs/ReadME.md` entrypoints to link to `docs/SPEC.md`.
-- Reduced duplication by removing the inline “MVP API Contract” block from `docs/ReadME.md` in favor of `docs/SPEC.md`.
+- Added `docs/overview/SPEC.md` as the canonical MVP technical specification (API/DTOs, idempotency, statuses/transitions, persistence notes, expiration job, payload format, chunking guidance, and chat log parsing).
+- Updated `docs/overview/ROADMAP.md` to link each MVP phase to the relevant SPEC sections and to treat SPEC as the canonical contract.
+- Updated `README.md` and `docs/ReadME.md` entrypoints to link to `docs/overview/SPEC.md`.
+- Reduced duplication by removing the inline “MVP API Contract” block from `docs/ReadME.md` in favor of `docs/overview/SPEC.md`.
 
 ## Modified files
 
-- `docs/SPEC.md` (new)
-- `docs/ROADMAP.md`
+- `docs/overview/SPEC.md` (new)
+- `docs/overview/ROADMAP.md`
 - `docs/ReadME.md`
 - `README.md`
 - Added workflow artifacts:
@@ -18,7 +18,7 @@ Implemented documentation structure option A:
 
 ## Verification
 
-- Manual link and consistency check: roadmap “Spec links” refer to headings present in `docs/SPEC.md`.
+- Manual link and consistency check: roadmap “Spec links” refer to headings present in `docs/overview/SPEC.md`.
 - No code changes; test execution not applicable.
 
 ## Potential technical debt

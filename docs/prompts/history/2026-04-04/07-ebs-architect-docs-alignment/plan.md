@@ -6,9 +6,9 @@ Encode architect-approved MVP behavior in **normative docs** so implementation c
 
 ## Files to update
 
-- `docs/SPEC.md` — EBS section extensions, §5/§6/§11, glossary, Outbox paragraph.
-- `docs/ROADMAP.md` — EBS terminology, MVP-0 `slnx`, MVP-2 Helix bullet, mandatory checklist section.
-- `CONTEXT.md`, `AGENTS.md`, `docs/INTERACTION_SCENARIOS.md`, `docs/IMPLEMENTATION_READINESS.md`, `docs/ReadME.md`.
+- `docs/overview/SPEC.md` — EBS section extensions, §5/§6/§11, glossary, Outbox paragraph.
+- `docs/overview/ROADMAP.md` — EBS terminology, MVP-0 `slnx`, MVP-2 Helix bullet, mandatory checklist section.
+- `CONTEXT.md`, `AGENTS.md`, `docs/overview/INTERACTION_SCENARIOS.md`, `docs/reference/IMPLEMENTATION_READINESS.md`, `docs/ReadME.md`.
 - `docs/MimironsGoldOMatic.*/ReadME.md` — EBS alignment.
 
 ## Risks

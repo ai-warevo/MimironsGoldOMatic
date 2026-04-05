@@ -1,6 +1,6 @@
 namespace MimironsGoldOMatic.Desktop.Win32;
 
-/// <summary>Injects a slash command into WoW chat (<c>docs/SPEC.md</c> §8).</summary>
+/// <summary>Injects a slash command into WoW chat (<c>docs/overview/SPEC.md</c> §8).</summary>
 public interface IWoWInputStrategy
 {
     /// <param name="wowMainWindow">Main window HWND from <see cref="WoWForegroundLocator"/>.</param>

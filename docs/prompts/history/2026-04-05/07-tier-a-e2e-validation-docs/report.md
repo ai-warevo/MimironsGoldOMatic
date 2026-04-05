@@ -2,9 +2,9 @@
 
 ## Modified files
 
-- `docs/E2E_AUTOMATION_PLAN.md` — terminology (**CI Tier A / CI Tier B** vs operational validation); **§1** recommendation list updated; **How to run Tier A E2E tests**; **Predictive issue analysis**; **Tier B Implementation Plan** (tasks 1–6, dependencies); **Optimization and scalability**; **§8** next steps cross-links; document control **v1.2**.
-- `docs/E2E_AUTOMATION_TASKS.md` — overview wording; **Tier A Validation Checklist**; document control **v1.2**.
-- `docs/MimironsGoldOMatic.Backend/ReadME.md` — local Tier A procedure, mock debugging, env var table; header updated.
+- `docs/e2e/E2E_AUTOMATION_PLAN.md` — terminology (**CI Tier A / CI Tier B** vs operational validation); **§1** recommendation list updated; **How to run Tier A E2E tests**; **Predictive issue analysis**; **Tier B Implementation Plan** (tasks 1–6, dependencies); **Optimization and scalability**; **§8** next steps cross-links; document control **v1.2**.
+- `docs/e2e/E2E_AUTOMATION_TASKS.md` — overview wording; **Tier A Validation Checklist**; document control **v1.2**.
+- `docs/components/backend/ReadME.md` — local Tier A procedure, mock debugging, env var table; header updated.
 
 ## Verification
 

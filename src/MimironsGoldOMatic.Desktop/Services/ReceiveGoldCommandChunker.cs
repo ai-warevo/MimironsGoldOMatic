@@ -3,7 +3,7 @@ using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Desktop.Services;
 
-/// <summary>Builds <c>/run ReceiveGold("…")</c> lines each under 255 characters (<c>docs/SPEC.md</c> §8).</summary>
+/// <summary>Builds <c>/run ReceiveGold("…")</c> lines each under 255 characters (<c>docs/overview/SPEC.md</c> §8).</summary>
 public static class ReceiveGoldCommandChunker
 {
     private const int MaxLineLength = 254;

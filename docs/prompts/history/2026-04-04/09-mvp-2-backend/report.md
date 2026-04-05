@@ -6,9 +6,9 @@
 - `src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs` — `[AllowAnonymous]`
 - `src/MimironsGoldOMatic.Backend/Services/PayoutExpirationHostedService.cs` — sweep then hourly delay
 - `src/MimironsGoldOMatic.Backend/appsettings.json`, `appsettings.Development.json` — connection string + `Mgm` + `Twitch` structure
-- `docs/ROADMAP.md` — MVP-2 implementation status note
-- `docs/IMPLEMENTATION_READINESS.md` — MVP-2 row + Go/No-Go product demo line
-- `docs/MimironsGoldOMatic.Backend/ReadME.md` — repository status, stack, libraries
+- `docs/overview/ROADMAP.md` — MVP-2 implementation status note
+- `docs/reference/IMPLEMENTATION_READINESS.md` — MVP-2 row + Go/No-Go product demo line
+- `docs/components/backend/ReadME.md` — repository status, stack, libraries
 
 ## Verification
 

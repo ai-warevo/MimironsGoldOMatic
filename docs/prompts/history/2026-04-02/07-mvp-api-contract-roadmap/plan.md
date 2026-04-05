@@ -5,7 +5,7 @@ Document a concrete MVP API contract and persist the finalized roadmap under `do
 ## Scope / files
 
 - Update: `docs/ReadME.md` (add "MVP API Contract")
-- Add: `docs/ROADMAP.md`
+- Add: `docs/overview/ROADMAP.md`
 - Optional: Update `README.md` to link the roadmap (only if it improves discoverability)
 
 ## Notes

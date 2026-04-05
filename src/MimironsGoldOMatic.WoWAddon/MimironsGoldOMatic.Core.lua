@@ -1,6 +1,6 @@
 --[[
   Pure helpers shared by the addon (WoW 3.3.5a) and headless Lua tests.
-  Normative: docs/SPEC.md §8 (MGM_WHO JSON shape).
+  Normative: docs/overview/SPEC.md §8 (MGM_WHO JSON shape).
 ]]
 
 MimironsGoldOMaticCore = MimironsGoldOMaticCore or {}

@@ -49,7 +49,7 @@ public sealed class HelixChatServiceTests
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
 
-        var client = new HttpClient(handler.Object);
+        var client = new HttpClient(handler.Object) { BaseAddress = new Uri("https://api.twitch.tv/") };
         var factory = new Mock<IHttpClientFactory>();
         factory.Setup(f => f.CreateClient("Helix")).Returns(client);
 
@@ -86,7 +86,7 @@ public sealed class HelixChatServiceTests
                     : new HttpResponseMessage(HttpStatusCode.OK));
             });
 
-        var client = new HttpClient(handler.Object);
+        var client = new HttpClient(handler.Object) { BaseAddress = new Uri("https://api.twitch.tv/") };
         var factory = new Mock<IHttpClientFactory>();
         factory.Setup(f => f.CreateClient("Helix")).Returns(client);
 
@@ -116,7 +116,7 @@ public sealed class HelixChatServiceTests
                 return new HttpResponseMessage(HttpStatusCode.OK);
             });
 
-        var client = new HttpClient(handler.Object);
+        var client = new HttpClient(handler.Object) { BaseAddress = new Uri("https://api.twitch.tv/") };
         var factory = new Mock<IHttpClientFactory>();
         factory.Setup(f => f.CreateClient("Helix")).Returns(client);
 
@@ -135,5 +135,36 @@ public sealed class HelixChatServiceTests
         Assert.NotNull(message);
         Assert.Contains("WinnerName", message, StringComparison.Ordinal);
         Assert.Contains("Награда", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Should_PostToRelativePath_ForHelixClientBaseAddress()
+    {
+        Uri? seen = null;
+        var handler = new Mock<HttpMessageHandler>();
+        handler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>((r, _) =>
+            {
+                seen = r.RequestUri;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NoContent));
+            });
+
+        var client = new HttpClient(handler.Object) { BaseAddress = new Uri("http://127.0.0.1:9053/") };
+        var factory = new Mock<IHttpClientFactory>();
+        factory.Setup(f => f.CreateClient("Helix")).Returns(client);
+
+        var twitch = Options.Create(new TwitchOptions
+        {
+            BroadcasterAccessToken = "tok",
+            BroadcasterUserId = "42",
+            HelixClientId = "c",
+        });
+        var sut = new HelixChatService(factory.Object, twitch, NullLogger<HelixChatService>.Instance);
+
+        var ok = await sut.TrySendRewardSentAnnouncementAsync("Hero", CancellationToken.None);
+        Assert.True(ok);
+        Assert.NotNull(seen);
+        Assert.Equal("http://127.0.0.1:9053/helix/chat/messages", seen!.ToString());
     }
 }

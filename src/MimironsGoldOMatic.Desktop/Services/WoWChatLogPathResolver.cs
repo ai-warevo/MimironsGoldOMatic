@@ -4,7 +4,7 @@ namespace MimironsGoldOMatic.Desktop.Services;
 
 public static class WoWChatLogPathResolver
 {
-    /// <summary>Resolves absolute path to <c>WoWChatLog.txt</c> per <c>docs/SPEC.md</c> §10.</summary>
+    /// <summary>Resolves absolute path to <c>WoWChatLog.txt</c> per <c>docs/overview/SPEC.md</c> §10.</summary>
     public static string? Resolve(DesktopUserSettings s)
     {
         var o = s.WoWChatLogPathOverride?.Trim();

@@ -1,6 +1,6 @@
 --[[
   Mimiron's Gold-o-Matic — WoW 3.3.5a (Interface: 30300)
-  Normative: docs/SPEC.md §8–§10, docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md UI-401–405
+  Normative: docs/overview/SPEC.md §8–§10, docs/components/wow-addon/UI_SPEC.md UI-401–405
 ]]
 
 local L = {

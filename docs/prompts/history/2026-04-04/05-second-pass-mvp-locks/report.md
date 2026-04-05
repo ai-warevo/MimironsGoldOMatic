@@ -6,17 +6,17 @@ Locked: **uniform random** pool candidate; **`verify-candidate`** grace **30s af
 
 ## Files touched
 
-- `docs/SPEC.md`
-- `docs/INTERACTION_SCENARIOS.md`
-- `docs/ROADMAP.md`
+- `docs/overview/SPEC.md`
+- `docs/overview/INTERACTION_SCENARIOS.md`
+- `docs/overview/ROADMAP.md`
 - `docs/ReadME.md`
-- `docs/UI_SPEC.md`
-- `docs/IMPLEMENTATION_READINESS.md`
-- `docs/MimironsGoldOMatic.Shared/ReadME.md`
-- `docs/MimironsGoldOMatic.Backend/ReadME.md`
-- `docs/MimironsGoldOMatic.Desktop/ReadME.md`
-- `docs/MimironsGoldOMatic.WoWAddon/ReadME.md`
-- `docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`
+- `docs/reference/UI_SPEC.md`
+- `docs/reference/IMPLEMENTATION_READINESS.md`
+- `docs/components/shared/ReadME.md`
+- `docs/components/backend/ReadME.md`
+- `docs/components/desktop/ReadME.md`
+- `docs/components/wow-addon/ReadME.md`
+- `docs/components/twitch-extension/ReadME.md`
 - `AGENTS.md`
 - `docs/prompts/history/2026-04-04/05-second-pass-mvp-locks/*`
 

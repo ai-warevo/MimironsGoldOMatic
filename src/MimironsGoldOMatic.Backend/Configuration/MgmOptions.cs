@@ -1,3 +1,4 @@
+// <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 namespace MimironsGoldOMatic.Backend.Configuration;
 
 public sealed class MgmOptions
@@ -9,4 +10,9 @@ public sealed class MgmOptions
 
     /// <summary>When true, Helix subscriber check for POST /api/payouts/claim is skipped (local dev only).</summary>
     public bool DevSkipSubscriberCheck { get; set; }
+
+    /// <summary>
+    /// When true with Development environment, enables <c>POST /api/e2e/prepare-pending-payout</c> for CI Tier B (ApiKey auth).
+    /// </summary>
+    public bool EnableE2eHarness { get; set; }
 }

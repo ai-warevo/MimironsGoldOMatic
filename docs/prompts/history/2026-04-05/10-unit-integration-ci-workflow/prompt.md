@@ -1,1 +1,1 @@
-Create GitHub Actions workflow `unit-integration-tests.yml` for unit/integration tests on PRs to `main`, parallel with E2E; four component jobs + aggregate PR comment; document in `docs/E2E_AUTOMATION_PLAN.md`. See task message for full requirements.
+Create GitHub Actions workflow `unit-integration-tests.yml` for unit/integration tests on PRs to `main`, parallel with E2E; four component jobs + aggregate PR comment; document in `docs/e2e/E2E_AUTOMATION_PLAN.md`. See task message for full requirements.

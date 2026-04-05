@@ -1,11 +1,11 @@
 ## Goal
 
-Make `docs/ROADMAP.md` the single canonical location for phased MVP implementation prompts.
+Make `docs/overview/ROADMAP.md` the single canonical location for phased MVP implementation prompts.
 
 ## Plan
 
 - Read `docs/prompts/todo/*.md` to capture the existing phased prompts (Shared, Addon, Backend, Desktop, TwitchExtension, Finalization).
-- Update `docs/ROADMAP.md` by adding a **Step-by-step prompt** block under each corresponding MVP section:
+- Update `docs/overview/ROADMAP.md` by adding a **Step-by-step prompt** block under each corresponding MVP section:
   - Phase 1 -> MVP-1 (Shared)
   - Phase 2 -> MVP-3 (WoW Addon)
   - Phase 3 -> MVP-2 (Backend)

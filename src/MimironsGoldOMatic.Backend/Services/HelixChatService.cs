@@ -1,3 +1,4 @@
+// <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -25,7 +26,7 @@ public sealed class HelixChatService(
         var message =
             $"Награда отправлена персонажу {winnerCharacterName} на почту, проверяй ящик!";
         var client = httpClientFactory.CreateClient("Helix");
-        const string url = "https://api.twitch.tv/helix/chat/messages";
+        const string relativePath = "helix/chat/messages";
 
         var body = JsonSerializer.Serialize(
             new
@@ -39,7 +40,7 @@ public sealed class HelixChatService(
         {
             try
             {
-                using var req = new HttpRequestMessage(HttpMethod.Post, url);
+                using var req = new HttpRequestMessage(HttpMethod.Post, relativePath);
                 req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _twitch.BroadcasterAccessToken);
                 req.Headers.TryAddWithoutValidation("Client-Id", _twitch.HelixClientId);
                 req.Content = new StringContent(body, Encoding.UTF8, "application/json");

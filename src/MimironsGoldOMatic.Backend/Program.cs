@@ -1,3 +1,5 @@
+// <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -46,13 +48,16 @@ builder.Services.AddSingleton<HelixChatService>();
 builder.Services.AddHostedService<RouletteSynchronizerHostedService>();
 builder.Services.AddHostedService<PayoutExpirationHostedService>();
 
+var twitch = builder.Configuration.GetSection(TwitchOptions.SectionName).Get<TwitchOptions>() ?? new TwitchOptions();
+var helixBase = string.IsNullOrWhiteSpace(twitch.HelixApiBaseUrl)
+    ? "https://api.twitch.tv/"
+    : twitch.HelixApiBaseUrl.Trim().TrimEnd('/') + "/";
 builder.Services.AddHttpClient("Helix", c =>
 {
+    c.BaseAddress = new Uri(helixBase);
     c.DefaultRequestHeaders.Add("Accept", "application/json");
     c.Timeout = TimeSpan.FromSeconds(30);
 });
-
-var twitch = builder.Configuration.GetSection(TwitchOptions.SectionName).Get<TwitchOptions>() ?? new TwitchOptions();
 
 byte[] extensionKey;
 if (!string.IsNullOrEmpty(twitch.ExtensionSecret))
@@ -88,7 +93,10 @@ builder.Services.AddRateLimiter(options =>
         if (context.Request.Path.StartsWithSegments("/api/twitch/eventsub"))
             return RateLimitPartition.GetNoLimiter("eventsub");
 
+        // API key auth sets NameIdentifier (Desktop) but not user_id; without this, localhost E2E
+        // (GET / + prepare + confirm + PATCH×2) shares one IP bucket and hits 429.
         var key = context.User.FindFirst("user_id")?.Value
+                  ?? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                   ?? context.Connection.RemoteIpAddress?.ToString()
                   ?? "anon";
         return RateLimitPartition.GetFixedWindowLimiter(

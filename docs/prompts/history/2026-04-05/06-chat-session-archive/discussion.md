@@ -12,18 +12,18 @@ Summary of the Cursor thread preserved for engineering history. Excludes the fin
 
 ### Roadmap / MVP status (Q&A)
 
-- Explained **late MVP / MVP-6**: core MVP-0–5 implemented in code; MVP-6 = automated Backend slice + manual full E2E; Beta/Production later per `docs/ROADMAP.md` and `docs/IMPLEMENTATION_READINESS.md`.
+- Explained **late MVP / MVP-6**: core MVP-0–5 implemented in code; MVP-6 = automated Backend slice + manual full E2E; Beta/Production later per `docs/overview/ROADMAP.md` and `docs/reference/IMPLEMENTATION_READINESS.md`.
 
 ### Documentation sync (MVP-5 / MVP-6)
 
-- **`docs/ROADMAP.md`:** Current stage blurb; MVP-5 **Implemented (MVP)** with Extension + UI_SPEC links; MVP-6 verification split + **Next steps**; cross-links to INTERACTION_SCENARIOS Automated E2E anchor.
-- **`docs/IMPLEMENTATION_READINESS.md`:** MVP-5 row expanded with links; MVP-6 row split **Completed (automated)** vs **In progress**; new **MVP-6 verification status** table.
-- **`docs/INTERACTION_SCENARIOS.md`:** Automation bullets for `Category=Unit` / `Category=Integration`; new **Automated E2E Scenarios (MVP-6)** section with step table.
+- **`docs/overview/ROADMAP.md`:** Current stage blurb; MVP-5 **Implemented (MVP)** with Extension + UI_SPEC links; MVP-6 verification split + **Next steps**; cross-links to INTERACTION_SCENARIOS Automated E2E anchor.
+- **`docs/reference/IMPLEMENTATION_READINESS.md`:** MVP-5 row expanded with links; MVP-6 row split **Completed (automated)** vs **In progress**; new **MVP-6 verification status** table.
+- **`docs/overview/INTERACTION_SCENARIOS.md`:** Automation bullets for `Category=Unit` / `Category=Integration`; new **Automated E2E Scenarios (MVP-6)** section with step table.
 
 ### E2E automation artifacts
 
-- **`docs/E2E_AUTOMATION_PLAN.md`** — Tier A (CI) vs Tier B; steps 1–4; mock specs (EventSub client/helper, Extension JWT, Helix stub, SyntheticDesktop); CI workflow sketch; prerequisites; risks; links to real paths under `src/MimironsGoldOMatic.Backend/`.
-- **`docs/E2E_AUTOMATION_TASKS.md`** — Actionable tasks A–D + shared/validation/risk tables; ownership (Backend, DevOps, Frontend optional, Game Dev Tier B); clarifications for team.
+- **`docs/e2e/E2E_AUTOMATION_PLAN.md`** — Tier A (CI) vs Tier B; steps 1–4; mock specs (EventSub client/helper, Extension JWT, Helix stub, SyntheticDesktop); CI workflow sketch; prerequisites; risks; links to real paths under `src/MimironsGoldOMatic.Backend/`.
+- **`docs/e2e/E2E_AUTOMATION_TASKS.md`** — Actionable tasks A–D + shared/validation/risk tables; ownership (Backend, DevOps, Frontend optional, Game Dev Tier B); clarifications for team.
 - Cross-links added among ROADMAP, IMPLEMENTATION_READINESS, INTERACTION_SCENARIOS, E2E plan, and E2E tasks; plan **Related** points to tasks file.
 
 ## Key technical notes captured in docs
@@ -34,6 +34,6 @@ Summary of the Cursor thread preserved for engineering history. Excludes the fin
 
 ## References
 
-- `@docs/ROADMAP.md`, `@docs/IMPLEMENTATION_READINESS.md`, `@docs/INTERACTION_SCENARIOS.md`
-- `@docs/E2E_AUTOMATION_PLAN.md`, `@docs/E2E_AUTOMATION_TASKS.md`
+- `@docs/overview/ROADMAP.md`, `@docs/reference/IMPLEMENTATION_READINESS.md`, `@docs/overview/INTERACTION_SCENARIOS.md`
+- `@docs/e2e/E2E_AUTOMATION_PLAN.md`, `@docs/e2e/E2E_AUTOMATION_TASKS.md`
 - Backend: `src/MimironsGoldOMatic.Backend/` (controllers, `HelixChatService`, `TwitchEventSubController`)
