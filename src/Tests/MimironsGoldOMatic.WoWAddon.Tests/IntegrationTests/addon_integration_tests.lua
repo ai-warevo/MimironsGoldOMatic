@@ -8,13 +8,13 @@ local function loadFreshAddon()
   WOW_MOCK_CREATED_FRAMES = {}
   WOW_MOCK_SENDMAIL_HOOKS = {}
   SendChatMessage_calls = {}
-  DEFAULT_CHAT_FRAME.messages = {}
   MailFrame = nil
   SendMailNameEditBox = nil
   SendMailSubjectEditBox = nil
   SendMailMoney = nil
 
   dofile(MOCK_LUA)
+  DEFAULT_CHAT_FRAME.messages = {}
   GetNumWhoResults = function()
     return 0
   end

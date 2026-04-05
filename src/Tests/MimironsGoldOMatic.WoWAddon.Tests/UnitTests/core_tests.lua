@@ -32,7 +32,7 @@ function TestCore:test_build_who_log_line_deterministic()
   local line = MimironsGoldOMaticCore.BuildWhoLogLine("sc-1", 'N"x', true, "2020-05-01T12:00:00Z")
   lu.assertStrContains(line, "[MGM_WHO]")
   lu.assertStrContains(line, [["spinCycleId":"sc-1"]])
-  lu.assertStrContains(line, [["characterName":"N\\\"x"]])
+  lu.assertStrContains(line, [["characterName":"N\"x"]])
   lu.assertStrContains(line, [["online":true]])
   lu.assertStrContains(line, [["capturedAt":"2020-05-01T12:00:00Z"]])
 end

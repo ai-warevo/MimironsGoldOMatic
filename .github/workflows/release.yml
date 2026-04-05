@@ -380,10 +380,9 @@ jobs:
       # GHCR defaults to private. Avoid list ?package_type=container (can return 400 Invalid argument for some orgs).
       # Resolve package via GET .../packages/{container|docker}/{name}, then PATCH the package's canonical .url from the JSON.
       #
-      # Org-owned packages: GITHUB_TOKEN can GET metadata but PATCH visibility often returns 404/403 (insufficient package admin).
-      # Set optional secret GH_PACKAGES_VISIBILITY_PAT: classic PAT with write:packages (SSO authorized if the org uses SSO),
-      # or a fine-grained PAT with Packages write for this org. Org owner can also set the package to Public once in the UI.
-      # Without that secret, PATCH failure is a warning only so the release still completes (image is already on GHCR).
+      # Org-owned packages: PATCH visibility requires a PAT (GITHUB_TOKEN cannot administer the package). If secret
+      # GH_PACKAGES_VISIBILITY_PAT is unset, this step exits immediately so logs are not spammed with a doomed PATCH 404.
+      # Classic PAT: write:packages (SSO-authorized if the org uses SSO). Fine-grained: Packages write for this org.
       - name: Make Backend GHCR package public via API
         env:
           GH_PACKAGES_VISIBILITY_PAT: ${{ secrets.GH_PACKAGES_VISIBILITY_PAT }}
@@ -393,8 +392,13 @@ jobs:
           WANT="mimirons-goldomatic-backend"
           API="https://api.github.com"
           API_VERSION="2022-11-28"
-          # Prefer PAT for API calls when set (required for PATCH on many org GHCR packages); else workflow token.
-          PKG_TOKEN="${GH_PACKAGES_VISIBILITY_PAT:-${{ secrets.GITHUB_TOKEN }}}"
+
+          if [ -z "${GH_PACKAGES_VISIBILITY_PAT:-}" ]; then
+            echo "::notice::Skipping GHCR package visibility API (no GH_PACKAGES_VISIBILITY_PAT). Image was pushed; package stays private by default. Add an org or repo secret with a PAT (write:packages or fine-grained Packages write; SSO if required) to automate public visibility."
+            exit 0
+          fi
+
+          PKG_TOKEN="${GH_PACKAGES_VISIBILITY_PAT}"
           HDR=(-H "Authorization: Bearer ${PKG_TOKEN}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: ${API_VERSION}")
 
           enc() { python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=\"\"))" "$1"; }
@@ -518,15 +522,8 @@ jobs:
             exit 0
           fi
 
-          # No org package admin on GITHUB_TOKEN → GitHub often returns 404 (or 403) for PATCH; do not fail the release.
-          if [ -z "${GH_PACKAGES_VISIBILITY_PAT:-}" ] && { [ "${HTTP}" = "404" ] || [ "${HTTP}" = "403" ]; }; then
-            echo "::warning::GHCR package is still private (PATCH HTTP ${HTTP}). Image push succeeded. To automate public visibility, add org/repo secret GH_PACKAGES_VISIBILITY_PAT (classic: write:packages, or fine-grained Packages write; SSO-authorized if required). Or set the package to Public under Org → Packages → ${PKG_NAME} → Package settings."
-            cat /tmp/gh_pkg_patch.json || true
-            exit 0
-          fi
-
           if [ "${HTTP}" = "404" ] || [ "${HTTP}" = "403" ]; then
-            echo "::error::PATCH returned HTTP ${HTTP} even with GH_PACKAGES_VISIBILITY_PAT set. Verify PAT scopes (write:packages), SSO authorization for the org, and that the token can administer this package."
+            echo "::error::PATCH returned HTTP ${HTTP}. Verify GH_PACKAGES_VISIBILITY_PAT scopes (write:packages), SSO authorization for the org, and that the token can administer this package."
           else
             echo "::error::PATCH failed HTTP ${HTTP}"
           fi
