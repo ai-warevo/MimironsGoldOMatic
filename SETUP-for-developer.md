@@ -52,6 +52,8 @@ For local UI development:
 npm run dev
 ```
 
+Copy **`.env.example`** to **`.env.local`** and set **`VITE_MGM_EBS_BASE_URL`** to your Backend base URL (no trailing slash), e.g. `http://localhost:5088`. The panel calls the EBS with the Twitch Extension JWT; use the **[Developer Rig](https://dev.twitch.tv/docs/extensions/rig/)** for real tokens. Without the Rig (plain Vite only), expect the unauthenticated / error state until a token is present.
+
 ---
 
 ## 3. PostgreSQL
@@ -231,7 +233,7 @@ OpenAPI (Development): typically exposed when `Development` — see `Program.cs`
 |---------|------|--------|
 | **Shared** | `src/MimironsGoldOMatic.Shared` | Referenced by Backend; `dotnet build` via solution. |
 | **Desktop** | `src/MimironsGoldOMatic.Desktop` | `dotnet run --project src/MimironsGoldOMatic.Desktop` (WPF; MVP-4 queue + log tail + injection per readiness doc). |
-| **Twitch Extension** | `src/MimironsGoldOMatic.TwitchExtension` | `npm run dev` / `npm run build` (MVP-5 UI still scaffold per readiness doc). |
+| **Twitch Extension** | `src/MimironsGoldOMatic.TwitchExtension` | `npm install`; `.env.local` with **`VITE_MGM_EBS_BASE_URL`** (see `.env.example`); `npm run dev` / `npm run build` (MVP-5 viewer panel; Dev Rig for JWT). |
 | **WoW addon** | `src/MimironsGoldOMatic.WoWAddon` | Copy addon folder into WoW **`Interface\AddOns`** (see streamer guide). |
 
 ---
@@ -240,6 +242,7 @@ OpenAPI (Development): typically exposed when `Development` — see `Program.cs`
 
 - [ ] PostgreSQL running; database created; **`ConnectionStrings:PostgreSQL`** set.
 - [ ] **`Mgm:ApiKey`** set; same value in Desktop **File → Settings** (`X-MGM-ApiKey`).
+- [ ] Twitch Extension: **`.env.local`** with **`VITE_MGM_EBS_BASE_URL`** pointing at the Backend (see `.env.example` under `MimironsGoldOMatic.TwitchExtension`).
 - [ ] **`Twitch:ExtensionClientId`** and **`Twitch:ExtensionSecret`** (base64) from Extension console.
 - [ ] **`Twitch:EventSubSecret`** matches webhook; public URL points to **`/api/twitch/eventsub`**.
 - [ ] **`Twitch:HelixClientId`** (+ secret if you use token helper flows).
