@@ -257,6 +257,10 @@ Acting as **[Frontend/Twitch Expert]**:
   - expiration behavior
   - roulette / pool rules (at least one spin with **1** participant)
 
+**Status — automated slice:** `src/MimironsGoldOMatic.Backend.Tests` (xUnit + **Testcontainers** PostgreSQL) exercises MediatR handlers for the bullets above plus **`PATCH` → `Sent`** pool removal; **`dotnet test src/MimironsGoldOMatic.slnx`** (Docker required). **Manual / live:** full chat→WoW→Helix path remains operator-verified (`docs/INTERACTION_SCENARIOS.md`).
+
+**Solution layout:** `MimironsGoldOMatic.slnx` includes **Backend.Tests**; **Twitch Extension** and **WoW addon** stay non-MSBuild trees (same as MVP-0).
+
 Spec links:
 
 - `docs/SPEC.md`

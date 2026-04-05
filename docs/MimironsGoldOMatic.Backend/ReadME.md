@@ -50,6 +50,12 @@
   - Returns `404 Not Found` when no payout exists for caller.
 - **Pool / spin endpoints (MVP):** **`GET /api/roulette/state`**, **`GET /api/pool/me`** (Extension **JWT-only**); **`POST /api/roulette/verify-candidate`** (Desktop **ApiKey**) — see `docs/SPEC.md` §5–5.1.
 
+## Automated tests (MVP-6)
+
+- Project: **`src/MimironsGoldOMatic.Backend.Tests`** (referenced from **`MimironsGoldOMatic.slnx`**).
+- Run: **`dotnet test src/MimironsGoldOMatic.slnx`** — requires **Docker** for **Testcontainers** PostgreSQL.
+- Scope: integration tests over real Marten + MediatR (`PostClaim`, `verify-candidate`, expiration sweep, **`Sent`** pool removal). Not a substitute for Twitch/WoW manual scenarios.
+
 ## Additional Libraries
 
 - `Marten`

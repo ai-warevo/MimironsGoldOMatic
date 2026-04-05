@@ -9,7 +9,6 @@ using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
 using MimironsGoldOMatic.Shared;
 using Marten;
-using Marten.Events;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
@@ -36,17 +35,7 @@ if (string.IsNullOrWhiteSpace(pg))
 builder.Services.AddMarten(opts =>
 {
     opts.Connection(pg);
-    opts.DatabaseSchemaName = "mgm";
-    opts.RegisterDocumentType<PoolDocument>();
-    opts.RegisterDocumentType<SpinStateDocument>();
-    opts.RegisterDocumentType<PayoutReadDocument>();
-    opts.RegisterDocumentType<ChatMessageDedupDocument>();
-    opts.RegisterDocumentType<EnrollmentIdempotencyDocument>();
-    opts.Events.StreamIdentity = StreamIdentity.AsGuid;
-    opts.Events.AddEventType(typeof(PayoutCreated));
-    opts.Events.AddEventType(typeof(PayoutStatusChanged));
-    opts.Events.AddEventType(typeof(WinnerAcceptanceRecorded));
-    opts.Events.AddEventType(typeof(HelixRewardSentAnnouncementSucceeded));
+    MgmMartenDocumentConfiguration.Configure(opts);
 });
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(PostClaimHandler).Assembly));

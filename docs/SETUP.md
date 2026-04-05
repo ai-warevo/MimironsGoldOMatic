@@ -45,6 +45,14 @@ dotnet restore src/MimironsGoldOMatic.slnx
 dotnet build src/MimironsGoldOMatic.slnx
 ```
 
+**Backend integration tests (MVP-6)**
+
+```bash
+dotnet test src/MimironsGoldOMatic.slnx
+```
+
+Requires **[Docker](https://docs.docker.com/get-docker/)** running locally: tests spin up **PostgreSQL** in a container (**Testcontainers**). Without Docker, `dotnet test` fails when starting the container.
+
 **Twitch Extension**
 
 ```bash
