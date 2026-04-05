@@ -95,6 +95,9 @@ function CreateFrame(kind, name, parent, template)
   return pushFrame(buildFrame(kind, name, parent, template))
 end
 
+--- Populated by addons at load time (e.g. SlashCmdList["MGM"] = fn); must exist before dofile(addon).
+SlashCmdList = {}
+
 DEFAULT_CHAT_FRAME = {
   messages = {},
   AddMessage = function(self, msg)
