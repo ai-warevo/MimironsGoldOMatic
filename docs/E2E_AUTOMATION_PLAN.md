@@ -1,5 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation plan) -->
-<!-- Updated: 2026-04-05 (Sequential release CI/CD pipeline) -->
+<!-- Updated: 2026-04-05 (Unit/integration PR workflow + strategy section) -->
 
 # E2E automation plan (MVP-6): Chat → WoW → Helix
 
@@ -12,7 +12,7 @@ This document proposes how to automate the **full operator workflow** currently 
 - Backend (EBS): `src/MimironsGoldOMatic.Backend/` — **not** `MimironsGoldOMatic.WEBAPI.Backend`.
 - WoW addon: `src/MimironsGoldOMatic.WoWAddon/`.
 - Desktop: `src/MimironsGoldOMatic.Desktop/`.
-- CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
+- CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). **Unit/integration (parallel):** `.github/workflows/unit-integration-tests.yml` (Backend, Desktop, WoW addon validation, Twitch Extension `npm test`) on the **same** PR trigger. CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
 - Tier A mocks: `src/Mocks/MockEventSubWebhook/`, `src/Mocks/MockExtensionJwt/`.
 
 **CI tier labels (this repository):** **Tier A** is the current [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) job: **Postgres + Backend + mocks + synthetic EventSub → `GET /api/pool/me`**. **Tier B** is the **planned CI extension** with **MockHelixApi**, **SyntheticDesktop**, and a **configurable Helix base URL** (see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)). In **Section 1**, optional **real WoW + self-hosted** validation is **operational / full-stack** work—**not** the same as **CI Tier B**.
@@ -420,6 +420,43 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 
 ---
 
+## Unit and Integration Testing Strategy
+
+**Workflow:** [`.github/workflows/unit-integration-tests.yml`](../.github/workflows/unit-integration-tests.yml)
+
+### Trigger conditions
+
+- **`pull_request`** targeting **`main`** only — same event filter as [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) (**Tier A E2E**).
+- Because this is a **separate workflow file**, GitHub Actions starts it **in parallel** with **E2E** on each qualifying PR (independent workflow graphs, subject to org concurrency limits).
+
+### Component breakdown
+
+| Component | Job | Runner | What runs today |
+|-----------|-----|--------|-----------------|
+| **Backend** | `test-backend` | `ubuntu-latest` | `dotnet test` on **`src/MimironsGoldOMatic.Backend.Tests/`** (xUnit + **Testcontainers** integration tests); TRX under **`TestResults/backend/`** |
+| **Desktop** | `test-desktop` | `windows-latest` | `dotnet test` on **`src/MimironsGoldOMatic.Desktop.Tests/`** (WPF smoke / future unit tests); TRX under **`TestResults/desktop/`** |
+| **WoW addon** | `test-wowaddon` | `ubuntu-latest` | Required files + **`.toc`** consistency + **`luac -p`** on **`MimironsGoldOMatic.lua`**; log artifact (**placeholder** until a Lua test runner exists) |
+| **Twitch Extension** | `test-twitch-extension` | `ubuntu-latest` | **`npm ci`** + **`npm test`** (**`eslint`** + **`tsc`/`vite build`**); logs under **`TestResults/twitch-extension/`** |
+
+### Parallel execution model
+
+- **Across workflows:** **Unit/integration** vs **E2E** — parallel (same trigger, different `name:` workflows).
+- **Within unit/integration:** **`test-backend`**, **`test-desktop`**, **`test-wowaddon`**, **`test-twitch-extension`** have **no** mutual **`needs:`**, so they are eligible to run **concurrently**.
+- **`aggregate-results`** runs **`if: always()`** after all four, posts or updates a **PR comment** (summary table + link to the workflow run). It is designed **not** to fail the workflow by itself; failing **test-*** jobs still mark the overall workflow **failed**.
+
+### Artifact retention
+
+- Per-component artifacts (**`test-results-backend`**, **`test-results-desktop`**, **`test-results-wowaddon`**, **`test-results-twitch-extension`**) use **`retention-days: 7`** (TRX, validation logs, **`npm test`** output).
+
+### Future expansion
+
+- **WoW addon:** add a real Lua unit suite (e.g. **Busted** / extracted pure modules) and invoke it from **`test-wowaddon`** instead of syntax-only checks.
+- **Twitch Extension:** add **Vitest** (or similar), emit **lcov**, and upload coverage next to logs.
+- **Backend:** optional **matrix** or split jobs (**fast unit** vs **Testcontainers integration**) if wall-clock time grows.
+- **PR comment:** fork PRs may not allow **`pull-requests: write`** on `GITHUB_TOKEN`; the comment step uses **`continue-on-error: true`** so the summary is best-effort.
+
+---
+
 ## 8. Next steps (implementation checklist)
 
 1. **Refactor `HelixChatService`** — tracked as **Tier B Task 5**; see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension).
@@ -440,3 +477,4 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | 1.1 | 2026-04-05 | **Tier A:** `MockEventSubWebhook`, `MockExtensionJwt`, `e2e-test.yml`, `send_e2e_eventsub.py` |
 | 1.2 | 2026-04-05 | **Tier A** runbook, predictive issues, **CI Tier B** plan, optimization notes; terminology aligned with workflow |
 | 1.3 | 2026-04-05 | **CI/CD Pipeline Architecture:** `e2e-test.yml` scoped PR build; **`release.yml`** parallel builds + sequential **`create-release`**; GHCR Backend image |
+| 1.4 | 2026-04-05 | **Unit and Integration Testing Strategy:** `unit-integration-tests.yml` (PR→`main`, parallel with E2E); per-component jobs + artifacts + PR summary |
