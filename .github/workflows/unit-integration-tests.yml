@@ -171,13 +171,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run npm test (lint + production build)
+      - name: Run npm test (lint, Vitest, production build)
         run: |
           set -euo pipefail
           mkdir -p "$GITHUB_WORKSPACE/TestResults/twitch-extension"
           npm test 2>&1 | tee "$GITHUB_WORKSPACE/TestResults/twitch-extension/npm-test.log"
-          # TODO: Wire Vitest (or similar) and emit lcov; upload coverage alongside logs.
-          echo "No JS unit coverage collector yet — see TODO above." > "$GITHUB_WORKSPACE/TestResults/twitch-extension/coverage-note.txt"
+          echo "Vitest runs via npm test (see src/MimironsGoldOMatic.TwitchExtension). Optional: add @vitest/coverage-v8 and emit lcov for artifacts." > "$GITHUB_WORKSPACE/TestResults/twitch-extension/coverage-note.txt"
 
       - name: Upload Twitch Extension logs
         if: always()
