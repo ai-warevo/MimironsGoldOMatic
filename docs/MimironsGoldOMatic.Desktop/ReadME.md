@@ -1,6 +1,6 @@
 ## MimironsGoldOMatic.Desktop (WPF | Bridge between EBS & Lua addon)
 
-- **Repository status:** `src/MimironsGoldOMatic.Desktop` is a **WPF shell** (default window only). Queue UI, HTTP client, log tail, and WinAPI injection below are **target** behavior per `docs/SPEC.md` — see `docs/IMPLEMENTATION_READINESS.md`.
+- **Repository status:** `src/MimironsGoldOMatic.Desktop` ships the **MVP-4** WPF utility: queue UI, **`HttpClient`** + Polly to the EBS ( **`X-MGM-ApiKey`** ), single-file tail of **`WoWChatLog.txt`**, and foreground **`WoW.exe`** injection per `docs/SPEC.md` §8–10. See `docs/IMPLEMENTATION_READINESS.md` for parity notes.
 - **UI spec:** `docs/UI_SPEC.md` §3 (WPF **UI-301–308**: API setup, main window, queue, settings, modals, log).
 - **Role:** Monitors the **EBS** and injects **winner** payout data into the WoW client; bridges **addon → EBS** for **`!twgold`** (acceptance) and **`WoWChatLog.txt`** tailing for **`[MGM_CONFIRM:UUID]`** (required **mail-sent → `Sent`**).
 - **Stack:** .NET 10, WPF, MVVM (CommunityToolkit.Mvvm).
@@ -53,3 +53,10 @@ The Desktop app uses an explicit claim model to avoid accidentally locking payou
 
 ## Resilience
 - **Polly Integration:** Use Polly for all outgoing HTTP calls to the Backend to handle transient network issues with retries and exponential backoff.
+
+## WinAPI / WoW 3.3.5a compatibility (MVP)
+
+- **Window discovery:** Only the **foreground** window is considered. `GetForegroundWindow` → `GetWindowThreadProcessId` → process name **`WoW`** (module **`WoW.exe`**) must match. If another app is focused, injection is skipped or fails fast — the streamer must click into WoW before **Sync/Inject** or auto **`NotifyWinnerWhisper`**.
+- **Focus timing:** `ShowWindow(SW_RESTORE)` + `SetForegroundWindow` run before posting keys. Short sleeps (~60–120 ms) follow focus and between **`WM_CHAR`** posts so the client’s chat box keeps up on slower machines; if commands truncate, increase delays in `PostMessageWoWInputStrategy` / `SendInputWoWInputStrategy` or prefer **SendInput** in Settings.
+- **Primary vs fallback:** **`PostMessage(WM_CHAR)`** targets the **main** WoW HWND (same as foreground). If the client ignores posted messages (some anti-cheat or focus modes), the coordinator retries with **`SendInput`** (`KEYEVENTF_UNICODE`). Operator can force **SendInput** first via Settings.
+- **What breaks if timing differs:** If WoW is not actually receiving keyboard focus, chat may not open and **`/run`** text can appear in the wrong UI layer or be dropped. If delays are too short, partial commands may be sent — reduce poll/inject frequency or increase inter-character delay.
