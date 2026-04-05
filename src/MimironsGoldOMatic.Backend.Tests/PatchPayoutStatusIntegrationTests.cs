@@ -10,6 +10,7 @@ using Xunit;
 namespace MimironsGoldOMatic.Backend.Tests;
 
 [Collection(nameof(PostgresCollection))]
+[Trait("Category", "Integration")]
 public sealed class PatchPayoutStatusIntegrationTests : IAsyncLifetime
 {
     private readonly PostgresContainerFixture _pg;

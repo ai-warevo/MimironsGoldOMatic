@@ -51,7 +51,7 @@ dotnet build src/MimironsGoldOMatic.slnx
 dotnet test src/MimironsGoldOMatic.slnx
 ```
 
-Requires **[Docker](https://docs.docker.com/get-docker/)** running locally: tests spin up **PostgreSQL** in a container (**Testcontainers**). Without Docker, `dotnet test` fails when starting the container.
+Requires **[Docker](https://docs.docker.com/get-docker/)** running locally for **integration** tests: **Testcontainers** starts **PostgreSQL**. Fast **unit** slice (no Docker): **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit`**. Without Docker, the full `dotnet test` (all categories) fails when starting the container.
 
 **Twitch Extension**
 

@@ -12,6 +12,7 @@ using Xunit;
 namespace MimironsGoldOMatic.Backend.Tests;
 
 [Collection(nameof(PostgresCollection))]
+[Trait("Category", "Integration")]
 public sealed class RouletteVerifyCandidateIntegrationTests : IAsyncLifetime
 {
     private readonly PostgresContainerFixture _pg;

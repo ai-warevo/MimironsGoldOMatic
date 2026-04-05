@@ -53,8 +53,9 @@
 ## Automated tests (MVP-6)
 
 - Project: **`src/MimironsGoldOMatic.Backend.Tests`** (referenced from **`MimironsGoldOMatic.slnx`**).
-- Run: **`dotnet test src/MimironsGoldOMatic.slnx`** — requires **Docker** for **Testcontainers** PostgreSQL.
-- Scope: integration tests over real Marten + MediatR (`PostClaim`, `verify-candidate`, expiration sweep, **`Sent`** pool removal). Not a substitute for Twitch/WoW manual scenarios.
+- **Unit (no Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit`** — `RouletteTime`, `SpinPhaseResolver`, `TwGoldChatEnrollmentParser` (`!twgold` line shape).
+- **Integration (Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Integration`** — PostgreSQL via **Testcontainers**, Marten + MediatR (`PostClaim`, `verify-candidate`, expiration sweep, **`Sent`** pool removal).
+- **All tests:** **`dotnet test src/MimironsGoldOMatic.slnx`** — runs unit + integration; full suite needs Docker. Not a substitute for Twitch/WoW manual scenarios.
 
 ## Additional Libraries
 
