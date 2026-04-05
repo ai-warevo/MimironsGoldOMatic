@@ -135,7 +135,7 @@ Longer explanations and Twitch doc links: **`Mgm`** in §4.4, **`Twitch`** in §
 
 | Key | Meaning |
 |-----|---------|
-| **`ApiKey`** | Shared secret for **Desktop** → Backend calls. Sent as HTTP header **`X-MGM-ApiKey`**. Choose a long random string; match the same value in the Desktop app config when MVP-4 wires it. |
+| **`ApiKey`** | Shared secret for **Desktop** → Backend calls. Sent as HTTP header **`X-MGM-ApiKey`**. Choose a long random string; enter the **same** value in the Desktop app (**File → Settings**). |
 | **`DevSkipSubscriberCheck`** | **`true`** only in local dev if you want to bypass subscriber-only enrollment rules while testing. **`false`** in production-like configs. |
 
 **Where to get `ApiKey`:** You generate it (password manager, `openssl rand -hex 32`, etc.). It is not issued by Twitch.
@@ -230,7 +230,7 @@ OpenAPI (Development): typically exposed when `Development` — see `Program.cs`
 | Project | Path | Command |
 |---------|------|--------|
 | **Shared** | `src/MimironsGoldOMatic.Shared` | Referenced by Backend; `dotnet build` via solution. |
-| **Desktop** | `src/MimironsGoldOMatic.Desktop` | `dotnet run --project src/MimironsGoldOMatic.Desktop` (WPF; MVP-4 still scaffold-heavy per readiness doc). |
+| **Desktop** | `src/MimironsGoldOMatic.Desktop` | `dotnet run --project src/MimironsGoldOMatic.Desktop` (WPF; MVP-4 queue + log tail + injection per readiness doc). |
 | **Twitch Extension** | `src/MimironsGoldOMatic.TwitchExtension` | `npm run dev` / `npm run build` (MVP-5 UI still scaffold per readiness doc). |
 | **WoW addon** | `src/MimironsGoldOMatic.WoWAddon` | Copy addon folder into WoW **`Interface\AddOns`** (see streamer guide). |
 
@@ -239,7 +239,7 @@ OpenAPI (Development): typically exposed when `Development` — see `Program.cs`
 ## 7. Quick config checklist
 
 - [ ] PostgreSQL running; database created; **`ConnectionStrings:PostgreSQL`** set.
-- [ ] **`Mgm:ApiKey`** set; planned Desktop build will use the same key.
+- [ ] **`Mgm:ApiKey`** set; same value in Desktop **File → Settings** (`X-MGM-ApiKey`).
 - [ ] **`Twitch:ExtensionClientId`** and **`Twitch:ExtensionSecret`** (base64) from Extension console.
 - [ ] **`Twitch:EventSubSecret`** matches webhook; public URL points to **`/api/twitch/eventsub`**.
 - [ ] **`Twitch:HelixClientId`** (+ secret if you use token helper flows).

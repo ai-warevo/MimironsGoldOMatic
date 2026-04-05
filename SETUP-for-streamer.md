@@ -2,7 +2,7 @@
 
 This guide is for **broadcasters** who run Mimiron's Gold-o-Matic: **WoW addon**, **Twitch Extension**, and **Desktop** helper, and how they connect to the **Backend (EBS)**.
 
-**Important:** As of the current repository state, the **Backend** implements MVP-2; the **Desktop**, **Twitch Extension UI**, and **addon** are still **partial or scaffold** in places. See **`docs/IMPLEMENTATION_READINESS.md`** for what is actually implemented. Until releases exist, “setup” often means **running from source** with a developer (see **[SETUP-for-developer.md](SETUP-for-developer.md)**).
+**Important:** As of the current repository state, the **Backend** implements MVP-2, the **WoW addon** MVP-3, and the **Desktop (WPF)** MVP-4; the **Twitch Extension** viewer UI is still **scaffold-heavy** (MVP-5). See **`docs/IMPLEMENTATION_READINESS.md`** for detail. Until releases exist, “setup” often means **running from source** with a developer (see **[SETUP-for-developer.md](SETUP-for-developer.md)**).
 
 Normative behavior (chat commands, mail flow, logs) is defined in **`docs/SPEC.md`**.
 
@@ -100,7 +100,7 @@ Component doc: **`docs/MimironsGoldOMatic.TwitchExtension/ReadME.md`**.
   dotnet run --project src/MimironsGoldOMatic.Desktop
   ```
 
-Configure the **EBS base URL** and **API key** in the app settings when the settings UI exists (MVP-4 — see readiness doc).
+On first run, open **File → Settings**: set the **EBS base URL** (same host as your Backend) and **`X-MGM-ApiKey`** (must match **`Mgm:ApiKey`** on the server). The API key is stored under **`%LocalAppData%\MimironsGoldOMatic`** with **DPAPI**. Set your **WoW install folder** (or an override path) so the app can tail **`Logs\WoWChatLog.txt`** (`docs/SPEC.md` §10). Use **Test connection** to verify **`GET /api/payouts/pending`**.
 
 Component doc: **`docs/MimironsGoldOMatic.Desktop/ReadME.md`**.
 
