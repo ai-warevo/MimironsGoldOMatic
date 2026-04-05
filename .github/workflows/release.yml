@@ -221,7 +221,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image_repo: ${{ steps.image.outputs.image_repo }}
-      image_digest: ${{ steps.push.outputs.digest }}
+      image_digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -353,13 +353,14 @@ jobs:
 
       - name: Push Backend image to GHCR
         run: |
+          REPO="${{ needs.build-backend-docker.outputs.image_repo }}"
           docker tag mimirons-goldomatic-backend:${{ env.RELEASE_VERSION }} \
-            ${{ steps.image.outputs.image_repo }}:${{ env.RELEASE_VERSION }}
-          docker push ${{ steps.image.outputs.image_repo }}:${{ env.RELEASE_VERSION }}
+            "${REPO}:${{ env.RELEASE_VERSION }}"
+          docker push "${REPO}:${{ env.RELEASE_VERSION }}"
 
           docker tag mimirons-goldomatic-backend:${{ env.RELEASE_VERSION }} \
-            ${{ steps.image.outputs.image_repo }}:latest
-          docker push ${{ steps.image.outputs.image_repo }}:latest
+            "${REPO}:latest"
+          docker push "${REPO}:latest"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
