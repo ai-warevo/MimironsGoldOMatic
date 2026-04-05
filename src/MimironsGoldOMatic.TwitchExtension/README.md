@@ -8,12 +8,12 @@ MVP **viewer** panel: **Vite + React + TypeScript** (Zustand, axios, EBS polling
 
 **Scripts:** `npm run dev`, `npm run build`, `npm run lint` — see **`package.json`**.
 
-**Automated tests (Vitest, in this package — not under repo `src/Tests/` .NET projects):**
+**Automated tests (Jest, in this package — not under repo `src/Tests/` .NET projects):**
 
-- **`npm test`** — ESLint, **`vitest run`** (unit + integration), then production **`tsc` + `vite build`** (same as CI).
-- **`npm run test:unit`** — `*.test.ts` / `*.test.tsx` only (e.g. colocated next to components).
-- **`npm run test:integration`** — `*.integration.test.ts` (HTTP via **MSW**; shared server in **`src/test/msw/server.ts`**, setup in **`src/test/setup.ts`**).
-- **`npm run test:vitest`** — all Vitest suites without lint/build.
+- **`npm test`** — ESLint, **`jest`** (unit + integration), then production **`tsc` + `vite build`** (same as CI).
+- **`npm run test:unit`** — unit tests only (excludes `*.integration.test.ts`).
+- **`npm run test:integration`** — `*.integration.test.ts` (HTTP via **axios-mock-adapter** on the same `AxiosInstance` the panel uses; setup in **`src/test/jest.setup.ts`**).
+- **`npm run test:jest`** — all Jest suites without lint/build.
 
 Backend/Desktop (from repo root): **`dotnet test src/MimironsGoldOMatic.slnx`**.
 

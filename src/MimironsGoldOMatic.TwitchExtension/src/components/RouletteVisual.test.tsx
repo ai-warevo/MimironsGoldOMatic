@@ -1,18 +1,19 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, jest } from '@jest/globals'
 import { MimironsGoldOMaticRouletteVisual } from './RouletteVisual'
 
 function mockMatchMedia(matches: boolean) {
+  const mm = jest.fn((query: string) => ({
+    matches,
+    media: query,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  }))
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     configurable: true,
-    value: vi.fn().mockImplementation((query: string) => ({
-      matches,
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
+    value: mm,
   })
 }
 

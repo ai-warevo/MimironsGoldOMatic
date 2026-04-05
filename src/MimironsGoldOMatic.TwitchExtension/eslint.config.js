@@ -1,5 +1,5 @@
 import js from '@eslint/js'
-import vitest from '@vitest/eslint-plugin'
+import jestPlugin from 'eslint-plugin-jest'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
@@ -32,17 +32,14 @@ export default defineConfig([
       '**/*.integration.test.ts',
       'src/test/**/*.{ts,tsx}',
     ],
-    plugins: { vitest },
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      vitest.configs.recommended,
-    ],
+    plugins: { jest: jestPlugin },
+    extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: { ...globals.browser },
+      globals: { ...globals.browser, ...globals.jest },
     },
     rules: {
+      ...jestPlugin.configs['flat/recommended'].rules,
       'react-hooks/rules-of-hooks': 'off',
       'react-hooks/exhaustive-deps': 'off',
     },
