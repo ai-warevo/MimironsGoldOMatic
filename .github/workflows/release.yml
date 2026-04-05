@@ -8,9 +8,13 @@
 #
 name: Release
 
+# push to main: snapshot builds (v0.0.<run_number>).
+# push tag v*: SemVer release — matches tags from `node .../release-skill.js` (annotated vX.Y.Z).
 on:
-  pull_request:
+  push:
     branches: [main]
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       version:
@@ -42,9 +46,15 @@ jobs:
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
           INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
         run: |
-          set -e
+          set -euo pipefail
+          if [ "${REF_TYPE}" = "tag" ]; then
+            echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            exit 0
+          fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
@@ -109,9 +119,15 @@ jobs:
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
           INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
         run: |
-          set -e
+          set -euo pipefail
+          if [ "${REF_TYPE}" = "tag" ]; then
+            echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            exit 0
+          fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
@@ -164,9 +180,15 @@ jobs:
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
           INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
         run: |
-          set -e
+          set -euo pipefail
+          if [ "${REF_TYPE}" = "tag" ]; then
+            echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            exit 0
+          fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
@@ -232,9 +254,15 @@ jobs:
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
           INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
         run: |
-          set -e
+          set -euo pipefail
+          if [ "${REF_TYPE}" = "tag" ]; then
+            echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            exit 0
+          fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
@@ -287,9 +315,15 @@ jobs:
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
           INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || '' }}
         run: |
-          set -e
+          set -euo pipefail
+          if [ "${REF_TYPE}" = "tag" ]; then
+            echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            exit 0
+          fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
@@ -337,21 +371,42 @@ jobs:
           fi
           cp -f "${TAR}" upload/backend-image.tar
           (cd upload && sha256sum *.zip backend-image.tar > SHA256SUMS.txt)
-          PREV_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          # Previous tag for range: if releasing an annotated v* tag, exclude current tag from "latest" describe.
+          CURRENT_TAG="${RELEASE_VERSION}"
+          if git rev-parse -q --verify "refs/tags/${CURRENT_TAG}" >/dev/null 2>&1; then
+            PREV_TAG="$(git tag -l 'v*' --sort=-version:refname | awk -v cur="${CURRENT_TAG}" '$0 != cur {print; exit}')"
+          else
+            PREV_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          fi
           NOTES_FILE="${GITHUB_WORKSPACE}/release-notes.md"
+          TMP_COMMITS="$(mktemp)"
+          if [ -n "${PREV_TAG}" ]; then
+            git log --pretty=format:'%s (%h)' "${PREV_TAG}..HEAD" > "${TMP_COMMITS}" || true
+          else
+            git log --pretty=format:'%s (%h)' -n 50 > "${TMP_COMMITS}" || true
+          fi
           {
-            echo "## Changes"
+            echo "## Changelog (Conventional Commits)"
             echo ""
-            if [ -n "${PREV_TAG}" ]; then
-              git log --pretty=format:'- %s (%h)' "${PREV_TAG}..HEAD" || true
-            else
-              git log --pretty=format:'- %s (%h)' -n 50 || true
-            fi
+            echo "Commits since \`${PREV_TAG:-<repository start>}\` — grouped by prefix where possible."
+            echo ""
+            echo "### Features"
+            FEAT="$(grep -E '^feat(\([^)]*\))?!?:' "${TMP_COMMITS}" || true)"
+            if [ -z "${FEAT}" ]; then echo "- _(none)_"; else echo "${FEAT}" | sed 's/^/- /'; fi
+            echo ""
+            echo "### Fixes"
+            FIX="$(grep -E '^fix(\([^)]*\))?!?:' "${TMP_COMMITS}" || true)"
+            if [ -z "${FIX}" ]; then echo "- _(none)_"; else echo "${FIX}" | sed 's/^/- /'; fi
+            echo ""
+            echo "### Other"
+            REST="$(grep -Ev '^(feat|fix)(\([^)]*\))?!?:' "${TMP_COMMITS}" | grep -v '^$' || true)"
+            if [ -z "${REST}" ]; then echo "- _(none)_"; else echo "${REST}" | sed 's/^/- /'; fi
             echo ""
             echo "## Artifacts"
             echo ""
             echo "ZIP bundles (Desktop, WoW addon, Twitch Extension), Backend container image (\`backend-image.tar\`), and \`SHA256SUMS.txt\` are attached. The same image is pushed to GHCR."
           } > "${NOTES_FILE}"
+          rm -f "${TMP_COMMITS}"
           echo "NOTES_FILE=${NOTES_FILE}" >> "${GITHUB_ENV}"
 
       - name: Load Docker image from tar
