@@ -18,7 +18,7 @@ MimironsGoldOMatic/
 ├── docs/
 │   ├── SPEC.md, ROADMAP.md, UI_SPEC.md, INTERACTION_SCENARIOS.md
 │   ├── ARCHITECTURE.md, PROJECT_STRUCTURE.md, WORKFLOWS.md
-│   ├── MVP_PRODUCT_SUMMARY.md, GLOSSARY.md, SETUP_COMMON.md
+│   ├── MVP_PRODUCT_SUMMARY.md, GLOSSARY.md, SETUP.md, SETUP-for-developer.md, SETUP-for-streamer.md
 │   ├── IMPLEMENTATION_READINESS.md, ReadME.md
 │   ├── MimironsGoldOMatic.*/ReadME.md
 │   └── prompts/            (Cursor templates + task history — not part of product docs)
@@ -32,7 +32,6 @@ MimironsGoldOMatic/
 ├── README.md
 ├── CONTEXT.md
 ├── AGENTS.md
-├── SETUP.md, SETUP-for-developer.md, SETUP-for-streamer.md
 └── …
 ```
 

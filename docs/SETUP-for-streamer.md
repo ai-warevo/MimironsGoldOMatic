@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-05 -->
 
 # Setup for streamers and operators
 

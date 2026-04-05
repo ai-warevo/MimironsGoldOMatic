@@ -6,7 +6,7 @@
 
 Normative architecture and API behavior live in **`docs/SPEC.md`** and **`docs/ROADMAP.md`**. **`docs/IMPLEMENTATION_READINESS.md`** tracks doc/spec consistency and **`src/`** parity (**MVP-1…5** in tree; **MVP-6** pending).
 
-**Deduplicated overviews:** [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) · [`WORKFLOWS.md`](WORKFLOWS.md) · [`MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md) · [`GLOSSARY.md`](GLOSSARY.md) · [`SETUP_COMMON.md`](SETUP_COMMON.md)
+**Deduplicated overviews:** [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) · [`WORKFLOWS.md`](WORKFLOWS.md) · [`MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md) · [`GLOSSARY.md`](GLOSSARY.md) · [`SETUP.md`](SETUP.md) (see also [`SETUP-for-developer.md`](SETUP-for-developer.md), [`SETUP-for-streamer.md`](SETUP-for-streamer.md))
 
 <!-- Content moved to ARCHITECTURE.md (Architectural patterns + persistence). See: docs/ARCHITECTURE.md -->
 

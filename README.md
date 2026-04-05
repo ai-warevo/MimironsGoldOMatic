@@ -24,9 +24,9 @@ Normative contracts live in **`docs/SPEC.md`**, **`docs/ROADMAP.md`**, **`docs/U
 
 ## Setup
 
-- **[SETUP.md](SETUP.md)** — index to the setup guides below
-- **[SETUP-for-developer.md](SETUP-for-developer.md)** — prerequisites (see also **`docs/SETUP_COMMON.md`**), PostgreSQL, Backend `appsettings` (including Twitch keys), running projects from source
-- **[SETUP-for-streamer.md](SETUP-for-streamer.md)** — installing the WoW addon, Twitch Extension, and Desktop app; operator notes
+- **[docs/SETUP.md](docs/SETUP.md)** — overview, shared prerequisites, and first **dotnet** / **npm** build
+- **[docs/SETUP-for-developer.md](docs/SETUP-for-developer.md)** — PostgreSQL, Backend `appsettings` (including Twitch keys), running projects from source
+- **[docs/SETUP-for-streamer.md](docs/SETUP-for-streamer.md)** — WoW addon, Twitch Extension, Desktop; operator notes
 
 ## Documentation
 
@@ -37,7 +37,7 @@ Normative contracts live in **`docs/SPEC.md`**, **`docs/ROADMAP.md`**, **`docs/U
 - **[docs/WORKFLOWS.md](docs/WORKFLOWS.md)** — end-to-end MVP flow
 - **[docs/MVP_PRODUCT_SUMMARY.md](docs/MVP_PRODUCT_SUMMARY.md)** — product rules at a glance
 - **[docs/GLOSSARY.md](docs/GLOSSARY.md)** — terms → spec sections
-- **[docs/SETUP_COMMON.md](docs/SETUP_COMMON.md)** — shared prerequisites and first build
+- **[docs/SETUP.md](docs/SETUP.md)** — setup overview, prerequisites, first build (role-specific guides linked from there)
 
 **Specifications and tracking:**
 

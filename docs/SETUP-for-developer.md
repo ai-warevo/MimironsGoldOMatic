@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-05 -->
 
 # Setup for developers
 
@@ -10,7 +10,7 @@ Normative product behavior remains in **`docs/SPEC.md`**. Implementation status 
 
 ## 1–2. Prerequisites, clone, and first build
 
-<!-- Content moved to SETUP_COMMON.md. See: docs/SETUP_COMMON.md -->
+Complete **[SETUP.md](SETUP.md)** (shared prerequisites and first build) before continuing with PostgreSQL below.
 
 ---
 

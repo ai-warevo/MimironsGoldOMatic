@@ -38,5 +38,5 @@ Contributors and AI agents follow [`AGENTS.md`](../AGENTS.md): history under **`
 
 ## 9. Setup (roles)
 
-- **Developers:** [`SETUP-for-developer.md`](../SETUP-for-developer.md) (extends shared prerequisites in [`docs/SETUP_COMMON.md`](SETUP_COMMON.md)).
-- **Streamers / operators:** [`SETUP-for-streamer.md`](../SETUP-for-streamer.md).
+- **Developers:** [`SETUP-for-developer.md`](SETUP-for-developer.md) (after shared prerequisites in [`SETUP.md`](SETUP.md)).
+- **Streamers / operators:** [`SETUP-for-streamer.md`](SETUP-for-streamer.md).
