@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-05 (Tier A validation + Tier B plan) -->
 
 ## MimironsGoldOMatic.Backend — EBS (Extension Backend Service) (ASP.NET Core | Bridge between Twitch Extension & WPF Desktop)
 
@@ -56,7 +56,57 @@
 - **Unit (no Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit`** — `RouletteTime`, `SpinPhaseResolver`, `TwGoldChatEnrollmentParser` (`!twgold` line shape).
 - **Integration (Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Integration`** — PostgreSQL via **Testcontainers**, Marten + MediatR (`PostClaim`, `verify-candidate`, expiration sweep, **`Sent`** pool removal).
 - **All tests:** **`dotnet test src/MimironsGoldOMatic.slnx`** — runs unit + integration; full suite needs Docker. Not a substitute for Twitch/WoW manual scenarios.
-- **CI Tier A (E2E mocks):** GitHub Actions **`.github/workflows/e2e-test.yml`** runs Backend + Postgres + **`src/Mocks/MockEventSubWebhook`** + **`src/Mocks/MockExtensionJwt`**, sends a synthetic **`channel.chat.message`**, asserts **`GET /api/pool/me`**. See [`docs/E2E_AUTOMATION_PLAN.md`](../E2E_AUTOMATION_PLAN.md) (**Tier A implementation**).
+- **CI Tier A (E2E mocks):** GitHub Actions **`.github/workflows/e2e-test.yml`** runs Backend + Postgres + **`src/Mocks/MockEventSubWebhook`** + **`src/Mocks/MockExtensionJwt`**, sends a synthetic **`channel.chat.message`**, asserts **`GET /api/pool/me`**. See [`docs/E2E_AUTOMATION_PLAN.md`](../E2E_AUTOMATION_PLAN.md) ([How to run Tier A E2E tests](../E2E_AUTOMATION_PLAN.md#how-to-run-tier-a-e2e-tests-github-actions)).
+
+### Running Tier A E2E locally (manual)
+
+Mirror the workflow on one machine (Linux/macOS/WSL or separate terminals on Windows):
+
+1. Start **PostgreSQL 16** with database **`mgm`**, user/password matching your connection string (same shape as CI: `Host=localhost;Port=5432;Database=mgm;Username=postgres;Password=postgres`).
+2. **Terminal A — Backend:**  
+   `ASPNETCORE_ENVIRONMENT=Development`  
+   `ASPNETCORE_URLS=http://127.0.0.1:8080`  
+   `ConnectionStrings__PostgreSQL=Host=localhost;Port=5432;Database=mgm;Username=postgres;Password=postgres`  
+   `Mgm__ApiKey=ci-desktop-api-key`  
+   `Mgm__DevSkipSubscriberCheck=true`  
+   `Twitch__EventSubSecret=<same secret as mocks>`  
+   then `dotnet run --project src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj -c Release` (or Debug).
+3. **Terminal B — MockEventSubWebhook:**  
+   `ASPNETCORE_URLS=http://127.0.0.1:9051`  
+   `Backend__BaseUrl=http://127.0.0.1:8080`  
+   `Twitch__EventSubSecret=<same as Backend>`  
+   then `dotnet run --project src/Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj`.
+4. **Terminal C — MockExtensionJwt:**  
+   `ASPNETCORE_URLS=http://127.0.0.1:9052`  
+   Leave **`Twitch:ExtensionSecret`** empty only if Backend is in **Development** (shared dev key); otherwise set the **same** base64 **`Twitch:ExtensionSecret`** on both.  
+   `dotnet run --project src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj`.
+5. Send the synthetic EventSub notification:  
+   `python3 .github/scripts/send_e2e_eventsub.py --url http://127.0.0.1:9051 --secret "<secret>" --user-id e2e-viewer-1 --login e2eviewer1 --text "!twgold E2EHero"`
+6. Fetch a token and call the API:  
+   `curl -s "http://127.0.0.1:9052/token?userId=e2e-viewer-1&displayName=E2EViewer"` → use **`access_token`** as **`Authorization: Bearer …`** on **`GET http://127.0.0.1:8080/api/pool/me`**.
+
+Full checklist: [`docs/E2E_AUTOMATION_TASKS.md`](../E2E_AUTOMATION_TASKS.md) (**Tier A Validation Checklist**).
+
+### Debugging mock services
+
+- **`MockEventSubWebhook` returns 401:** HMAC failed — align **`Twitch__EventSubSecret`** with **`--secret`** in **`send_e2e_eventsub.py`**; ensure the script’s JSON body is unchanged between signing and POST (compact JSON as in the script).
+- **Forward fails / 502 from mock:** Backend not listening on **`Backend:BaseUrl`** or wrong path; check mock logs for EBS **`StatusCode`**.
+- **`GET /api/pool/me` 401:** JWT signing key mismatch — in **Development**, both Backend and **MockExtensionJwt** must use empty **`ExtensionSecret`** (dev SHA256 fallback) **or** the same base64 secret; if **`Twitch:ExtensionClientId`** is set on Backend, set the same **`Twitch:ExtensionClientId`** on the mock so **`aud`** validates.
+- **Health checks:** **`GET /health`** on **9051** / **9052** should return JSON with **`status`** **`ok`**.
+
+### Environment variables (local E2E)
+
+| Variable | Component | Purpose |
+|----------|-----------|---------|
+| `ASPNETCORE_ENVIRONMENT` | Backend | **`Development`** for dev Extension JWT key when secret empty. |
+| `ASPNETCORE_URLS` | All ASP.NET processes | Bind addresses (**8080**, **9051**, **9052**). |
+| `ConnectionStrings__PostgreSQL` | Backend | Marten / PostgreSQL. |
+| `Mgm__ApiKey` | Backend | Desktop **`X-MGM-ApiKey`** routes (set for parity with Desktop tests). |
+| `Mgm__DevSkipSubscriberCheck` | Backend | **`true`** so synthetic subscriber payload enrolls without Helix. |
+| `Twitch__EventSubSecret` | Backend + MockEventSubWebhook | HMAC verification (empty = skip verification). |
+| `Backend__BaseUrl` | MockEventSubWebhook | EBS root URL for forward. |
+| `Twitch__ExtensionSecret` | Backend + MockExtensionJwt | Base64 symmetric key; empty + **Development** uses shared dev fallback string. |
+| `Twitch__ExtensionClientId` | Backend + MockExtensionJwt | Optional JWT **`aud`**; must match if set. |
 
 ## Additional Libraries
 

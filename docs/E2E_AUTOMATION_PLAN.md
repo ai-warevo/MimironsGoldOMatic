@@ -1,5 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation plan) -->
-<!-- Updated: 2026-04-05 (Tier A implementation) -->
+<!-- Updated: 2026-04-05 (Tier A validation + Tier B plan) -->
 
 # E2E automation plan (MVP-6): Chat → WoW → Helix
 
@@ -14,6 +14,8 @@ This document proposes how to automate the **full operator workflow** currently 
 - Desktop: `src/MimironsGoldOMatic.Desktop/`.
 - CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub). Other workflows may be added later.
 - Tier A mocks: `src/Mocks/MockEventSubWebhook/`, `src/Mocks/MockExtensionJwt/`.
+
+**CI tier labels (this repository):** **Tier A** is the current [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) job: **Postgres + Backend + mocks + synthetic EventSub → `GET /api/pool/me`**. **Tier B** is the **planned CI extension** with **MockHelixApi**, **SyntheticDesktop**, and a **configurable Helix base URL** (see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)). In **Section 1**, optional **real WoW + self-hosted** validation is **operational / full-stack** work—**not** the same as **CI Tier B**.
 
 ---
 
@@ -37,10 +39,11 @@ This aligns with **SC-001** steps 1–16 and the four segments in **Automated E2
 | Desktop WinAPI → WoW | **Manual** | **Mock** via **API-only choreography** in **CI**; real WinAPI on **manual/nightly** |
 | Helix `POST .../chat/messages` | **Manual** / real token | **Mock** HTTP server in **CI**; optional **live** job with broadcaster token |
 
-**Recommendation:** Treat **“fully automated in CI/CD”** as **two tiers**:
+**Recommendation:** Split **automation** into **CI phases** plus **optional real clients**:
 
-1. **Tier A — CI (GitHub-hosted):** Single process: Backend + Postgres (container) + **mocked outbound Helix** + **synthetic Desktop** (HTTP calls only, no WoW). Verifies **EBS state machine** through **`Sent`** and **Helix call attempted** (capture request body).
-2. **Tier B — Optional pipeline:** Self-hosted runner or manual **nightly**: real **WoW** + **Desktop** + **Dev Rig / test channel** for true UI and WinAPI validation.
+1. **CI Tier A (implemented):** Backend + Postgres (service container) + **MockEventSubWebhook** + **MockExtensionJwt**; verifies **pool enrollment** via synthetic **`channel.chat.message`** and **`GET /api/pool/me`** ([workflow](../.github/workflows/e2e-test.yml)).
+2. **CI Tier B (planned):** **MockHelixApi** + **SyntheticDesktop** (HTTP choreography) + **`HelixChatService`** configurable base URL; asserts path through **`Sent`** and captured **Helix** `POST` (see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)).
+3. **Operational / full-stack (optional):** Self-hosted or manual runs with real **WoW** + **Desktop** + **Dev Rig / test channel** for UI and WinAPI validation.
 
 ---
 
@@ -112,7 +115,9 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 
 ### Proposed workflow: `.github/workflows/e2e-test.yml`
 
-High-level **jobs** (all **Ubuntu** unless self-hosted Tier B):
+**As implemented (CI Tier A):** [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) is a **single job** (`e2e-tier-a`) with a **PostgreSQL 16 service container**, **not** the multi-job split in the table below. The table remains the **longer-term** layout (optional companion **`ci.yml`**, separate unit/integration jobs, future **dotnet test** E2E).
+
+High-level **jobs** (all **Ubuntu** unless self-hosted operational validation):
 
 | Job | Purpose | Needs Docker | Notes |
 |-----|---------|--------------|--------|
@@ -120,7 +125,7 @@ High-level **jobs** (all **Ubuntu** unless self-hosted Tier B):
 | **test-unit** | `dotnet test ... --filter Category=Unit` | No | Matches [`docs/MimironsGoldOMatic.Backend/ReadME.md`](MimironsGoldOMatic.Backend/ReadME.md). |
 | **test-integration** | `dotnet test ... --filter Category=Integration` | **Yes** (Testcontainers) | Same as today’s integration slice. |
 | **test-e2e-api** (new) | Tier A: Postgres + Backend host in test process + mock Helix | **Yes** | Runs after **test-integration** or in parallel if runners allow; longer timeout (e.g. 15–20 min). |
-| **test-e2e-full** (optional, `workflow_dispatch`) | Tier B | Self-hosted + Windows | Disabled by default; document secrets in repo settings. |
+| **test-e2e-full** (optional, `workflow_dispatch`) | Operational / full-stack (real WoW) | Self-hosted + Windows | Disabled by default; document secrets in repo settings. |
 
 **Dependencies:** `test-e2e-api` **needs** `build` (and ideally `test-integration` passing first to reuse confidence).
 
@@ -193,7 +198,7 @@ A **passed** Tier A **E2E** run should demonstrate:
 
 ## Tier A implementation (repository)
 
-**Status:** Partial — **EventSub relay + Extension JWT issuer + GitHub Actions** are implemented. **MockHelixApi** and **SyntheticDesktop** remain **out of scope** for this slice (see §8).
+**Status:** **Enrollment path complete in CI** — **EventSub relay + Extension JWT issuer + GitHub Actions** are implemented and documented ([runbook](#how-to-run-tier-a-e2e-tests-github-actions)). **MockHelixApi** and **SyntheticDesktop** are **CI Tier B** ([plan](#tier-b-implementation-plan-ci-extension)).
 
 ### MockEventSubWebhook (`src/Mocks/MockEventSubWebhook/`)
 
@@ -220,15 +225,134 @@ A **passed** Tier A **E2E** run should demonstrate:
 
 ---
 
+## How to run Tier A E2E tests (GitHub Actions)
+
+### Triggering the workflow
+
+1. Open a **pull request** whose **base branch** is **`main`** (or push commits to an existing PR targeting `main`).
+2. GitHub runs workflow **`E2E Tier A (mocks)`** (file [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml)) automatically on `pull_request` for **`main`**.
+3. In the PR, open **Checks** → select the workflow run → inspect the **`e2e-tier-a`** job log.
+
+**Manual re-run:** From the **Actions** tab, open the workflow run and use **Re-run jobs** (same commit).
+
+### Prerequisites
+
+| Prerequisite | Notes |
+|--------------|--------|
+| **Repository permissions** | **Actions** enabled for the repo; contributors need permission to run workflows (fork PRs may require maintainer approval for first-time contributors, per org settings). |
+| **GitHub Secrets** | **None required** for current Tier A: `E2E_EVENTSUB_SECRET` is set inline in the workflow `env` block (not a repo secret). |
+| **Branch** | Workflow is bound to **`pull_request` → `main`** only; PRs to other branches do **not** run this job unless the workflow `on:` section is extended. |
+| **Runner image** | **`ubuntu-latest`**: includes **.NET SDK** (via `setup-dotnet`), **Python 3**, **curl**; **PostgreSQL 16** is provided by the job **`services.postgres`** container (`postgres:16-alpine`), not the host OS. |
+
+### Expected execution time (order of magnitude)
+
+Times vary with cold cache and NuGet restore; values below are **typical** for a small solution on GitHub-hosted runners.
+
+| Stage | What happens | Typical duration |
+|--------|----------------|------------------|
+| **Job setup** | Checkout, `setup-dotnet` | ~30–90 s |
+| **PostgreSQL** | Service container start + `pg_isready` health checks | ~10–60 s (often toward the lower end once healthy) |
+| **Build** | `dotnet build … -c Release` (includes restore) | ~1–4 min |
+| **Backend start** | Background `dotnet run`; wait loop up to **90 × 1 s** | Usually a few seconds; **worst case ~90 s** if the app is slow to bind |
+| **MockEventSubWebhook** | Background `dotnet run`; health poll up to **60 s** | Usually under **10 s** |
+| **MockExtensionJwt** | Same pattern on **9052** | Usually under **10 s** |
+| **Send + verify** | Python script + `curl` + JSON assert | ~5–15 s |
+| **Total job** | End-to-end | Often **~5–12 min**; allow **~15–20 min** under load or cold cache |
+
+### Success criteria (passing Tier A)
+
+The job **passes** when all steps are green and, specifically:
+
+1. **Backend** accepts HTTP on **`http://127.0.0.1:8080`** within the wait loop.
+2. **MockEventSubWebhook** returns **`GET /health`** successfully on **`:9051`**.
+3. **MockExtensionJwt** returns **`GET /health`** successfully on **`:9052`**.
+4. **Python** [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) completes with exit code **0** (synthetic **`channel.chat.message`** accepted by the mock and forwarded to EBS).
+5. **`GET /api/pool/me`** with the issued Bearer token returns JSON with **`isEnrolled: true`** and **`characterName`** **`E2EHero`** (matching `!twgold E2EHero` in the script).
+
+On **failure**, the workflow runs a **Logs (on failure)** step with backend PID and a diagnostic **`curl`** to the backend root.
+
+---
+
+## Predictive issue analysis (Tier A CI)
+
+| Risk area | Root cause (likely) | Prevention | Troubleshooting |
+|-----------|---------------------|------------|-----------------|
+| **Ports 8080 / 9051 / 9052** | Another process on the runner binding the same ports (uncommon on clean `ubuntu-latest`, but possible if defaults change or multiple apps run). | Keep **loopback-only** URLs as in the workflow; avoid adding parallel jobs on the same job container that reuse these ports. | In failed logs, check “address already in use”; consider explicit `ASPNETCORE_URLS` or moving to ephemeral ports + config (future hardening). |
+| **HMAC / EventSub signature** | **Secret mismatch** between mock, Backend, and Python (`Twitch__EventSubSecret` vs `--secret`); **wrong signing payload** (must be `message-id + timestamp + raw body` bytes); **JSON canonicalization** differing between signer and verifier (Python uses `separators=(',', ':')`—body must match what EBS hashes). | Single source of truth: workflow `env.E2E_EVENTSUB_SECRET`; never log the secret. | Reproduce locally with the same secret and `send_e2e_eventsub.py`; compare **401** from mock vs EBS; enable Development logging on mock/EBS. |
+| **PostgreSQL service** | Container slow to become ready; wrong **`ConnectionStrings__PostgreSQL`** (host/port/db/user/password). | Workflow uses **`localhost:5432`** and matches **`POSTGRES_DB`/`PASSWORD`**; health check **`pg_isready`**. | Inspect **Services** logs in the Actions UI; verify Marten can connect (Backend would fail startup or first DB use). |
+| **Mock / Backend startup timeouts** | Heavy cold restore, AV, or hung `dotnet run`; DB migrations taking longer than the loop. | Add **`actions/cache`** for NuGet (see [Optimization and scalability](#optimization-and-scalability-ci)); keep `--no-build` after a successful Release build. | Increase wait loops only if justified; check whether Backend blocks before Kestrel listens. |
+| **Python script** | Missing **`python3`** (present on `ubuntu-latest`); wrong **`--url`**; HTTP errors from mock (signature or connection). | Pin runner image label in docs; script already uses stdlib only. | Run script locally against local mocks; print response body (script prints on **HTTPError**). |
+| **JWT / `GET /api/pool/me`** | **Signing key mismatch**: Backend **Development** uses SHA256 of **`mgm-dev-extension-secret-change-me`** when **`Twitch:ExtensionSecret`** is empty; **MockExtensionJwt** uses the same rule. **Production** config without secret would throw at startup—CI uses **Development**. | CI sets **`ASPNETCORE_ENVIRONMENT: Development`**; do not set **`Twitch__ExtensionClientId`** on the mock unless Backend validates **`aud`** with the same value. | Decode JWT at [jwt.io](https://jwt.io) (local only); verify claims include **`user_id`** matching enrollment **`chatter_user_id`**. |
+| **Enrollment assertion** | **`Mgm__DevSkipSubscriberCheck`** not set (subscriber rules); duplicate **`message_id`** dedupe; non-subscriber badge payload. | Workflow sets **`Mgm__DevSkipSubscriberCheck: "true"`**; Python sends subscriber **`badges`**. | Inspect **`GET /api/pool/me`** body in logs; query pool state via integration tests pattern if needed. |
+| **Fork PR workflows** | GitHub may not pass secrets to forks; this workflow uses **no** repo secrets today—low risk. | If later adding secrets, use **Environment** rules and document fork behavior. | Check workflow policy for **“Run workflows from fork pull requests”**. |
+
+---
+
+## Tier B Implementation Plan (CI extension)
+
+**Objective:** Extend CI so the **EBS payout path** is exercised **without WoW**: **SyntheticDesktop** issues the same HTTP sequence the real Desktop would, and **MockHelixApi** captures **`POST .../helix/chat/messages`** (or equivalent path under a configurable base URL). Aligns with [§6 Success criteria](#6-success-criteria) items **2–5** and tasks **C**/**D** in [E2E_AUTOMATION_TASKS.md](E2E_AUTOMATION_TASKS.md).
+
+### Dependencies on Tier A
+
+| Tier A component | Tier B dependency |
+|------------------|-------------------|
+| **Postgres service + Marten** | Required for full payout state and pool removal. |
+| **Backend on loopback** | All Desktop and Helix traffic targets the same EBS instance. |
+| **`e2e-test.yml` pattern** | Reuse **build → background processes → scripted HTTP**; add services/ports for **MockHelixApi** (and optionally fold **SyntheticDesktop** into the same job as a script or small process). |
+| **MockEventSubWebhook + signing** | Optional for Tier B if enrollment is seeded via Marten/API instead; keeping Tier A enrollment step preserves a **full vertical slice** from chat to **`Sent`**. |
+
+### Product / code changes
+
+1. **`TwitchOptions` + `HelixChatService`:** Add optional **`HelixApiBaseUrl`** (or **`HelixApiBase`**) — when empty, behavior matches today (**`https://api.twitch.tv/helix/chat/messages`** absolute URL). When set, **`Helix`** `HttpClient` uses that base and the service posts to a **relative** **`/helix/chat/messages`** (or documented path). Register the named client in [`Program.cs`](../src/MimironsGoldOMatic.Backend/Program.cs).
+2. **MockHelixApi:** New minimal ASP.NET Core (or console + Kestrel) project under `src/Mocks/`, e.g. **`MockHelixApi`**, exposing **`POST /helix/chat/messages`** (and **`GET /health`**), recording the last request body/headers for assertions (or logging JSON for CI `curl` + Python assert).
+3. **SyntheticDesktop:** Either a **`dotnet`** console tool (**`Mgm.Desktop.E2EHarness`**) or **bash/curl** steps in the workflow calling **`X-MGM-ApiKey`** endpoints: **`POST /api/payouts/{id}/confirm-acceptance`**, **`PATCH .../status`** (**`InProgress`**, then **`Sent`**) per [`DesktopPayoutsController`](../src/MimironsGoldOMatic.Backend/Controllers/DesktopPayoutsController.cs) and [tasks D1–D3](E2E_AUTOMATION_TASKS.md#d-syntheticdesktop).
+
+### Task breakdown (owners and estimates)
+
+| Task | Owner | Est. | Description |
+|------|--------|------|-------------|
+| **1** | Backend Dev | **0.5 d** | Create **`MockHelixApi`** project in **`src/Mocks/`**, wire into **`MimironsGoldOMatic.slnx`**, **`GET /health`**. |
+| **2** | Backend Dev | **0.5–1 d** | Implement **`POST /helix/chat/messages`** stub: validate **`Authorization`**, **`Client-Id`**, return **2xx**; expose last payload via **`GET /last-request`** or structured log for CI. |
+| **3** | DevOps / Backend Dev | **0.5–1 d** | Integrate into **`.github/workflows/e2e-test.yml`**: start mock on a free port (e.g. **9053**), set **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`** on Backend so **`HelixChatService`** actually calls Helix; assert Russian §11 message template. |
+| **4** | Backend Dev | **1–2 d** | **SyntheticDesktop**: ordered **`HttpClient`** calls (or shell) with **`Mgm__ApiKey`**; seed or reuse **pool + spin + `Pending`** (see [`RouletteVerifyCandidateIntegrationTests`](../src/MimironsGoldOMatic.Backend.Tests/RouletteVerifyCandidateIntegrationTests.cs)). |
+| **5** | Backend Dev | **1 d** | **`HelixChatService` + `TwitchOptions`**: configurable base URL; regression test that default URL unchanged when option unset. |
+| **6** | DevOps | **0.5 d** | Extend workflow: start **MockHelixApi**, run synthetic chain, fail job if Helix mock did not receive exactly one announcement (or match xUnit artifact strategy). |
+
+**Suggested order:** **Task 5** → **Tasks 1–2** → **Task 4** (against local Helix mock) → **Tasks 3 + 6** (CI wiring).
+
+---
+
+## Optimization and scalability (CI)
+
+### Speed
+
+- **Cache NuGet** with **`actions/cache`** on **`~/.nuget/packages`** keyed by `packages.lock.json` or hash of `*.csproj` — cuts restore time on warm runs.
+- **Parallelize** only when **resource isolation** is guaranteed: Tier A today is **one job** with **shared localhost** ports—splitting into parallel jobs would require **dynamic ports** or **Docker Compose** networking.
+- **Pre-built mock images**: optional **Docker** images for mocks to skip `dotnet run` JIT on every run; trade-off is image build/publish maintenance (team decision).
+
+### Cost savings
+
+- Run **full Tier A + Tier B** on **`schedule`** (nightly/weekly) and keep **PR** runs to **`dotnet build` + unit/integration** only, or run **Tier A** only on PRs to **`main`** (current behavior is already PR→`main` only).
+- **Path filters**: skip E2E when only `docs/` changes (if acceptable risk).
+- **Self-hosted runners** for repeated long suites if minute quotas are a concern.
+
+### Monitoring
+
+- Enable **GitHub Actions failure notifications** (repo **Settings → Notifications** / org rules).
+- Track **job duration** in Actions **Insights**; alert on **p95** regression after workflow changes.
+- Optionally **upload artifacts** (Backend + mock logs) on **always()** for flaky startup diagnosis (see [E2E Automation Tasks **V2**](E2E_AUTOMATION_TASKS.md#4-validation-tasks)).
+
+---
+
 ## 8. Next steps (implementation checklist)
 
-1. **Refactor `HelixChatService`** to use configurable Helix base URI (default production). **Verify** existing integration behavior unchanged.
-2. **Add `MockHelixHandler`** (or WireMock) and **one** **`E2E`/`Integration`** test: **`Sent`** → outbound HTTP asserted.
+1. **Refactor `HelixChatService`** — tracked as **Tier B Task 5**; see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension).
+2. **Add `MockHelixApi` + assertions** — **Tier B Tasks 1–3, 6**.
 3. **Optional:** Add in-repo **`EventSubSignatureHelper`** in **`Backend.Tests`** (or reuse **Python** script logic) for xUnit coverage of **`POST /api/twitch/eventsub`** with **non-empty** `EventSubSecret` — **Tier A CI** already exercises the full path via mocks + script.
-4. **Compose chained test** (or harness): enroll → spin tick → verify-candidate → confirm-acceptance → patch statuses → assert Helix mock + pool (**SyntheticDesktop** + **MockHelixApi**).
+4. **SyntheticDesktop + chained workflow** — **Tier B Task 4**; enroll → spin tick → verify-candidate → confirm-acceptance → patch statuses → assert Helix mock + pool.
 5. ~~**Create `.github/workflows/e2e-test.yml`**~~ **Done (Tier A).** Optionally add **`ci.yml`** for PR **build/test** only; add **`Category=E2E`** **dotnet test** when in-process E2E tests exist.
-6. **Document** test filters in **`docs/MimironsGoldOMatic.Backend/ReadME.md`** (updated for Tier A CI pointer).
-7. **Tier B (later):** self-hosted Windows job spec + operator runbook in **`docs/SETUP.md`** (no code change required in this plan).
+6. **Document** test filters in **`docs/MimironsGoldOMatic.Backend/ReadME.md`** (Tier A + local E2E).
+7. **Operational / full-stack (later):** self-hosted Windows job spec + operator runbook in **`docs/SETUP.md`** (real WoW + Desktop; outside **CI Tier B**).
 
 ---
 
@@ -238,3 +362,4 @@ A **passed** Tier A **E2E** run should demonstrate:
 |---------|------|------|
 | 1.0 | 2026-04-05 | Initial plan from **SC-001** + current Backend layout |
 | 1.1 | 2026-04-05 | **Tier A:** `MockEventSubWebhook`, `MockExtensionJwt`, `e2e-test.yml`, `send_e2e_eventsub.py` |
+| 1.2 | 2026-04-05 | **Tier A** runbook, predictive issues, **CI Tier B** plan, optimization notes; terminology aligned with workflow |
