@@ -378,16 +378,23 @@ jobs:
           docker push "${REPO}:latest"
 
       # GHCR defaults to private. Avoid list ?package_type=container (can return 400 Invalid argument for some orgs).
-      # Resolve package via GET .../packages/{container|docker}/{name}, then PATCH the same path segment as package_type.
+      # Resolve package via GET .../packages/{container|docker}/{name}, then PATCH the package's canonical .url from the JSON.
+      #
+      # Org-owned packages: GITHUB_TOKEN can GET metadata but PATCH visibility often returns 404 (insufficient package admin).
+      # Set optional secret GH_PACKAGES_VISIBILITY_PAT: classic PAT with write:packages (SSO authorized if the org uses SSO),
+      # or a fine-grained PAT with Packages write for this org. Org owner can also set the package to Public once in the UI.
       - name: Make Backend GHCR package public via API
+        env:
+          GH_PACKAGES_VISIBILITY_PAT: ${{ secrets.GH_PACKAGES_VISIBILITY_PAT }}
         run: |
           set -euo pipefail
           OWNER="${{ github.repository_owner }}"
           WANT="mimirons-goldomatic-backend"
-          TOKEN="${{ secrets.GITHUB_TOKEN }}"
           API="https://api.github.com"
           API_VERSION="2022-11-28"
-          HDR=(-H "Authorization: Bearer ${TOKEN}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: ${API_VERSION}")
+          # Prefer PAT for API calls when set (required for PATCH on many org GHCR packages); else workflow token.
+          PKG_TOKEN="${GH_PACKAGES_VISIBILITY_PAT:-${{ secrets.GITHUB_TOKEN }}}"
+          HDR=(-H "Authorization: Bearer ${PKG_TOKEN}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: ${API_VERSION}")
 
           enc() { python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=\"\"))" "$1"; }
 
@@ -485,24 +492,36 @@ jobs:
 
           ENC_PKG="$(enc "${PKG_NAME}")"
           if [ "${OWNER_TYPE}" = "Organization" ]; then
-            PATCH_URL="${API}/orgs/${OWNER}/packages/${PACKAGE_TYPE}/${ENC_PKG}"
+            GET_PKG_URL="${API}/orgs/${OWNER}/packages/${PACKAGE_TYPE}/${ENC_PKG}"
           else
-            PATCH_URL="${API}/user/packages/${PACKAGE_TYPE}/${ENC_PKG}"
+            GET_PKG_URL="${API}/user/packages/${PACKAGE_TYPE}/${ENC_PKG}"
           fi
-          echo "PATCH ${PATCH_URL}"
+          code="$(curl -sS -w "%{http_code}" -o /tmp/gh_pkg_full.json "${HDR[@]}" "${GET_PKG_URL}")"
+          if [ "${code}" != "200" ]; then
+            echo "::error::GET package (for canonical url) failed HTTP ${code} ${GET_PKG_URL}"
+            cat /tmp/gh_pkg_full.json || true
+            exit 1
+          fi
+          PKG_API_URL="$(jq -r .url /tmp/gh_pkg_full.json)"
+          echo "PATCH ${PKG_API_URL}"
 
           HTTP="$(curl -sS -w "%{http_code}" -o /tmp/gh_pkg_patch.json \
             -X PATCH \
             "${HDR[@]}" \
+            -H "Content-Type: application/json" \
             -d '{"visibility":"public"}' \
-            "${PATCH_URL}")"
+            "${PKG_API_URL}")"
 
           if [ "${HTTP}" = "200" ] || [ "${HTTP}" = "204" ]; then
             echo "GHCR package set to public (HTTP ${HTTP})."
             exit 0
           fi
 
-          echo "::error::PATCH failed HTTP ${HTTP}"
+          if [ "${HTTP}" = "404" ] && [ -z "${GH_PACKAGES_VISIBILITY_PAT:-}" ]; then
+            echo "::error::PATCH returned 404 with GITHUB_TOKEN. For organization-scoped GHCR packages, GitHub usually requires a PAT with permission to change package visibility (add repo or org secret GH_PACKAGES_VISIBILITY_PAT: classic write:packages, or fine-grained Packages write; authorize for SSO if applicable). Or set the package to Public once under Org → Packages → ${PKG_NAME} → Package settings."
+          else
+            echo "::error::PATCH failed HTTP ${HTTP}"
+          fi
           cat /tmp/gh_pkg_patch.json
           exit 1
 

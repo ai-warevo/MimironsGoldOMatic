@@ -6,7 +6,7 @@
 # "needs:" edges, so they run concurrently on the runner pool (subject to org concurrency limits).
 #
 # WoWAddon: LuaUnit tests in src/Tests/MimironsGoldOMatic.WoWAddon.Tests (python3 run_tests.py → lua run_tests.lua).
-# Backend: restores/tests the solution so both Backend.UnitTests and Backend.IntegrationTests run (Integration needs Docker).
+# Backend: restores/tests Backend.UnitTests + Backend.IntegrationTests only (full slnx includes net10.0-windows Desktop; Linux cannot restore WPF without excluding it). Desktop tests run in test-desktop (windows-latest).
 
 name: Unit and integration tests
 
@@ -46,12 +46,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p TestResults/backend
-          dotnet restore src/MimironsGoldOMatic.slnx
-          dotnet test src/MimironsGoldOMatic.slnx \
+          BACKEND_UT="src/Tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj"
+          BACKEND_IT="src/Tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj"
+          dotnet restore "$BACKEND_UT"
+          dotnet restore "$BACKEND_IT"
+          dotnet test "$BACKEND_UT" \
             --configuration Release \
             --no-restore \
             --verbosity normal \
-            --logger "trx;LogFileName=backend-tests.trx" \
+            --logger "trx;LogFileName=backend-unit-tests.trx" \
+            --results-directory "${GITHUB_WORKSPACE}/TestResults/backend"
+          dotnet test "$BACKEND_IT" \
+            --configuration Release \
+            --no-restore \
+            --verbosity normal \
+            --logger "trx;LogFileName=backend-integration-tests.trx" \
             --results-directory "${GITHUB_WORKSPACE}/TestResults/backend"
 
       - name: Upload Backend test results
@@ -88,9 +97,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           New-Item -ItemType Directory -Force -Path TestResults/desktop | Out-Null
-          # Release Desktop publish profile uses RuntimeIdentifier=win-x64; restore that graph first so test projects build.
-          dotnet restore src/MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj -r win-x64
-          dotnet restore src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj
+          # Release Desktop sets RuntimeIdentifier=win-x64; restore the test project once with -r win-x64 so Desktop's
+          # project.assets.json keeps net10.0-windows/win-x64 (a second restore without -r overwrites and breaks NETSDK1047).
+          dotnet restore src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj -r win-x64
           dotnet test src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj `
             --configuration Release `
             --no-restore `

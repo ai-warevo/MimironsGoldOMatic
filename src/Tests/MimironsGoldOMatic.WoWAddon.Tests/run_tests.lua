@@ -12,15 +12,19 @@ if arg and arg[0] and arg[0] ~= "" then
   end
 end
 
-package.path = TEST_ROOT .. "lib/?.lua;" .. package.path
+-- When arg[0] is bare "run_tests.lua", TEST_ROOT is "." — concatenating "." .. "lib/?.lua"
+-- yields ".lib/?.lua" (wrong). Use a prefix that is either "" or a directory ending in / or \.
+local ROOT_PREFIX = (TEST_ROOT == "." and "" or TEST_ROOT)
 
-CORE_LUA = TEST_ROOT .. "../MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.Core.lua"
-ADDON_LUA = TEST_ROOT .. "../MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua"
-MOCK_LUA = TEST_ROOT .. "wow_api_mock.lua"
+package.path = ROOT_PREFIX .. "lib/?.lua;" .. package.path
+
+CORE_LUA = ROOT_PREFIX .. "../MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.Core.lua"
+ADDON_LUA = ROOT_PREFIX .. "../MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua"
+MOCK_LUA = ROOT_PREFIX .. "wow_api_mock.lua"
 
 local lu = require("luaunit")
 
-dofile(TEST_ROOT .. "UnitTests/core_tests.lua")
-dofile(TEST_ROOT .. "IntegrationTests/addon_integration_tests.lua")
+dofile(ROOT_PREFIX .. "UnitTests/core_tests.lua")
+dofile(ROOT_PREFIX .. "IntegrationTests/addon_integration_tests.lua")
 
 os.exit(lu.LuaUnit.run())
