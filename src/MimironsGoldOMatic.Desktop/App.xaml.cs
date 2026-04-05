@@ -35,6 +35,7 @@ public partial class App : Application
         services.AddSingleton(sp => new EbsDesktopClient(
             sp.GetRequiredService<IHttpClientFactory>(),
             () => sp.GetRequiredService<DesktopConnectionContext>().GetConnection()));
+        services.AddSingleton<IEbsDesktopClient>(sp => sp.GetRequiredService<EbsDesktopClient>());
         services.AddSingleton<WoWInjectionCoordinator>();
         services.AddSingleton<MainViewModel>();
 

@@ -8,4 +8,7 @@ public sealed class DesktopConnectionContext
     public string? ApiKey { get; set; }
 
     public (string BaseUrl, string ApiKey) GetConnection() => (Settings.BaseUrl, ApiKey ?? "");
+
+    /// <summary>UI-306 / SPEC: poll interval clamped to [5, 600] seconds.</summary>
+    public int GetClampedPollIntervalSeconds() => Math.Clamp(Settings.PollIntervalSeconds, 5, 600);
 }

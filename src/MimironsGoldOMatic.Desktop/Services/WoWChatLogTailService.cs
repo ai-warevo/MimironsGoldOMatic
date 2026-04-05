@@ -17,7 +17,7 @@ public sealed partial class WoWChatLogTailService : IDisposable
     };
 
     private readonly DesktopConnectionContext _connection;
-    private readonly EbsDesktopClient _api;
+    private readonly IEbsDesktopClient _api;
     private readonly PayoutSnapshotCache _payouts;
     private readonly Action<string> _deliveryLog;
     private readonly System.Timers.Timer _timer = new(750) { AutoReset = true };
@@ -30,7 +30,7 @@ public sealed partial class WoWChatLogTailService : IDisposable
 
     public WoWChatLogTailService(
         DesktopConnectionContext connection,
-        EbsDesktopClient api,
+        IEbsDesktopClient api,
         PayoutSnapshotCache payouts,
         Action<string> deliveryLog)
     {
@@ -112,7 +112,7 @@ public sealed partial class WoWChatLogTailService : IDisposable
         }
     }
 
-    private async Task ProcessLineAsync(string line, CancellationToken ct)
+    internal async Task ProcessLineAsync(string line, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(line))
             return;

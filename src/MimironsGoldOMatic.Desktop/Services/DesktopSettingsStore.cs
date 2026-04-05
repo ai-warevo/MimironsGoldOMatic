@@ -13,8 +13,16 @@ public sealed class DesktopSettingsStore
     public static string DataDirectory =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MimironsGoldOMatic");
 
-    private static string SettingsPath => Path.Combine(DataDirectory, "settings.json");
-    private static string ApiKeyPath => Path.Combine(DataDirectory, "api-key.dpapi");
+    private readonly string _dataDirectory;
+
+    /// <param name="dataDirectory">Optional override for tests; defaults to <see cref="DataDirectory"/>.</param>
+    public DesktopSettingsStore(string? dataDirectory = null)
+    {
+        _dataDirectory = dataDirectory ?? DataDirectory;
+    }
+
+    private string SettingsPath => Path.Combine(_dataDirectory, "settings.json");
+    private string ApiKeyPath => Path.Combine(_dataDirectory, "api-key.dpapi");
 
     public DesktopUserSettings LoadSettings()
     {
@@ -33,7 +41,7 @@ public sealed class DesktopSettingsStore
 
     public void SaveSettings(DesktopUserSettings settings)
     {
-        Directory.CreateDirectory(DataDirectory);
+        Directory.CreateDirectory(_dataDirectory);
         File.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings, JsonOpts));
     }
 
@@ -55,7 +63,7 @@ public sealed class DesktopSettingsStore
 
     public void SaveApiKey(string apiKey)
     {
-        Directory.CreateDirectory(DataDirectory);
+        Directory.CreateDirectory(_dataDirectory);
         var plain = Encoding.UTF8.GetBytes(apiKey);
         var encrypted = ProtectedData.Protect(plain, null, DataProtectionScope.CurrentUser);
         File.WriteAllBytes(ApiKeyPath, encrypted);

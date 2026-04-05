@@ -88,12 +88,21 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           New-Item -ItemType Directory -Force -Path TestResults/desktop | Out-Null
+          # Release Desktop publish profile uses RuntimeIdentifier=win-x64; restore that graph first so test projects build.
+          dotnet restore src/MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj -r win-x64
+          dotnet restore src/tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj
           dotnet restore src/MimironsGoldOMatic.Desktop.Tests/MimironsGoldOMatic.Desktop.Tests.csproj
+          dotnet test src/tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj `
+            --configuration Release `
+            --no-restore `
+            --verbosity normal `
+            --logger "trx;LogFileName=desktop-unit-tests.trx" `
+            --results-directory "$env:GITHUB_WORKSPACE/TestResults/desktop"
           dotnet test src/MimironsGoldOMatic.Desktop.Tests/ `
             --configuration Release `
             --no-restore `
             --verbosity normal `
-            --logger "trx;LogFileName=desktop-tests.trx" `
+            --logger "trx;LogFileName=desktop-smoke-tests.trx" `
             --results-directory "$env:GITHUB_WORKSPACE/TestResults/desktop"
 
       - name: Upload Desktop test results

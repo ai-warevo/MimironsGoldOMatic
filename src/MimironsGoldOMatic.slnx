@@ -6,5 +6,6 @@
   <Project Path="tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj" />
   <Project Path="MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj" />
   <Project Path="MimironsGoldOMatic.Desktop.Tests/MimironsGoldOMatic.Desktop.Tests.csproj" />
+  <Project Path="tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj" />
   <Project Path="MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj" />
 </Solution>
