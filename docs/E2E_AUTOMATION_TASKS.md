@@ -1,5 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation tasks) -->
-<!-- Updated: 2026-04-05 (Tier A validation + Tier B plan) -->
+<!-- Updated: 2026-04-05 (Sequential release CI/CD pipeline) -->
 
 # E2E automation tasks (MVP-6)
 
@@ -7,7 +7,7 @@
 
 Tasks to implement the E2E automation plan described in [E2E Automation Plan](E2E_AUTOMATION_PLAN.md).
 
-- **Current status:** **CI Tier A:** **`src/Mocks/MockEventSubWebhook`**, **`src/Mocks/MockExtensionJwt`**, **`.github/workflows/e2e-test.yml`**, **`.github/scripts/send_e2e_eventsub.py`** — synthetic chat → EBS pool → **`GET /api/pool/me`** in **CI** (see [How to run Tier A E2E tests](E2E_AUTOMATION_PLAN.md#how-to-run-tier-a-e2e-tests-github-actions)). **Not started (CI Tier B):** **MockHelixApi**, **SyntheticDesktop**, configurable **Helix** base URL in **`HelixChatService`**; optional in-repo **xUnit** E2E chain (A1–A3, B2–B3).
+- **Current status:** **CI Tier A:** **`src/Mocks/MockEventSubWebhook`**, **`src/Mocks/MockExtensionJwt`**, **`.github/workflows/e2e-test.yml`**, **`.github/scripts/send_e2e_eventsub.py`** — synthetic chat → EBS pool → **`GET /api/pool/me`** on **PRs to `main`** with a **scoped** dotnet build (no Desktop / addon / Extension / test projects). **CD:** **`.github/workflows/release.yml`** — parallel **Desktop / WoW addon / Twitch Extension** ZIP artifacts + **Backend** GHCR image, then sequential **`create-release`** (see [CI/CD Pipeline Architecture](E2E_AUTOMATION_PLAN.md#cicd-pipeline-architecture)). **Not started (CI Tier B):** **MockHelixApi**, **SyntheticDesktop**, configurable **Helix** base URL in **`HelixChatService`**; optional in-repo **xUnit** E2E chain (A1–A3, B2–B3).
 - **Target completion:** **CI Tier B** extends automation through **`Sent`** + captured Helix announcement. **Operational** real WoW + Desktop remains optional (see plan **§1** / [Optimization](E2E_AUTOMATION_PLAN.md#optimization-and-scalability-ci)).
 
 **Normative product behavior:** unchanged — still defined in **`docs/SPEC.md`**. This file is execution tracking only.
@@ -18,6 +18,8 @@ Tasks to implement the E2E automation plan described in [E2E Automation Plan](E2
 
 Use this before relying on **CI Tier A** as a gate or when debugging a red workflow. Details and mitigations: [Predictive issue analysis](E2E_AUTOMATION_PLAN.md#predictive-issue-analysis-tier-a-ci).
 
+- [ ] Confirm the workflow run is a **`pull_request`** targeting **`main`** (Tier A does **not** run on arbitrary branches unless **`on:`** is extended).
+- [ ] Confirm **PR validation** builds only **Shared + Backend + both mocks** (no **Desktop**, **WoW addon**, **Twitch Extension**, **Backend.Tests**) — see **`Restore and build (Backend + mocks only)`** in [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml).
 - [ ] Confirm **PostgreSQL 16** runs in the job via the **`services.postgres`** container (**`postgres:16-alpine`**) and **`pg_isready`** health checks succeed (not the host image—**`ubuntu-latest`** does not need a local `postgres` package).
 - [ ] Verify **mock services** start: **`GET http://127.0.0.1:9051/health`** (**MockEventSubWebhook**) and **`GET http://127.0.0.1:9052/health`** (**MockExtensionJwt**) return **200** with JSON **`status`** / **`service`** fields.
 - [ ] Test **HMAC** end-to-end: run [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) with the **same** `--secret` as **`Twitch__EventSubSecret`** on mock + Backend; expect **no** **401** from mock or EBS.
@@ -83,6 +85,11 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 |---|------|--------|------|--------|
 | V1 | Encode [E2E Automation Plan §6 success criteria](E2E_AUTOMATION_PLAN.md#6-success-criteria) as assertions in one **Tier A** test class. | Backend Dev | 0.5 day | |
 | V2 | CI job: publish **trx** / test logs as artifacts; fail job on unhandled host exceptions (standard xUnit + `--logger`). | DevOps | 0.5 day | |
+| V3 | **Release pipeline:** verify **`build-wowaddon`** produces **`wow-addon-release`** with **`MimironsGoldOMatic.toc`**, **`MimironsGoldOMatic.lua`**, **`README.txt`**, and sane addon folder layout inside the ZIP. | DevOps | 0.25 day | See [`.github/workflows/release.yml`](../.github/workflows/release.yml). |
+| V4 | **Release pipeline:** verify **`build-twitch-extension`** runs **`npm ci`** + **`npm run build`** and **`twitch-extension-release`** contains built **`dist/`** assets + **`README.txt`**. | DevOps / Frontend Dev | 0.25 day | |
+| V5 | **Release pipeline:** verify **`build-backend-docker`** pushes **`ghcr.io/<owner-lowercase>/mimirons-goldomatic-backend:<tag>`** and **`:latest`**, and that **`create-release`** notes include the image lines + digest when present. | DevOps | 0.25 day | Confirm org **Packages** visibility and **`GITHUB_TOKEN`** scopes. |
+| V6 | **Release pipeline:** validate **GitHub Release** assets: all three ZIPs, **`SHA256SUMS.txt`**, tag matches **`RELEASE_VERSION`**, notes list commits since last tag. | DevOps / Release manager | 0.25 day | |
+| V7 | **Release pipeline:** confirm **`create-release`** shows **`needs:`** all four build jobs — a failed **Desktop**, **addon**, **Extension**, or **Docker** job must **skip** release creation. | DevOps | 0.1 day | |
 
 ---
 
@@ -121,3 +128,4 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 | 1.0 | 2026-04-05 | Initial tasks from [E2E Automation Plan](E2E_AUTOMATION_PLAN.md) |
 | 1.1 | 2026-04-05 | Tier A mocks + **`e2e-test.yml`** + Python sender; tasks file status updated |
 | 1.2 | 2026-04-05 | **Tier A Validation Checklist**; **CI Tier A / CI Tier B** wording aligned with [E2E_AUTOMATION_PLAN.md](E2E_AUTOMATION_PLAN.md) |
+| 1.3 | 2026-04-05 | PR scoped Tier A build; **`release.yml`** validation tasks (**V3–V7**); cross-link to [CI/CD Pipeline Architecture](E2E_AUTOMATION_PLAN.md#cicd-pipeline-architecture) |

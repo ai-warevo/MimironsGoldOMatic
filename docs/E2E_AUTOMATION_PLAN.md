@@ -1,5 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation plan) -->
-<!-- Updated: 2026-04-05 (Tier A validation + Tier B plan) -->
+<!-- Updated: 2026-04-05 (Sequential release CI/CD pipeline) -->
 
 # E2E automation plan (MVP-6): Chat → WoW → Helix
 
@@ -12,7 +12,7 @@ This document proposes how to automate the **full operator workflow** currently 
 - Backend (EBS): `src/MimironsGoldOMatic.Backend/` — **not** `MimironsGoldOMatic.WEBAPI.Backend`.
 - WoW addon: `src/MimironsGoldOMatic.WoWAddon/`.
 - Desktop: `src/MimironsGoldOMatic.Desktop/`.
-- CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub). Other workflows may be added later.
+- CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
 - Tier A mocks: `src/Mocks/MockEventSubWebhook/`, `src/Mocks/MockExtensionJwt/`.
 
 **CI tier labels (this repository):** **Tier A** is the current [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) job: **Postgres + Backend + mocks + synthetic EventSub → `GET /api/pool/me`**. **Tier B** is the **planned CI extension** with **MockHelixApi**, **SyntheticDesktop**, and a **configurable Helix base URL** (see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)). In **Section 1**, optional **real WoW + self-hosted** validation is **operational / full-stack** work—**not** the same as **CI Tier B**.
@@ -144,6 +144,82 @@ High-level **jobs** (all **Ubuntu** unless self-hosted operational validation):
 
 ---
 
+## CI/CD Pipeline Architecture
+
+This section describes the **split** between **fast PR validation** (Tier A E2E) and **post-merge release** (all shipping components). Normative workflow files: [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml), [`.github/workflows/release.yml`](../.github/workflows/release.yml).
+
+### Workflow A — `e2e-test.yml` (fast PR validation)
+
+| Item | Detail |
+|------|--------|
+| **Trigger** | `pull_request` targeting **`main`** only. |
+| **Runner** | `ubuntu-latest`. |
+| **Build scope** | **Shared + Backend + MockEventSubWebhook + MockExtensionJwt** only (excludes **Desktop**, **Backend.Tests**, **WoW addon**, **Twitch Extension**) for shorter wall time and fewer prerequisites. |
+| **Data plane** | PostgreSQL **16** service container (unchanged health / port / credentials pattern). |
+| **Runtime** | Backend + both mocks on loopback; **Python** [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) + **`curl`** assertions unchanged from Tier A. |
+| **Proof** | Synthetic **`channel.chat.message`** → **`GET /api/pool/me`** enrollment check (`E2EHero`). |
+| **Caching** | Optional **NuGet** cache (`~/.nuget/packages`, key from `src/**/*.csproj`) — see workflow comments. |
+
+### Workflow B — `release.yml` (full build, artifacts, GHCR, GitHub Release)
+
+| Trigger | When it runs |
+|---------|----------------|
+| **`push` to `main`** | After a PR merge (or direct push) to **`main`**. |
+| **`workflow_dispatch`** | Emergency / manual run; optional **`version`** input (`1.2.3` without `v`) overrides the default auto tag **`v0.0.<run_number>`**. |
+
+**Parallel jobs (1–4)** — no cross-dependencies; all use the same **resolved `RELEASE_VERSION`** logic for consistent ZIP names and image tags.
+
+| Job | Runner | Component | Outputs |
+|-----|--------|-----------|---------|
+| **`build-desktop`** | `windows-latest` | **MimironsGoldOMatic.Desktop** (`dotnet publish`, `win-x64`, framework-dependent) | ZIP **`MimironsGoldOMatic-Desktop-<RELEASE_VERSION>-win.zip`** + embedded **`README.txt`** → artifact **`desktop-release`** |
+| **`build-wowaddon`** | `ubuntu-latest` | **`src/MimironsGoldOMatic.WoWAddon`** (`.toc`, `.lua`, manifest text; future locale folders can be added to the same pack step) | ZIP **`WoWAddon-<RELEASE_VERSION>.zip`** + **`README.txt`** → **`wow-addon-release`** |
+| **`build-twitch-extension`** | `ubuntu-latest` | **`src/MimironsGoldOMatic.TwitchExtension`** — `npm ci`, `npm run build` (Vite) | ZIP **`TwitchExtension-<RELEASE_VERSION>.zip`** containing **`dist/`** + **`README.txt`** → **`twitch-extension-release`** |
+| **`build-backend-docker`** | `ubuntu-latest` | **Backend** Docker image from [`src/MimironsGoldOMatic.Backend/Dockerfile`](../src/MimironsGoldOMatic.Backend/Dockerfile) (build context **`src/`**) | Push **`ghcr.io/<owner-lowercase>/mimirons-goldomatic-backend:<RELEASE_VERSION>`** and **`:latest`** (OIDC/`GITHUB_TOKEN` with `packages: write`) |
+
+**Sequential job (5)** — **must not start** until **all four** build jobs succeed (`needs:`).
+
+| Job | Runner | Depends on | Behavior |
+|-----|--------|------------|----------|
+| **`create-release`** | `ubuntu-latest` | **`build-desktop`**, **`build-wowaddon`**, **`build-twitch-extension`**, **`build-backend-docker`** | Downloads **`desktop-release`**, **`wow-addon-release`**, **`twitch-extension-release`**; writes **`SHA256SUMS.txt`** for all ZIPs; builds release notes from **`git log`** since previous tag (fallback: last 50 commits); creates **GitHub Release** tagged **`RELEASE_VERSION`**; attaches ZIPs + checksum file; body links **GHCR** repo, tags, and image **digest** (when provided by the Docker push step). |
+
+**Pipeline flow (text diagram):**
+
+```text
+Push to main (or workflow_dispatch)
+        |
+        +--> [build-desktop] (windows-latest) ------> artifact: desktop-release
+        |
+        +--> [build-wowaddon] (ubuntu-latest) ------> artifact: wow-addon-release
+        |
+        +--> [build-twitch-extension] (ubuntu-latest) -> artifact: twitch-extension-release
+        |
+        +--> [build-backend-docker] (ubuntu-latest) -> GHCR image + digest
+        |
+        +------------------------- (all four succeeded) -------------------------+
+                                                                                 |
+                                                                                 v
+                                                                    [create-release]
+                                                         (downloads ZIPs, SHA256SUMS,
+                                                          GitHub Release + notes)
+```
+
+### Benefits of this split
+
+- **Cost / time:** PRs avoid **Windows** Desktop builds, **npm** Extension builds, and **Docker** publish unless merging to **`main`**.
+- **Separation of concerns:** Tier A proves the **chat → pool** contract; release packaging stays in **`release.yml`**.
+- **Completeness:** One **GitHub Release** bundles **Desktop + addon + Extension** ZIPs and documents the **Backend** image.
+- **Parallelism:** Independent build jobs minimize wall-clock time before the release step.
+- **Safety:** **`create-release`** runs **only after** every build/publish job has passed, so partial failures do not publish a “complete” release.
+
+### Team discussion hooks
+
+- **Versioning:** Default **`v0.0.<run_number>`** on **`main`** pushes is predictable but may not match marketing semver; **`workflow_dispatch`** allows explicit **`1.2.3`**. Alternatives: tag-only releases, `VERSION` file in repo, or GitVersion.
+- **Artifact retention:** Workflow uploads use **90-day** retention (tunable); align with compliance and storage budgets.
+- **GHCR permissions:** Package visibility (public vs private) and org **OIDC** / token policies should match how streamers/operators pull images.
+- **Failed build jobs:** Any failure in jobs **1–4** skips **`create-release`** by design — confirm this is the desired **“all green or no release”** policy.
+
+---
+
 ## 5. Prerequisites
 
 ### Accounts and identities (Tier B / live)
@@ -217,7 +293,7 @@ A **passed** Tier A **E2E** run should demonstrate:
 ### CI workflow (`.github/workflows/e2e-test.yml`)
 
 - **Trigger:** `pull_request` to **`main`**.
-- **Steps (summary):** Start **PostgreSQL 16** service → build **`MimironsGoldOMatic.slnx`** → run **Backend** (`Development`, shared `Twitch:EventSubSecret`) → run both mocks → **Python** [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) posts a synthetic **`channel.chat.message`** to the mock → assert **`GET /api/pool/me`** with JWT shows **`isEnrolled: true`** and expected **`characterName`** (`!twgold E2EHero`).
+- **Steps (summary):** Start **PostgreSQL 16** service → **scoped** `dotnet build` (**Shared + Backend + both mocks** only) → run **Backend** (`Development`, shared `Twitch:EventSubSecret`) → run both mocks → **Python** [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) posts a synthetic **`channel.chat.message`** to the mock → assert **`GET /api/pool/me`** with JWT shows **`isEnrolled: true`** and expected **`characterName`** (`!twgold E2EHero`).
 
 ### E2E script
 
@@ -252,12 +328,12 @@ Times vary with cold cache and NuGet restore; values below are **typical** for a
 |--------|----------------|------------------|
 | **Job setup** | Checkout, `setup-dotnet` | ~30–90 s |
 | **PostgreSQL** | Service container start + `pg_isready` health checks | ~10–60 s (often toward the lower end once healthy) |
-| **Build** | `dotnet build … -c Release` (includes restore) | ~1–4 min |
+| **Build** | Scoped `dotnet build` (Shared + Backend + mocks) `-c Release` (includes restore) | Often **~1–3 min** (typically faster than full solution) |
 | **Backend start** | Background `dotnet run`; wait loop up to **90 × 1 s** | Usually a few seconds; **worst case ~90 s** if the app is slow to bind |
 | **MockEventSubWebhook** | Background `dotnet run`; health poll up to **60 s** | Usually under **10 s** |
 | **MockExtensionJwt** | Same pattern on **9052** | Usually under **10 s** |
 | **Send + verify** | Python script + `curl` + JSON assert | ~5–15 s |
-| **Total job** | End-to-end | Often **~5–12 min**; allow **~15–20 min** under load or cold cache |
+| **Total job** | End-to-end | With NuGet cache warm, often **under ~5 min**; allow **~10–15 min** on cold cache or runner load |
 
 ### Success criteria (passing Tier A)
 
@@ -363,3 +439,4 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | 1.0 | 2026-04-05 | Initial plan from **SC-001** + current Backend layout |
 | 1.1 | 2026-04-05 | **Tier A:** `MockEventSubWebhook`, `MockExtensionJwt`, `e2e-test.yml`, `send_e2e_eventsub.py` |
 | 1.2 | 2026-04-05 | **Tier A** runbook, predictive issues, **CI Tier B** plan, optimization notes; terminology aligned with workflow |
+| 1.3 | 2026-04-05 | **CI/CD Pipeline Architecture:** `e2e-test.yml` scoped PR build; **`release.yml`** parallel builds + sequential **`create-release`**; GHCR Backend image |

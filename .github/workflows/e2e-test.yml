@@ -1,4 +1,12 @@
 # Created: 2026-04-05 (Tier A E2E mocks)
+# Updated: 2026-04-05 (PR-only scoped build: Backend + mocks; NuGet cache)
+#
+# Optimization / ops notes (Tier A):
+# - NuGet: actions/cache on ~/.nuget/packages (keyed by src/**/*.csproj) cuts restore time on warm runners.
+# - Self-hosted runners: optional for heavier future Tier B jobs or org minute limits; keep ubuntu-latest for portability.
+# - Artifacts: Tier A does not upload binaries; if adding trx/log uploads, set retention-days to match org policy.
+# - Future matrix: split unit/integration vs E2E only after dynamic ports or Compose networking (Tier A uses fixed loopback ports).
+#
 # Tier A: Backend + Postgres + MockEventSubWebhook (relay) + MockExtensionJwt; synthetic EventSub chat → pool enrollment → GET /api/pool/me
 name: E2E Tier A (mocks)
 
@@ -36,8 +44,23 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore and build solution
-        run: dotnet build src/MimironsGoldOMatic.slnx -c Release
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      # PR fast path: build Shared + Backend + Tier A mocks only (no Desktop, WoW addon, Twitch Extension, test projects).
+      # One project per invocation for MSBuild compatibility across runner images.
+      - name: Restore and build (Backend + mocks only)
+        run: |
+          set -e
+          dotnet build src/MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj -c Release
+          dotnet build src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj -c Release
+          dotnet build src/Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj -c Release
+          dotnet build src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj -c Release
 
       - name: Start Backend (background)
         env:
