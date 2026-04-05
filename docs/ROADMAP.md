@@ -263,7 +263,7 @@ Acting as **[Frontend/Twitch Expert]**:
 
 **Status — MVP-6 (verification split):**
 
-- **Automated (in place):** `src/tests/MimironsGoldOMatic.Backend.UnitTests` — xUnit, **PostgreSQL via Testcontainers** (Docker required for **Integration** category), plus **Unit** tests (no Docker) for time/spin-phase and **`!twgold`** line parsing. Integration coverage includes MediatR/HTTP paths aligned with the bullets above (claim rules, **`verify-candidate`**, expiration sweep, **`PATCH` → `Sent`** pool removal). See `docs/MimironsGoldOMatic.Backend/ReadME.md` §Automated tests.
+- **Automated (in place):** `src/Tests/MimironsGoldOMatic.Backend.UnitTests` — xUnit, **PostgreSQL via Testcontainers** (Docker required for **Integration** category), plus **Unit** tests (no Docker) for time/spin-phase and **`!twgold`** line parsing. Integration coverage includes MediatR/HTTP paths aligned with the bullets above (claim rules, **`verify-candidate`**, expiration sweep, **`PATCH` → `Sent`** pool removal). See `docs/MimironsGoldOMatic.Backend/ReadME.md` §Automated tests.
 - **Manual (required today):** The **full E2E** path **Twitch chat → EventSub → … → WoW client → `WoWChatLog.txt` → Desktop → Helix §11 announcement** is **not** automated in **CI/CD**. Operators validate it using **`docs/INTERACTION_SCENARIOS.md`** (e.g. SC-001, SC-005) and live/Dev Rig setup. Step-by-step mapping of manual vs target automation: **[Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)**.
 
 **Next steps (MVP-6):**

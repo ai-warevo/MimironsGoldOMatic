@@ -15,19 +15,19 @@ From the repository root.
 
 ```powershell
 dotnet restore src/MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj -r win-x64
-dotnet test src/tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj --configuration Release --no-restore
+dotnet test src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj --configuration Release --no-restore
 ```
 
 **Debug** (no RID restore needed):
 
 ```powershell
-dotnet test src/tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj --configuration Debug
+dotnet test src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj --configuration Debug
 ```
 
 With normal verbosity and TRX (for CI), after the **Release** restore above:
 
 ```powershell
-dotnet test src/tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj `
+dotnet test src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj `
   --configuration Release `
   --no-restore `
   --verbosity normal `
@@ -37,7 +37,7 @@ dotnet test src/tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.De
 Run a single class:
 
 ```powershell
-dotnet test src/tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj `
+dotnet test src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj `
   --filter "FullyQualifiedName~ReceiveGoldCommandChunkerTests"
 ```
 

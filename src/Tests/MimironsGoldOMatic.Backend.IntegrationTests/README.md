@@ -25,13 +25,13 @@ Typical local runs need **no** extra variables.
 From the repository root:
 
 ```bash
-dotnet test src/tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj
+dotnet test src/Tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj
 ```
 
 Integration-only filter (same project; all tests here are integration-style):
 
 ```bash
-dotnet test src/tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj --filter "Category=Integration"
+dotnet test src/Tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj --filter "Category=Integration"
 ```
 
 From `src/` using the solution:
@@ -51,9 +51,9 @@ Performance smoke tests are tagged `Kind=Performance` (see `CriticalPathPerforma
 ## Coverage (optional)
 
 ```bash
-dotnet test src/tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj \
+dotnet test src/Tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj \
   --configuration Release \
-  --settings src/tests/MimironsGoldOMatic.Backend.IntegrationTests/coverlet.runsettings \
+  --settings src/Tests/MimironsGoldOMatic.Backend.IntegrationTests/coverlet.runsettings \
   --collect:"XPlat Code Coverage" \
   --results-directory ./TestResults/coverage-integration
 ```

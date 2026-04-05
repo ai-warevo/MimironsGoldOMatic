@@ -27,13 +27,13 @@ End-to-end checks that the **Desktop HTTP client** (`EbsDesktopClient` / `IEbsDe
 From the repository root:
 
 ```bash
-dotnet test src/tests/MimironsGoldOMatic.Desktop.IntegrationTests/MimironsGoldOMatic.Desktop.IntegrationTests.csproj
+dotnet test src/Tests/MimironsGoldOMatic.Desktop.IntegrationTests/MimironsGoldOMatic.Desktop.IntegrationTests.csproj
 ```
 
 Filter:
 
 ```bash
-dotnet test src/tests/MimironsGoldOMatic.Desktop.IntegrationTests/MimironsGoldOMatic.Desktop.IntegrationTests.csproj --filter "Category=Integration"
+dotnet test src/Tests/MimironsGoldOMatic.Desktop.IntegrationTests/MimironsGoldOMatic.Desktop.IntegrationTests.csproj --filter "Category=Integration"
 ```
 
 With the solution (Backend + Desktop integration together on a Docker-capable agent):

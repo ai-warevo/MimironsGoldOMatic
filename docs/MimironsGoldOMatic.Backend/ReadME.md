@@ -52,7 +52,7 @@
 
 ## Automated tests (MVP-6)
 
-- Project: **`src/tests/MimironsGoldOMatic.Backend.UnitTests`** (referenced from **`src/MimironsGoldOMatic.slnx`**). See **`src/tests/MimironsGoldOMatic.Backend.UnitTests/README.md`** for coverage scope and **`coverlet.runsettings`**.
+- Project: **`src/Tests/MimironsGoldOMatic.Backend.UnitTests`** (referenced from **`src/MimironsGoldOMatic.slnx`**). See **`src/Tests/MimironsGoldOMatic.Backend.UnitTests/README.md`** for coverage scope and **`coverlet.runsettings`**.
 - **Unit (no Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit`** — time/spin phase, `!twgold` parser, controllers (Moq), ApiKey auth, Helix client, EventSub controller, FluentValidation.
 - **Integration (Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Integration`** — PostgreSQL via **Testcontainers**, Marten + MediatR (claims, chat enrollment, `verify-candidate`, expiration, payout status, roulette tick).
 - **All tests:** **`dotnet test src/MimironsGoldOMatic.slnx`** — runs unit + integration; full suite needs Docker. Not a substitute for Twitch/WoW manual scenarios.
