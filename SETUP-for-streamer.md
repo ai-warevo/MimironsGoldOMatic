@@ -2,7 +2,7 @@
 
 This guide is for **broadcasters** who run Mimiron's Gold-o-Matic: **WoW addon**, **Twitch Extension**, and **Desktop** helper, and how they connect to the **Backend (EBS)**.
 
-**Important:** As of the current repository state, the **Backend** implements MVP-2, the **WoW addon** MVP-3, and the **Desktop (WPF)** MVP-4; the **Twitch Extension** viewer UI is still **scaffold-heavy** (MVP-5). See **`docs/IMPLEMENTATION_READINESS.md`** for detail. Until releases exist, “setup” often means **running from source** with a developer (see **[SETUP-for-developer.md](SETUP-for-developer.md)**).
+**Important:** In source, the **Backend** implements MVP-2, the **WoW addon** MVP-3, the **Desktop (WPF)** MVP-4, and the **Twitch Extension** includes the **MVP-5** viewer panel (roulette UI, EBS polling). See **`docs/IMPLEMENTATION_READINESS.md`** and **`docs/ROADMAP.md`** for parity and gaps. Until packaged releases exist, “setup” often means **running from source** with a developer (see **[SETUP-for-developer.md](SETUP-for-developer.md)**).
 
 Normative behavior (chat commands, mail flow, logs) is defined in **`docs/SPEC.md`**.
 

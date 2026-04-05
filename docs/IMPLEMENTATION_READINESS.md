@@ -49,7 +49,7 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 | MVP-2 | Backend API + Marten/PostgreSQL | **Implemented:** Marten event store + read docs, MVP routes (`claim`, pool/roulette, payouts pending/status/confirm, verify-candidate), EventSub webhook, JWT + ApiKey auth, global rate limit (5/min per user/IP; EventSub exempt), Helix announcement + expiration job. Requires local Postgres + `appsettings` (`Mgm`, `Twitch`, connection string). |
 | MVP-3 | WoW addon | **Implemented (MVP):** globals **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin`**; **`[MGM_WHO]`** JSON, **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`**; **`MAIL_SHOW`** queue panel + **Prepare Mail** (`SendMail*` + **`MoneyInputFrame_SetCopper`**); minimap + **`/mgm`**. **Optional / later:** UI-405 debug frame, scroll list polish, `MimironsGoldOMatic` singleton table refactor. |
 | MVP-4 | WPF Desktop + WinAPI | **Implemented (MVP):** pending poll, **`NotifyWinnerWhisper`** + **Sync/Inject** (`ReceiveGold` chunking), **`WoWChatLog.txt`** tail (`[MGM_WHO]` / `[MGM_ACCEPT]` / `[MGM_CONFIRM]`), EBS **`PATCH`** overrides + **`InProgress`→`Pending`**, PostMessage→SendInput fallback, settings + DPAPI ApiKey. Manual verification on **WoW 3.3.5a** recommended. |
-| MVP-5 | Twitch Extension UI | **Scaffold only:** default Vite/React `App.tsx`; normative **`Sent`** chat string helper in `src/rewardSentAnnouncement.ts`; no Twitch helper, roulette, or `UI-101–106` yet. |
+| MVP-5 | Twitch Extension UI | **Implemented (MVP):** viewer panel (Twitch `onAuthorized`, EBS polling for roulette/pool/`my-last`), server-skew countdown, `spinPhase` UX per `docs/UI_SPEC.md` UI-101–106, Zustand + backoff on 429/503/network. Configure **`VITE_MGM_EBS_BASE_URL`** (see `src/MimironsGoldOMatic.TwitchExtension/.env.example`); use Dev Rig for real JWTs. |
 | MVP-6 | E2E demo + tests | **Not started** (depends on MVP-2…5 + tests). |
 
 ## Residual implementation risks (not contradictions)
@@ -66,4 +66,4 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 ## Go/No-Go
 
 - **Go (documentation):** MVP contracts are consistent across normative docs; agents can implement against `docs/SPEC.md` + `docs/ROADMAP.md`.
-- **Go (product demo):** **No** — Backend MVP-2 code is present but an end-to-end demo still needs Postgres/Twitch configuration plus MVP-3…5 (Desktop, Extension, addon) wired to the live API.
+- **Go (product demo):** **No** — an end-to-end demo still needs Postgres/Twitch configuration and **running** Backend, Desktop, Extension (Dev Rig or hosted), and WoW addon against the same live API.
