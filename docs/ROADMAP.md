@@ -1,8 +1,10 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-05 (MVP-6 status sync) -->
 
 # Project Roadmap: Mimiron's Gold-o-Matic
 
 This roadmap reflects the **finalized MVP specification** agreed during design clarification.
+
+**Current stage:** The project is in the **late MVP phase (MVP-6)**. **Core components** — Backend (EBS), WoW addon, WPF Desktop, and Twitch Extension (viewer panel) — are **implemented**. **Current focus:** verification, hardening, and **E2E automation** before the **Beta** milestone (see **Beta** section below).
 
 Canonical implementation contracts live in:
 
@@ -12,7 +14,7 @@ Canonical implementation contracts live in:
 
 **UI/UX (screens, element inventory, flows):** Hub [`docs/UI_SPEC.md`](UI_SPEC.md) (tokens, navigation); implement against [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md), [`docs/MimironsGoldOMatic.Desktop/UI_SPEC.md`](MimironsGoldOMatic.Desktop/UI_SPEC.md), and [`docs/MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](MimironsGoldOMatic.WoWAddon/UI_SPEC.md) for **UI-1xx–UI-4xx** (Twitch ~318px panel, WPF windows, WoW frames) while building MVP-3 / MVP-4 / MVP-5.
 
-**Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today versus **MVP-6** (tests, E2E harness) and residual risks, see [`docs/IMPLEMENTATION_READINESS.md`](IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*.
+**Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today versus **MVP-6** (tests, E2E harness) and residual risks, see [`docs/IMPLEMENTATION_READINESS.md`](IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*. For **Manual** vs **Automated** E2E mapping, see **[Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)** in `docs/INTERACTION_SCENARIOS.md`.
 
 ### Mandatory checklist (every roadmap step)
 
@@ -228,6 +230,8 @@ Acting as **[WPF/WinAPI Expert]**:
 - Status UX (pull model):
   - `GET /api/payouts/my-last` and/or pool/spin endpoints as implemented
 
+**Status — implemented (MVP):** Viewer panel lives in **`src/MimironsGoldOMatic.TwitchExtension`**. UI inventory and copy: [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md); hub tokens and cross-client rules: [`docs/UI_SPEC.md`](UI_SPEC.md).
+
 Spec links:
 
 - `docs/SPEC.md#5-api-contract-mvp`
@@ -257,7 +261,15 @@ Acting as **[Frontend/Twitch Expert]**:
   - expiration behavior
   - roulette / pool rules (at least one spin with **1** participant)
 
-**Status — automated slice:** `src/MimironsGoldOMatic.Backend.Tests` (xUnit + **Testcontainers** PostgreSQL) exercises MediatR handlers for the bullets above plus **`PATCH` → `Sent`** pool removal; **`dotnet test src/MimironsGoldOMatic.slnx`** (Docker required). **Manual / live:** full chat→WoW→Helix path remains operator-verified (`docs/INTERACTION_SCENARIOS.md`).
+**Status — MVP-6 (verification split):**
+
+- **Automated (in place):** `src/MimironsGoldOMatic.Backend.Tests` — xUnit, **PostgreSQL via Testcontainers** (Docker required for **Integration** category), plus **Unit** tests (no Docker) for time/spin-phase and **`!twgold`** line parsing. Integration coverage includes MediatR/HTTP paths aligned with the bullets above (claim rules, **`verify-candidate`**, expiration sweep, **`PATCH` → `Sent`** pool removal). See `docs/MimironsGoldOMatic.Backend/ReadME.md` §Automated tests.
+- **Manual (required today):** The **full E2E** path **Twitch chat → EventSub → … → WoW client → `WoWChatLog.txt` → Desktop → Helix §11 announcement** is **not** automated in **CI/CD**. Operators validate it using **`docs/INTERACTION_SCENARIOS.md`** (e.g. SC-001, SC-005) and live/Dev Rig setup. Step-by-step mapping of manual vs target automation: **[Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)**.
+
+**Next steps (MVP-6):**
+
+- **Automate full E2E demo in CI/CD** — extend automation beyond Backend integration tests (e.g. workflow jobs, harnesses, or mocks) only when an approach is chosen; `.github/workflows/` remains a placeholder today.
+- **Validate complete operator workflow** — run the full manual scenario end-to-end and record results against **TC-** rows in **`docs/INTERACTION_SCENARIOS.md`**.
 
 **Solution layout:** `MimironsGoldOMatic.slnx` includes **Backend.Tests**; **Twitch Extension** and **WoW addon** stay non-MSBuild trees (same as MVP-0).
 

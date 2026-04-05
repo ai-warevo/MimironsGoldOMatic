@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-05 (MVP-6 status sync) -->
 
 # MVP Implementation Readiness Matrix
 
@@ -6,6 +6,7 @@
 
 1. **Documentation / spec alignment** — The table below checks that MVP decisions are **reflected consistently** across normative docs (`docs/SPEC.md`, READMEs, roadmap). A **Ready** row means the **written contracts** agree; it does **not** mean the feature is **implemented in code**.
 2. **Source tree parity** — See [Source code parity (MVP track)](#source-code-parity-mvp-track) for **what exists today** under `src/` versus MVP-0…MVP-6 in `docs/ROADMAP.md`.
+3. **MVP-6 verification** — See [MVP-6 verification status](#mvp-6-verification-status) for **Automated** vs **Manual** coverage; full **E2E** (chat → WoW → Helix) detail lives in **[Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)** (`docs/INTERACTION_SCENARIOS.md`).
 
 Canonical normative source remains **`docs/SPEC.md`**. For **user-visible** behavior and layout, cross-check **`docs/UI_SPEC.md`** (hub: tokens, navigation) and **`docs/MimironsGoldOMatic.*/UI_SPEC.md`** (UI-1xx–4xx screens) alongside component READMEs. **Conceptual overviews** (architecture, MVP digest, workflows): [`docs/ARCHITECTURE.md`](ARCHITECTURE.md), [`docs/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), [`docs/WORKFLOWS.md`](WORKFLOWS.md).
 
@@ -51,8 +52,18 @@ Snapshot of `src/` versus `docs/ROADMAP.md` (MVP-0 … MVP-6). Update this secti
 | MVP-2 | Backend API + Marten/PostgreSQL | **Implemented:** Marten event store + read docs, MVP routes (`claim`, pool/roulette, payouts pending/status/confirm, verify-candidate), EventSub webhook, JWT + ApiKey auth, global rate limit (5/min per user/IP; EventSub exempt), Helix announcement + expiration job. Requires local Postgres + `appsettings` (`Mgm`, `Twitch`, connection string). |
 | MVP-3 | WoW addon | **Implemented (MVP):** globals **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin`**; **`[MGM_WHO]`** JSON, **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`**; **`MAIL_SHOW`** queue panel + **Prepare Mail** (`SendMail*` + **`MoneyInputFrame_SetCopper`**); minimap + **`/mgm`**. **Optional / later:** UI-405 debug frame, scroll list polish, `MimironsGoldOMatic` singleton table refactor. |
 | MVP-4 | WPF Desktop + WinAPI | **Implemented (MVP):** pending poll, **`NotifyWinnerWhisper`** + **Sync/Inject** (`ReceiveGold` chunking), **`WoWChatLog.txt`** tail (`[MGM_WHO]` / `[MGM_ACCEPT]` / `[MGM_CONFIRM]`), EBS **`PATCH`** overrides + **`InProgress`→`Pending`**, PostMessage→SendInput fallback, settings + DPAPI ApiKey. Manual verification on **WoW 3.3.5a** recommended. |
-| MVP-5 | Twitch Extension UI | **Implemented (MVP):** viewer panel (Twitch `onAuthorized`, EBS polling for roulette/pool/`my-last`), server-skew countdown, `spinPhase` UX per `docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md` UI-101–106, Zustand + backoff on 429/503/network. Configure **`VITE_MGM_EBS_BASE_URL`** (see `src/MimironsGoldOMatic.TwitchExtension/.env.example`); use Dev Rig for real JWTs. |
-| MVP-6 | E2E demo + tests | **Partial (automated):** `src/MimironsGoldOMatic.Backend.Tests` — PostgreSQL via **Testcontainers** (Docker required); covers claim idempotency, active-payout guard, 10k cap, expiration sweep, single-participant roulette + `verify-candidate`, pool removal on **`Sent`**. **Manual:** full Twitch/WoW/Dev Rig demo still per `docs/INTERACTION_SCENARIOS.md`. |
+| MVP-5 | Twitch Extension UI | **Implemented (MVP):** Code in **`src/MimironsGoldOMatic.TwitchExtension`** (Vite/React/TS). Viewer panel: Twitch `onAuthorized`, EBS polling for roulette/pool/`my-last`, server-skew countdown, `spinPhase` UX per [`docs/MimironsGoldOMatic.TwitchExtension/UI_SPEC.md`](MimironsGoldOMatic.TwitchExtension/UI_SPEC.md) **UI-101–106**; hub UI rules in [`docs/UI_SPEC.md`](UI_SPEC.md). Zustand + backoff on 429/503/network. Configure **`VITE_MGM_EBS_BASE_URL`** (see `src/MimironsGoldOMatic.TwitchExtension/.env.example`); use Dev Rig for real JWTs. |
+| MVP-6 | E2E demo + tests | **Completed (automated slice):** `src/MimironsGoldOMatic.Backend.Tests` — **Unit** (`--filter Category=Unit`, no Docker): roulette time / spin phase / **`!twgold`** parser. **Integration** (`--filter Category=Integration`, Docker): PostgreSQL via **Testcontainers**; claim idempotency, active-payout guard, 10k cap, expiration sweep, single-participant roulette + `verify-candidate`, pool removal on **`Sent`**. See **`docs/MimironsGoldOMatic.Backend/ReadME.md`** (section **Automated tests (MVP-6)**). **In progress / required:** full **E2E** chat → WoW → Helix flow remains **Manual**; operator validation per [`docs/INTERACTION_SCENARIOS.md`](INTERACTION_SCENARIOS.md) (and [Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)). **Target:** **Automated** full demo in **CI/CD** (not implemented yet). |
+
+## MVP-6 verification status
+
+| Area | Verification status | Notes |
+|---|---|---|
+| Backend business rules (pool, roulette, payouts, expiration, `Sent` pool removal) | **Automated** | `dotnet test src/MimironsGoldOMatic.slnx --filter Category=Integration` — requires **Docker** (**Testcontainers**). |
+| Pure logic (spin schedule boundaries, `spinPhase`, **`!twgold`** line parsing) | **Automated** | `dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit` — no Docker. |
+| Live Twitch EventSub → EBS enrollment | **Manual** | Real Twitch/Dev Rig; not covered as live traffic in **CI/CD**. |
+| WoW 3.3.5a addon + `WoWChatLog.txt` tags + Desktop WinAPI inject | **Manual** | SC-001, SC-003, SC-004, etc.; no headless WoW harness in repo. |
+| Helix **Send Chat Message** after **`Sent`** | **Manual** (target: **Automated** / mocked in **CI**) | Inline retries in Backend; **CI** does not assert live Helix today. |
 
 ## Residual implementation risks (not contradictions)
 

@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-05 (MVP-6 status sync) -->
 
 # Mimiron's Gold-o-Matic — Interaction Scenarios & Test Cases
 
@@ -16,8 +16,25 @@ End-to-end narrative: **[WORKFLOWS.md](WORKFLOWS.md)** · product digest: **[MVP
 
 - **TC-xxx** rows are **verification targets** derived from `docs/SPEC.md` and related docs. They are **not** bound to existing automated tests until those suites exist.
 - **When to run:** after the relevant MVP slice ships (e.g. **EBS** routes for TC-003+; Desktop WinAPI for TC-005+; addon mail path for TC-007+).
-- **Automation:** `src/MimironsGoldOMatic.slnx` exists — use **`dotnet test src/MimironsGoldOMatic.slnx`** for .NET projects when test projects are added; Extension and WoW flows may remain manual or harness-driven until dedicated test projects exist.
+- **Automation:** **`dotnet test src/MimironsGoldOMatic.slnx`** — **Unit** slice: **`--filter Category=Unit`** (no Docker). **Integration** slice: **`--filter Category=Integration`** (**Testcontainers** / Docker). Full suite: all categories (Integration needs Docker). Extension UI and WoW/Desktop flows remain **Manual** unless a harness is added; see [Automated E2E Scenarios (MVP-6)](#automated-e2e-scenarios-mvp-6).
 - **Auth notes:** `docs/SPEC.md` requires **real Twitch-issued Extension JWTs** (Dev Rig and production). Tests must not rely on a long-term “mock JWT” bypass unless explicitly labeled as **temporary harness** and called out in test code.
+
+---
+
+## Automated E2E Scenarios (MVP-6)
+
+**Overall status:** **Manual** (**target: Automated** in **CI/CD**).
+
+This section maps the **intended** full product pipe — **Twitch chat message → Backend processing → WoW addon / Desktop behavior → Helix API outcome** — to how it is verified **today** vs what **automation** would add. It does **not** change **`docs/SPEC.md`** behavior. Roadmap alignment: **`docs/ROADMAP.md` MVP-6**; matrix: **`docs/IMPLEMENTATION_READINESS.md`** ([MVP-6 verification status](IMPLEMENTATION_READINESS.md#mvp-6-verification-status)).
+
+| Step | Flow segment | Manual verification (today) | Target automated check (CI/CD) | Prerequisites / notes |
+|---|---|---|---|---|
+| 1 | **Twitch chat** enrollment (`!twgold`) → **Backend** pool | Execute **SC-005** (live **EventSub**) or Dev Rig / operator sends chat; confirm pool via **`GET /api/pool/me`** or DB. Optional: **`POST /api/payouts/claim`** for Extension-shaped enrollment in dev. | **Integration** tests already exercise **Backend** HTTP + persistence (not live Twitch). A future **CI** job could add signed **EventSub** fixture posts or keep relying on HTTP enrollment tests. | Running Backend + Postgres; Twitch credentials for **Manual** path. |
+| 2 | **Backend** spin / **`verify-candidate`** / payout lifecycle | Operator aligns clock with spin grid; **Desktop** submits **`[MGM_WHO]`** payload via **`POST /api/roulette/verify-candidate`**; observe **`Pending`** and Extension state. | **`dotnet test`** **`Category=Integration`** (`PostClaimRulesIntegrationTests`, `RouletteVerifyCandidateIntegrationTests`, etc.). | **Docker** for **Testcontainers**. |
+| 3 | **WoW addon** UI / mail queue + **`WoWChatLog.txt`** tags + **Desktop** WinAPI | **SC-001**, **SC-003**, **SC-004**: real **WoW 3.3.5a**, **`[MGM_WHO]`**, **`[MGM_ACCEPT]`**, **`[MGM_CONFIRM]`**, inject **`/run`**, mail send. | No automated test in repo (would require client harness or simulator). | Stable WoW + log path; streamer Desktop **ApiKey**. |
+| 4 | **Helix** chat announcement (**§11**) after **`Sent`** | After **`PATCH` → `Sent`**, confirm chat line (**Russian** copy per **SPEC**) or inspect logs. | **CI** could mock **Helix** or use a test double; **not** implemented today. | **Twitch** app scopes + tokens for live check; **Backend** `Twitch:*` config. |
+
+**Related narrative:** **SC-001** (full end-to-end). **Next steps** for automation are listed under **`docs/ROADMAP.md` MVP-6 — Next steps**.
 
 ---
 
