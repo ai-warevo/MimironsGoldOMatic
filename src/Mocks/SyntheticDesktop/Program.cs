@@ -1,5 +1,5 @@
 // <!-- Created: 2026-04-05 (Tier B E2E harness) -->
-// <!-- Updated: 2026-04-05 (Tier B readiness preparation) -->
+// <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 // HTTP stand-in for Desktop payout API choreography (no WPF / WinAPI).
 using System.Text;
 using System.Text.Json;
@@ -24,7 +24,7 @@ app.MapGet("/health", () => Results.Json(new { status = "healthy", component = "
 app.MapGet("/last-run", () =>
 {
     lock (runLock)
-        return Results.Json(state);
+        return Results.Json(state, apiJson);
 });
 
 app.MapPost("/run-sequence", async (RunSequenceRequest body, IHttpClientFactory httpFactory, IConfiguration config, CancellationToken ct) =>
@@ -35,7 +35,7 @@ app.MapPost("/run-sequence", async (RunSequenceRequest body, IHttpClientFactory 
     {
         lock (runLock)
             state = LastRunState.Failed("Mgm:ApiKey is not configured.");
-        return Results.Json(state, statusCode: 500);
+        return Results.Json(state, apiJson, statusCode: 500);
     }
 
     if (body.PayoutId == Guid.Empty || string.IsNullOrWhiteSpace(body.CharacterName))
@@ -73,13 +73,13 @@ app.MapPost("/run-sequence", async (RunSequenceRequest body, IHttpClientFactory 
         lock (runLock)
             state = new LastRunState { Ok = true, Steps = steps, Error = null, CompletedAtUtc = DateTime.UtcNow };
 
-        return Results.Json(state);
+        return Results.Json(state, apiJson);
     }
     catch (Exception ex)
     {
         lock (runLock)
             state = LastRunState.Failed(ex.Message, steps);
-        return Results.Json(state, statusCode: 502);
+        return Results.Json(state, apiJson, statusCode: 502);
     }
 });
 

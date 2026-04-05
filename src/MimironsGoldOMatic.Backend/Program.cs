@@ -1,3 +1,4 @@
+// <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -46,13 +47,16 @@ builder.Services.AddSingleton<HelixChatService>();
 builder.Services.AddHostedService<RouletteSynchronizerHostedService>();
 builder.Services.AddHostedService<PayoutExpirationHostedService>();
 
+var twitch = builder.Configuration.GetSection(TwitchOptions.SectionName).Get<TwitchOptions>() ?? new TwitchOptions();
+var helixBase = string.IsNullOrWhiteSpace(twitch.HelixApiBaseUrl)
+    ? "https://api.twitch.tv/"
+    : twitch.HelixApiBaseUrl.Trim().TrimEnd('/') + "/";
 builder.Services.AddHttpClient("Helix", c =>
 {
+    c.BaseAddress = new Uri(helixBase);
     c.DefaultRequestHeaders.Add("Accept", "application/json");
     c.Timeout = TimeSpan.FromSeconds(30);
 });
-
-var twitch = builder.Configuration.GetSection(TwitchOptions.SectionName).Get<TwitchOptions>() ?? new TwitchOptions();
 
 byte[] extensionKey;
 if (!string.IsNullOrEmpty(twitch.ExtensionSecret))

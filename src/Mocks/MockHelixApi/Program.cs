@@ -1,5 +1,5 @@
 // <!-- Created: 2026-04-05 (Tier B E2E mock) -->
-// <!-- Updated: 2026-04-05 (Tier B readiness preparation) -->
+// <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 // Loopback stub for Twitch Helix Send Chat Message — records POST /helix/chat/messages for CI assertions.
 using System.Text.Json;
 

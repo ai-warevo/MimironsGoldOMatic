@@ -1,14 +1,14 @@
 # Created: 2026-04-05 (Tier A E2E mocks)
-# Updated: 2026-04-05 (PR-only scoped build: Backend + mocks; NuGet cache)
+# Updated: 2026-04-05 (Tier B: MockHelixApi + SyntheticDesktop + Helix base URL + E2E harness)
 #
-# Optimization / ops notes (Tier A):
+# Optimization / ops notes (Tier A + B):
 # - NuGet: actions/cache on ~/.nuget/packages (keyed by src/**/*.csproj) cuts restore time on warm runners.
-# - Self-hosted runners: optional for heavier future Tier B jobs or org minute limits; keep ubuntu-latest for portability.
-# - Artifacts: Tier A does not upload binaries; if adding trx/log uploads, set retention-days to match org policy.
-# - Future matrix: split unit/integration vs E2E only after dynamic ports or Compose networking (Tier A uses fixed loopback ports).
+# - Tier B adds two ASP.NET processes (9053, 9054) and a Python orchestrator; expect ~1–3 min additional wall time vs Tier A alone.
+# - Helix base URL must be the mock root only (e.g. http://127.0.0.1:9053), not .../helix — relative path is helix/chat/messages.
 #
-# Tier A: Backend + Postgres + MockEventSubWebhook (relay) + MockExtensionJwt; synthetic EventSub chat → pool enrollment → GET /api/pool/me
-name: E2E Tier A (mocks)
+# Tier A: enrollment via MockEventSubWebhook → GET /api/pool/me
+# Tier B: POST /api/e2e/prepare-pending-payout → SyntheticDesktop /run-sequence → MockHelix last-request → pool cleared
+name: E2E Tier A+B (mocks)
 
 on:
   pull_request:
@@ -17,9 +17,10 @@ on:
 env:
   DOTNET_VERSION: "10.0.x"
   E2E_EVENTSUB_SECRET: e2e-ci-eventsub-secret
+  E2E_API_KEY: ci-desktop-api-key
 
 jobs:
-  e2e-tier-a:
+  e2e-tier-a-b:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -52,24 +53,36 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      # PR fast path: build Shared + Backend + Tier A mocks only (no Desktop, WoW addon, Twitch Extension, test projects).
-      # One project per invocation for MSBuild compatibility across runner images.
-      - name: Restore and build (Backend + mocks only)
+      - name: Restore and build (Backend + all E2E mocks)
         run: |
           set -e
           dotnet build src/MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj -c Release
           dotnet build src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj -c Release
           dotnet build src/Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj -c Release
           dotnet build src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj -c Release
+          dotnet build src/Mocks/MockHelixApi/MimironsGoldOMatic.Mocks.MockHelixApi.csproj -c Release
+          dotnet build src/Mocks/SyntheticDesktop/MimironsGoldOMatic.Mocks.SyntheticDesktop.csproj -c Release
+
+      - name: Job timing (start)
+        id: t0
+        run: echo "E2E_JOB_START_SEC=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Install Tier B verification Python deps
+        run: python3 -m pip install --user -r scripts/tier_b_verification/requirements.txt
 
       - name: Start Backend (background)
         env:
           ASPNETCORE_ENVIRONMENT: Development
           ASPNETCORE_URLS: http://127.0.0.1:8080
           ConnectionStrings__PostgreSQL: Host=localhost;Port=5432;Database=mgm;Username=postgres;Password=postgres
-          Mgm__ApiKey: ci-desktop-api-key
+          Mgm__ApiKey: ${{ env.E2E_API_KEY }}
           Mgm__DevSkipSubscriberCheck: "true"
+          Mgm__EnableE2eHarness: "true"
           Twitch__EventSubSecret: ${{ env.E2E_EVENTSUB_SECRET }}
+          Twitch__HelixApiBaseUrl: http://127.0.0.1:9053
+          Twitch__BroadcasterAccessToken: e2e-ci-broadcast-token
+          Twitch__BroadcasterUserId: e2e-ci-broadcaster
+          Twitch__HelixClientId: e2e-ci-helix-client
         run: |
           set -e
           dotnet run --project src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj -c Release --no-build &
@@ -112,6 +125,39 @@ jobs:
           done
           curl -sf http://127.0.0.1:9052/health >/dev/null || { echo "MockExtensionJwt failed to start"; exit 1; }
 
+      - name: Start MockHelixApi (background)
+        env:
+          ASPNETCORE_URLS: http://127.0.0.1:9053
+        run: |
+          set -e
+          dotnet run --project src/Mocks/MockHelixApi/MimironsGoldOMatic.Mocks.MockHelixApi.csproj -c Release --no-build &
+          echo $! > /tmp/mgm-mock-helix.pid
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:9053/health >/dev/null && echo "MockHelixApi healthy" && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:9053/health >/dev/null || { echo "MockHelixApi failed to start"; exit 1; }
+
+      - name: Start SyntheticDesktop (background)
+        env:
+          ASPNETCORE_URLS: http://127.0.0.1:9054
+          Mgm__ApiKey: ${{ env.E2E_API_KEY }}
+          SyntheticDesktop__BackendBaseUrl: http://127.0.0.1:8080
+        run: |
+          set -e
+          dotnet run --project src/Mocks/SyntheticDesktop/MimironsGoldOMatic.Mocks.SyntheticDesktop.csproj -c Release --no-build &
+          echo $! > /tmp/mgm-synthetic-desktop.pid
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:9054/health >/dev/null && echo "SyntheticDesktop healthy" && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:9054/health >/dev/null || { echo "SyntheticDesktop failed to start"; exit 1; }
+
+      - name: Workflow integration probe (Tier A + B health)
+        run: |
+          set -e
+          python3 scripts/tier_b_verification/check_workflow_integration.py
+
       - name: Send synthetic channel.chat.message via MockEventSubWebhook
         run: |
           set -e
@@ -122,7 +168,7 @@ jobs:
             --login e2eviewer1 \
             --text "!twgold Etoehero"
 
-      - name: Verify pool enrollment (Extension JWT)
+      - name: Verify pool enrollment (Extension JWT) — Tier A gate
         run: |
           set -e
           TOKEN=$(curl -sS "http://127.0.0.1:9052/token?userId=e2e-viewer-1&displayName=E2EViewer" | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
@@ -132,8 +178,24 @@ jobs:
           python3 -c "import json,sys; d=json.loads(sys.argv[1]); assert d.get('isEnrolled') is True, d; assert d.get('characterName')=='Etoehero', d" "$BODY"
           echo "E2E Tier A: pool enrollment verified."
 
+      - name: Tier B — full slice (harness, SyntheticDesktop, MockHelix, pool/me)
+        run: |
+          set -e
+          echo "E2E_TIER_B_START_SEC=$(date +%s)" >> "$GITHUB_ENV"
+          python3 .github/scripts/run_e2e_tier_b.py --api-key "${{ env.E2E_API_KEY }}"
+          echo "E2E_TIER_B_END_SEC=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Job timing summary
+        if: always()
+        run: |
+          END=$(date +%s)
+          START="${E2E_JOB_START_SEC:-$END}"
+          echo "E2E job wall-clock (approx): $((END - START))s (ubuntu runner; includes build + all services + Tier A + Tier B)"
+
       - name: Logs (on failure)
         if: failure()
         run: |
           echo "--- Backend PID ---"; cat /tmp/mgm-backend.pid 2>/dev/null || true
           echo "--- Try curl backend ---"; curl -v http://127.0.0.1:8080/ 2>&1 || true
+          echo "--- MockHelixApi /last-request ---"; curl -sS http://127.0.0.1:9053/last-request 2>&1 || true
+          echo "--- SyntheticDesktop /last-run ---"; curl -sS http://127.0.0.1:9054/last-run 2>&1 || true

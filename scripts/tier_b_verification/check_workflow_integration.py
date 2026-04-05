@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 """Probe Tier A + Tier B loopback services for reachability and health JSON."""
 
 from __future__ import annotations

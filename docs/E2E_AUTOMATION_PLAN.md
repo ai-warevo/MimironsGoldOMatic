@@ -1,5 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation plan) -->
-<!-- Updated: 2026-04-05 (Tier B readiness preparation) -->
+<!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 
 # E2E automation plan (MVP-6): Chat → WoW → Helix
 
@@ -12,11 +12,11 @@ This document proposes how to automate the **full operator workflow** currently 
 - Backend (EBS): `src/MimironsGoldOMatic.Backend/` — **not** `MimironsGoldOMatic.WEBAPI.Backend`.
 - WoW addon: `src/MimironsGoldOMatic.WoWAddon/`.
 - Desktop: `src/MimironsGoldOMatic.Desktop/`.
-- CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). **Unit/integration (parallel):** `.github/workflows/unit-integration-tests.yml` (Backend, Desktop, WoW addon validation, Twitch Extension `npm test`) on the **same** PR trigger. CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
+- CI: `.github/workflows/e2e-test.yml` — **Tier A + Tier B** (Backend + Postgres + Tier A mocks + **MockHelixApi** + **SyntheticDesktop** + synthetic EventSub + Tier B orchestrator) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). **Unit/integration (parallel):** `.github/workflows/unit-integration-tests.yml` (Backend, Desktop, WoW addon validation, Twitch Extension `npm test`) on the **same** PR trigger. CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
 - Tier A mocks: `src/Mocks/MockEventSubWebhook/`, `src/Mocks/MockExtensionJwt/`.
 - Tier B mocks (readiness): `src/Mocks/MockHelixApi/`, `src/Mocks/SyntheticDesktop/`; verification scripts: [`scripts/tier_b_verification/`](../scripts/tier_b_verification/).
 
-**CI tier labels (this repository):** **Tier A** is the current [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) job: **Postgres + Backend + mocks + synthetic EventSub → `GET /api/pool/me`**. **Tier B** is the **planned CI extension** with **MockHelixApi**, **SyntheticDesktop**, and a **configurable Helix base URL** (see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)). In **Section 1**, optional **real WoW + self-hosted** validation is **operational / full-stack** work—**not** the same as **CI Tier B**.
+**CI tier labels (this repository):** **Tier A** is the **enrollment slice** inside [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml): **Postgres + Backend + MockEventSubWebhook + MockExtensionJwt + synthetic EventSub → `GET /api/pool/me`**. **Tier B** is the **same workflow job** continued with **MockHelixApi** (9053), **SyntheticDesktop** (9054), **`Twitch:HelixApiBaseUrl`**, **`POST /api/e2e/prepare-pending-payout`** (Development + `Mgm:EnableE2eHarness`), **`.github/scripts/run_e2e_tier_b.py`**, and assertions on **MockHelix `GET /last-request`**, **SyntheticDesktop `GET /last-run`**, and **`GET /api/pool/me`** after **`Sent`**. In **Section 1**, optional **real WoW + self-hosted** validation is **operational / full-stack** work—**not** the same as **CI Tier B**.
 
 ---
 
@@ -43,7 +43,7 @@ This aligns with **SC-001** steps 1–16 and the four segments in **Automated E2
 **Recommendation:** Split **automation** into **CI phases** plus **optional real clients**:
 
 1. **CI Tier A (implemented):** Backend + Postgres (service container) + **MockEventSubWebhook** + **MockExtensionJwt**; verifies **pool enrollment** via synthetic **`channel.chat.message`** and **`GET /api/pool/me`** ([workflow](../.github/workflows/e2e-test.yml)).
-2. **CI Tier B (planned):** **MockHelixApi** + **SyntheticDesktop** (HTTP choreography) + **`HelixChatService`** configurable base URL; asserts path through **`Sent`** and captured **Helix** `POST` (see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)).
+2. **CI Tier B (implemented in workflow):** **MockHelixApi** + **SyntheticDesktop** + configurable **`Twitch:HelixApiBaseUrl`** + E2E harness; asserts path through **`Sent`** and captured **Helix** `POST` (see [Tier B Integration Results](#tier-b-integration-results) and [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)).
 3. **Operational / full-stack (optional):** Self-hosted or manual runs with real **WoW** + **Desktop** + **Dev Rig / test channel** for UI and WinAPI validation.
 
 ---
@@ -116,7 +116,7 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 
 ### Proposed workflow: `.github/workflows/e2e-test.yml`
 
-**As implemented (CI Tier A):** [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) is a **single job** (`e2e-tier-a`) with a **PostgreSQL 16 service container**, **not** the multi-job split in the table below. The table remains the **longer-term** layout (optional companion **`ci.yml`**, separate unit/integration jobs, future **dotnet test** E2E).
+**As implemented (CI Tier A + B):** [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) is a **single job** (`e2e-tier-a-b`) with a **PostgreSQL 16 service container**, **not** the multi-job split in the table below. The table remains the **longer-term** layout (optional companion **`ci.yml`**, separate unit/integration jobs, future **dotnet test** E2E).
 
 High-level **jobs** (all **Ubuntu** unless self-hosted operational validation):
 
@@ -157,8 +157,8 @@ This section describes the **split** between **fast PR validation** (Tier A E2E)
 | **Runner** | `ubuntu-latest`. |
 | **Build scope** | **Shared + Backend + MockEventSubWebhook + MockExtensionJwt** only (excludes **Desktop**, **Backend.UnitTests**, **WoW addon**, **Twitch Extension**) for shorter wall time and fewer prerequisites. |
 | **Data plane** | PostgreSQL **16** service container (unchanged health / port / credentials pattern). |
-| **Runtime** | Backend + both mocks on loopback; **Python** [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) + **`curl`** assertions unchanged from Tier A. |
-| **Proof** | Synthetic **`channel.chat.message`** → **`GET /api/pool/me`** enrollment check (`Etoehero`). |
+| **Runtime** | Backend + **MockEventSubWebhook** + **MockExtensionJwt** + **MockHelixApi** + **SyntheticDesktop** on loopback; **`pip install`** [verification requirements](../scripts/tier_b_verification/requirements.txt); **Python** [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) + [`.github/scripts/run_e2e_tier_b.py`](../.github/scripts/run_e2e_tier_b.py) + **`curl`**. |
+| **Proof** | Tier A: synthetic **`channel.chat.message`** → **`GET /api/pool/me`** (`Etoehero`). Tier B: harness → **`/run-sequence`** → **Helix** capture → **`isEnrolled: false`**. |
 | **Caching** | Optional **NuGet** cache (`~/.nuget/packages`, key from `src/**/*.csproj`) — see workflow comments. |
 
 ### Workflow B — `release.yml` (full build, artifacts, GHCR, GitHub Release)
@@ -275,7 +275,7 @@ A **passed** Tier A **E2E** run should demonstrate:
 
 ## Tier A implementation (repository)
 
-**Status:** **Enrollment path complete in CI** — **EventSub relay + Extension JWT issuer + GitHub Actions** are implemented and documented ([runbook](#how-to-run-tier-a-e2e-tests-github-actions)). **MockHelixApi** and **SyntheticDesktop** are **CI Tier B** ([plan](#tier-b-implementation-plan-ci-extension)).
+**Status:** **Tier A + Tier B in one PR job** — **EventSub relay + Extension JWT issuer + MockHelixApi + SyntheticDesktop + E2E harness** are implemented in [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) and documented ([runbook](#how-to-run-tier-a-e2e-tests-github-actions), [Tier B Integration Results](#tier-b-integration-results)).
 
 ### MockEventSubWebhook (`src/Mocks/MockEventSubWebhook/`)
 
@@ -304,7 +304,7 @@ A **passed** Tier A **E2E** run should demonstrate:
 
 ## Tier A Test Results & Verification
 
-This section records **observed CI behavior** for workflow **[E2E Tier A (mocks)](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml)** ([`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml)). Metrics below were taken from the **GitHub Actions API** on **2026-04-05** (public repo **`ai-warevo/MimironsGoldOMatic`**); re-query for up-to-date numbers: `GET /repos/{owner}/{repo}/actions/workflows/e2e-test.yml/runs`.
+This section records **observed CI behavior** for historical **Tier A–only** runs of workflow **[e2e-test.yml](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml)** (job was then named **`e2e-tier-a`**; it is now **`e2e-tier-a-b`** for **Tier A + B**). Metrics below were taken from the **GitHub Actions API** on **2026-04-05** (public repo **`ai-warevo/MimironsGoldOMatic`**); re-query for up-to-date numbers: `GET /repos/{owner}/{repo}/actions/workflows/e2e-test.yml/runs`.
 
 ### Run history summary
 
@@ -359,12 +359,55 @@ E2E Tier A: pool enrollment verified.
 
 ### Screenshots / deep links
 
-- **Workflow list:** [Actions → E2E Tier A (mocks)](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml)
-- **Example green run:** [Run #23](https://github.com/ai-warevo/MimironsGoldOMatic/actions/runs/24004723814) — open the **`e2e-tier-a`** job and expand steps for full logs (browser screenshot optional for reports).
+- **Workflow list:** [Actions → e2e-test.yml](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml) (UI name **E2E Tier A+B (mocks)**)
+- **Example green run (Tier A era):** [Run #23](https://github.com/ai-warevo/MimironsGoldOMatic/actions/runs/24004723814) — historical job id **`e2e-tier-a`**; new runs use **`e2e-tier-a-b`**.
 
 ### Tier A Validation Checklist — completion
 
 All items in **[Tier A Validation Checklist](E2E_AUTOMATION_TASKS.md#tier-a-validation-checklist)** are **verified** for the current workflow definition: PR→**`main`**, scoped Backend+mocks build, Postgres **16** service, mock health ports **9051**/**9052**, HMAC + JWT + enrollment **`Etoehero`**. The checklist file uses **`[x]`** markers for ongoing tracking.
+
+---
+
+## Tier B Integration Results
+
+**Status:** Tier B is **wired into** [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) (workflow display name **E2E Tier A+B (mocks)**). **First green GitHub Actions run** for this configuration should be confirmed on the repo **Actions** tab after this change merges (open the latest run for workflow `e2e-test.yml` and attach a browser screenshot to internal release notes if required).
+
+### Summary (expected first run)
+
+| Item | Value / note |
+|------|----------------|
+| **Outcome** | **Pass** when all steps green: health probes → Tier A enrollment → Tier B orchestrator |
+| **Duration vs Tier A** | Expect **~1–4 min** additional wall time vs historical Tier‑A‑only runs (two more `dotnet run` processes + `pip install` + Python orchestrator); total job often still **under ~10–15 min** on warm NuGet cache |
+| **Entry script** | [`.github/scripts/run_e2e_tier_b.py`](../.github/scripts/run_e2e_tier_b.py) |
+| **Helix capture** | **`GET http://127.0.0.1:9053/last-request`** → `captured: true`, `body.message` equals Russian template with winner **`characterName`** |
+| **Synthetic audit** | **`GET http://127.0.0.1:9054/last-run`** → `ok: true`, steps show **confirm-acceptance** / **InProgress** / **Sent** HTTP **2xx** |
+| **Pool after Sent** | **`GET /api/pool/me`** (Extension JWT) → **`isEnrolled: false`** (winner removed from pool) |
+
+### Key logs and metrics
+
+- **Orchestrator:** prints `Tier B: Pending payout …`, `SyntheticDesktop run-sequence OK`, `MockHelix message OK`, and wall time for the Python slice (orchestrator-only seconds).
+- **Job timing step:** approximate `date +%s` delta for the whole job (runner-reported; not a substitute for fine-grained profiling).
+- **Failure bundle:** workflow **`Logs (on failure)`** dumps Backend root diagnostic, **`/last-request`**, **`/last-run`**.
+
+### Issues encountered and resolutions (integration)
+
+| Issue | Resolution |
+|-------|----------------|
+| **Roulette wall-clock (4 min collecting + empty-pool-at-cycle-start)** blocks real tick → **Pending** in CI | **Development-only** **`POST /api/e2e/prepare-pending-payout`** (requires **`Mgm:EnableE2eHarness`** + **`X-MGM-ApiKey`**) aligns **`SpinStateDocument`** and runs **`verify-candidate`** in one CI-safe path |
+| **`HelixApiBaseUrl` must not include `/helix`** | Backend **`HttpClient`** base is the **service root**; relative path **`helix/chat/messages`** matches [MockHelixApi `Program.cs`](../src/Mocks/MockHelixApi/Program.cs) |
+| **`HelixChatService`** tests without **`BaseAddress`** after refactor | Unit tests now supply **`BaseAddress = https://api.twitch.tv/`** on the test **`HttpClient`** (mirrors **`Program.cs`** registration) |
+| **SyntheticDesktop JSON `Ok` vs `ok`** | **`Results.Json(state, apiJson)`** uses **camelCase** so Python **`ok`** assertions match |
+
+### Screenshot (GitHub Actions)
+
+After the first successful run on **`main`** or a PR, deep-link: **`https://github.com/<org>/<repo>/actions/workflows/e2e-test.yml`** → open the green run → expand **`e2e-tier-a-b`** → capture the job summary (browser screenshot). Replace this paragraph with the run URL in internal docs if the public repo path differs.
+
+### Post-integration optimization suggestions
+
+- **Parallelization:** Keep a **single** localhost E2E job per PR; split only with **Compose** or **dynamic ports** if multiple E2E jobs are needed.
+- **Caching:** Retain **NuGet** `actions/cache`; optional **Docker layer cache** if mocks move to images.
+- **Resource use:** **`dotnet run --no-build`** after Release build is already used; consider **`PublishSingleFile`** mock binaries only if startup time dominates (trade-off: artifact size).
+- **Monitoring:** Upload **structured log artifacts** on **`always()`** (Backend + mocks) if flaky startup diagnosis outweighs storage cost.
 
 ---
 
@@ -373,8 +416,8 @@ All items in **[Tier A Validation Checklist](E2E_AUTOMATION_TASKS.md#tier-a-vali
 ### Triggering the workflow
 
 1. Open a **pull request** whose **base branch** is **`main`** (or push commits to an existing PR targeting `main`).
-2. GitHub runs workflow **`E2E Tier A (mocks)`** (file [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml)) automatically on `pull_request` for **`main`**.
-3. In the PR, open **Checks** → select the workflow run → inspect the **`e2e-tier-a`** job log.
+2. GitHub runs workflow **`E2E Tier A+B (mocks)`** (file [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml)) automatically on `pull_request` for **`main`**.
+3. In the PR, open **Checks** → select the workflow run → inspect the **`e2e-tier-a-b`** job log.
 
 **Manual re-run:** From the **Actions** tab, open the workflow run and use **Re-run jobs** (same commit).
 
@@ -420,7 +463,7 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 
 | Risk area | Root cause (likely) | Prevention | Troubleshooting |
 |-----------|---------------------|------------|-----------------|
-| **Ports 8080 / 9051 / 9052** | Another process on the runner binding the same ports (uncommon on clean `ubuntu-latest`, but possible if defaults change or multiple apps run). | Keep **loopback-only** URLs as in the workflow; avoid adding parallel jobs on the same job container that reuse these ports. | In failed logs, check “address already in use”; consider explicit `ASPNETCORE_URLS` or moving to ephemeral ports + config (future hardening). |
+| **Ports 8080 / 9051–9054** | Another process on the runner binding the same ports (uncommon on clean `ubuntu-latest`, but possible if defaults change or multiple apps run). | Keep **loopback-only** URLs as in the workflow; avoid adding parallel jobs on the same job container that reuse these ports. | In failed logs, check “address already in use”; consider explicit `ASPNETCORE_URLS` or moving to ephemeral ports + config (future hardening). |
 | **HMAC / EventSub signature** | **Secret mismatch** between mock, Backend, and Python (`Twitch__EventSubSecret` vs `--secret`); **wrong signing payload** (must be `message-id + timestamp + raw body` bytes); **JSON canonicalization** differing between signer and verifier (Python uses `separators=(',', ':')`—body must match what EBS hashes). | Single source of truth: workflow `env.E2E_EVENTSUB_SECRET`; never log the secret. | Reproduce locally with the same secret and `send_e2e_eventsub.py`; compare **401** from mock vs EBS; enable Development logging on mock/EBS. |
 | **PostgreSQL service** | Container slow to become ready; wrong **`ConnectionStrings__PostgreSQL`** (host/port/db/user/password). | Workflow uses **`localhost:5432`** and matches **`POSTGRES_DB`/`PASSWORD`**; health check **`pg_isready`**. | Inspect **Services** logs in the Actions UI; verify Marten can connect (Backend would fail startup or first DB use). |
 | **Mock / Backend startup timeouts** | Heavy cold restore, AV, or hung `dotnet run`; DB migrations taking longer than the loop. | Add **`actions/cache`** for NuGet (see [Optimization and scalability](#optimization-and-scalability-ci)); keep `--no-build` after a successful Release build. | Increase wait loops only if justified; check whether Backend blocks before Kestrel listens. |
@@ -481,9 +524,9 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 
 | Step | Task | Details |
 |------|------|---------|
-| **D1** | **Extend [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml)** | After MockExtensionJwt: start **MockHelixApi** (background + health poll). Set Backend env: **`Twitch__HelixApiBaseUrl`**, dummy **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`** so **`HelixChatService`** does not early-return. |
-| **D2** | **Test script** | Add **Python** or **bash** step **or** `dotnet run --project SyntheticDesktop` after Tier A enrollment + seeded **`Pending`** path: optionally keep **`send_e2e_eventsub.py`** as enrollment, then run roulette tick APIs or Marten seed (team choice — see discussion below). |
-| **D3** | **Assertions** | **`curl`** MockHelixApi **`GET /last-request`** (or grep logs) for Russian message; assert **`GET /api/pool/me`** or Marten state shows winner removed. |
+| **D1** | **Extend [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml)** | **Done:** After **MockExtensionJwt**, start **MockHelixApi** (9053) and **SyntheticDesktop** (9054); Backend env **`Twitch__HelixApiBaseUrl`**, **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`**, **`Mgm__EnableE2eHarness`**. |
+| **D2** | **Test script** | **Done:** [`.github/scripts/run_e2e_tier_b.py`](../.github/scripts/run_e2e_tier_b.py) after Tier A enrollment; **`send_e2e_eventsub.py`** optional **`--probe-mock-helix`** for direct MockHelix probes. |
+| **D3** | **Assertions** | **Done:** Orchestrator asserts **MockHelix** **`GET /last-request`**, **SyntheticDesktop** **`GET /last-run`**, **`GET /api/pool/me`** after **`Sent`**. |
 
 **Success criteria (D):** Single job still completes within acceptable minutes budget; failure logs show which step failed (Helix vs Desktop sequence vs Backend).
 
@@ -551,27 +594,26 @@ Optional strict auth: set **`MockHelix__StrictAuth=true`** on the mock to requir
 
 ## Tier B First Run Guide
 
-End-to-end **first** Tier B rehearsal on a developer machine (still requires **Helix base URL** product change **A1–A2** before Backend traffic hits the mock; until then, complete only **readiness** scripts and mock-local checks).
+End-to-end **first** Tier B rehearsal on a developer machine (mirrors **CI** [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml)).
 
 1. **Prerequisites:** Docker or local **PostgreSQL 16**, **.NET 10 SDK**, **Python 3** + `pip install -r scripts/tier_b_verification/requirements.txt`.
-2. **Tier A stack:** Follow **Running Tier A E2E locally (manual)** in [`docs/MimironsGoldOMatic.Backend/ReadME.md`](MimironsGoldOMatic.Backend/ReadME.md) (Postgres + Backend + **9051** + **9052** + synthetic EventSub + pool assertion).
+2. **Tier A stack:** Follow **Running Tier A E2E locally (manual)** in [`docs/MimironsGoldOMatic.Backend/ReadME.md`](MimironsGoldOMatic.Backend/ReadME.md) (Postgres + Backend + **9051** + **9052** + synthetic EventSub + pool assertion). For Tier B, add to Backend env: **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`**, **`Mgm__EnableE2eHarness=true`** (Development only).
 3. **Start MockHelixApi:**  
    `ASPNETCORE_URLS=http://127.0.0.1:9053 dotnet run --project src/Mocks/MockHelixApi/MimironsGoldOMatic.Mocks.MockHelixApi.csproj -c Release`
 4. **Verify mock alone:** `python3 scripts/tier_b_verification/check_mockhelixapi.py --base-url http://127.0.0.1:9053`
-5. **Configure Backend for mock Helix (after A1–A2 merge):** set **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`**; restart Backend.
-6. **Start SyntheticDesktop:**  
+5. **Start SyntheticDesktop:**  
    `ASPNETCORE_URLS=http://127.0.0.1:9054`  
    `Mgm__ApiKey=<same as Backend>`  
    `SyntheticDesktop__BackendBaseUrl=http://127.0.0.1:8080`  
    `dotnet run --project src/Mocks/SyntheticDesktop/MimironsGoldOMatic.Mocks.SyntheticDesktop.csproj -c Release`
-7. **Health sweep:** `python3 scripts/tier_b_verification/check_workflow_integration.py`
-8. **Seed payout path:** Enroll → roulette tick / **`verify-candidate`** → obtain **`Pending`** **`payoutId`** (same patterns as [`RouletteVerifyCandidateIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs)).
-9. **Run synthetic Desktop sequence:** `curl -sS -X POST http://127.0.0.1:9054/run-sequence -H "Content-Type: application/json" -d "{\"payoutId\":\"<GUID>\",\"characterName\":\"Etoehero\"}"`  
-   Or: `python3 scripts/tier_b_verification/check_syntheticdesktop.py --payout-id <GUID>`
-10. **Assert Helix capture:** `curl -sS http://127.0.0.1:9053/last-request` — **`message`** must match Russian §11 template for the winner name (see [`HelixChatService`](../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs)).
-11. **Optional:** `GET http://127.0.0.1:9054/last-run` for step-level HTTP status audit.
+6. **Health sweep:** `python3 scripts/tier_b_verification/check_workflow_integration.py`
+7. **Full orchestrator (recommended):** after Tier A enrollment, run  
+   `python3 .github/scripts/run_e2e_tier_b.py --api-key <Mgm:ApiKey>`  
+   (calls **`POST /api/e2e/prepare-pending-payout`**, **`POST /run-sequence`**, asserts **MockHelix** + **`/last-run`** + **`GET /api/pool/me`**).
+8. **Manual alternative:** `curl -sS -X POST http://127.0.0.1:8080/api/e2e/prepare-pending-payout -H "Content-Type: application/json" -H "X-MGM-ApiKey: <key>" -d "{\"twitchUserId\":\"e2e-viewer-1\"}"` → use returned **`payoutId`** with **`check_syntheticdesktop.py --payout-id …`** or **`curl`** **`/run-sequence`** as in older steps.
+9. **Assert Helix capture:** `curl -sS http://127.0.0.1:9053/last-request` — **`message`** must match Russian §11 template (see [`HelixChatService`](../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs)).
 
-If step **5** is blocked (Helix URL not merged), stop after step **4** and track **A1–A2** on [`docs/TIER_B_IMPLEMENTATION_TASKS.md`](TIER_B_IMPLEMENTATION_TASKS.md).
+**Note:** Natural roulette tick → **`verify-candidate`** without the harness still requires **wall-clock** alignment (see [Tier B Integration Results — issues](#tier-b-integration-results)); **CI** uses the harness by design.
 
 ---
 
@@ -610,6 +652,10 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 | **Port conflicts** | **9053** (Helix mock) or **9054** (SyntheticDesktop) taken | Address in use | Change **`ASPNETCORE_URLS`** and **`Twitch__HelixApiBaseUrl`** together; document port map in workflow comments. |
 | **Job duration / cost** | Tier B adds two processes + more HTTP | PR minutes increase | Consider **nightly** Tier B only; keep Tier A on every PR to **`main`** ([Optimization](#optimization-and-scalability-ci)). |
 
+| **E2E harness 404** | **`Mgm:EnableE2eHarness`** false or not **Development** | **`POST /api/e2e/prepare-pending-payout`** returns **404** | Workflow sets **`Mgm__EnableE2eHarness: "true"`** with **`ASPNETCORE_ENVIRONMENT: Development`**; never enable harness in production. |
+| **prepare-pending 400 (not in pool)** | Tier A enrollment failed or wrong **`twitchUserId`** | Harness cannot find viewer | Run **`send_e2e_eventsub.py`** first; pass matching **`--twitch-user-id`** to **`run_e2e_tier_b.py`**. |
+| **`pip` / `requests` missing** | **`check_workflow_integration.py`** fails on clean runner | Import error | Workflow runs **`pip install -r scripts/tier_b_verification/requirements.txt`** before Python probes. |
+
 **Open discussion (team):** whether to publish **Docker** images for mocks to reduce cold **`dotnet run`** time; whether **CI Tier B** runs on every PR or **nightly** only (**Actions** minute budget); **real WoW + Desktop** remains **out of scope** for default GitHub-hosted Tier B ([Overview](#1-overview)).
 
 **Log patterns:** integration script logs each **`GET …/health`** URL; failure line names the first component that did not return **200** or expected JSON.
@@ -644,7 +690,7 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 
 ### Trigger conditions
 
-- **`pull_request`** targeting **`main`** only — same event filter as [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) (**Tier A E2E**).
+- **`pull_request`** targeting **`main`** only — same event filter as [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) (**Tier A + B E2E**).
 - Because this is a **separate workflow file**, GitHub Actions starts it **in parallel** with **E2E** on each qualifying PR (independent workflow graphs, subject to org concurrency limits).
 
 ### Component breakdown
@@ -698,3 +744,4 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 | 1.4 | 2026-04-05 | **Unit and Integration Testing Strategy:** `unit-integration-tests.yml` (PR→`main`, parallel with E2E); per-component jobs + artifacts + PR summary |
 | 1.5 | 2026-04-05 | **Tier A Test Results & Verification** (GitHub API metrics); expanded **Tier B** plan (A–D); **Tier B Troubleshooting**; link to [`TIER_B_IMPLEMENTATION_TASKS.md`](TIER_B_IMPLEMENTATION_TASKS.md) |
 | 1.6 | 2026-04-05 | **Tier B Readiness Verification**, **First Run Guide**, mock projects **MockHelixApi** / **SyntheticDesktop**, [`scripts/tier_b_verification/`](../scripts/tier_b_verification/), expanded troubleshooting; [`TIER_B_PRELAUNCH_CHECKLIST.md`](TIER_B_PRELAUNCH_CHECKLIST.md) |
+| 1.7 | 2026-04-05 | **Tier B Integration Results**; workflow **E2E Tier A+B**; **`Twitch:HelixApiBaseUrl`**; **`run_e2e_tier_b.py`**; **`POST /api/e2e/prepare-pending-payout`**; **SyntheticDesktop** camelCase JSON; troubleshooting rows for harness / pip |
