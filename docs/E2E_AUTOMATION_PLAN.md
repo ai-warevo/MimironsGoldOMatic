@@ -1,5 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation plan) -->
-<!-- Updated: 2026-04-05 (Tier A finalization + Tier B detailed plan) -->
+<!-- Updated: 2026-04-05 (Tier B readiness preparation) -->
 
 # E2E automation plan (MVP-6): Chat → WoW → Helix
 
@@ -14,6 +14,7 @@ This document proposes how to automate the **full operator workflow** currently 
 - Desktop: `src/MimironsGoldOMatic.Desktop/`.
 - CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). **Unit/integration (parallel):** `.github/workflows/unit-integration-tests.yml` (Backend, Desktop, WoW addon validation, Twitch Extension `npm test`) on the **same** PR trigger. CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
 - Tier A mocks: `src/Mocks/MockEventSubWebhook/`, `src/Mocks/MockExtensionJwt/`.
+- Tier B mocks (readiness): `src/Mocks/MockHelixApi/`, `src/Mocks/SyntheticDesktop/`; verification scripts: [`scripts/tier_b_verification/`](../scripts/tier_b_verification/).
 
 **CI tier labels (this repository):** **Tier A** is the current [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) job: **Postgres + Backend + mocks + synthetic EventSub → `GET /api/pool/me`**. **Tier B** is the **planned CI extension** with **MockHelixApi**, **SyntheticDesktop**, and a **configurable Helix base URL** (see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)). In **Section 1**, optional **real WoW + self-hosted** validation is **operational / full-stack** work—**not** the same as **CI Tier B**.
 
@@ -99,9 +100,9 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 |------|---------|----------|-------------------|
 | **MockEventSubWebhook** | Replace live Twitch → EBS delivery | **`POST /api/twitch/eventsub`** | Body includes `subscription.type` = `channel.chat.message`, `event.message_id`, `event.chatter_user_id`, `event.message.text`, `event.badges`. Headers: `Twitch-Eventsub-Message-Id`, `Timestamp`, `Signature` when secret configured. |
 | **MockExtensionJwt** | Auth for **`/api/pool/me`**, **`/api/payouts/claim`**, etc. | HS256 JWT | Signed with same key as [`Program.cs`](../src/MimironsGoldOMatic.Backend/Program.cs) dev derivation or test secret; claims: `user_id`, optional `display_name`. |
-| **MockHelixApi** | No real Twitch chat send in CI | **`POST /helix/chat/messages`** (path as configured) | Return **`200`** with Helix JSON; allow test to assert request body and **`Authorization: Bearer`**, **`Client-Id`** header. |
+| **MockHelixApi** | No real Twitch chat send in CI | **`POST /helix/chat/messages`** (path as configured) | **`GET /health`** → **`status: healthy`**, **`component: MockHelixApi`**. **`POST`** → **204**; last body on **`GET /last-request`**. Optional **`MockHelix:StrictAuth=true`** enforces **`Bearer`** + **`Client-Id`**. |
 | **MockWoWClient** (conceptual) | Replace WoW + WinAPI in Tier A | N/A in process | **Not implemented as a service** in Tier A — replaced by **API choreography**. Tier B only: optional scripted window focus tools (out of scope for default **CI**). |
-| **SyntheticDesktop** | Replace Desktop executable in Tier A | Sequences of **`HttpClient`** calls | Implements the same order as **SC-001** steps 10–15 **without** log tail: call **`confirm-acceptance`**, **`PATCH InProgress`**, **`PATCH Sent`** (or minimal subset proving **`Sent`** + Helix). |
+| **SyntheticDesktop** | Replace Desktop executable in CI Tier B | Sequences of **`HttpClient`** calls | **`GET /health`** → **`healthy`**, **`component: SyntheticDesktop`**. **`POST /run-sequence`** with **`payoutId`** + **`characterName`** → **`confirm-acceptance`** → **`PATCH InProgress`** → **`PATCH Sent`**. **`GET /last-run`** returns step statuses. |
 
 ### Suggested code structure (Backend tests)
 
@@ -460,7 +461,7 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | **B1** | **New project** | **`src/Mocks/MockHelixApi/`** — **.NET 10.0**, ASP.NET Core minimal API, namespace **`MimironsGoldOMatic.Mocks.MockHelixApi`**, added to [`MimironsGoldOMatic.slnx`](../src/MimironsGoldOMatic.slnx). |
 | **B2** | **`POST /helix/chat/messages`** | Match Twitch Helix shape: accept JSON with **`broadcaster_id`**, **`sender_id`**, **`message`**. Echo **`Authorization: Bearer`** and **`Client-Id`** validation (optional strict mode for CI). Return **`204`** or **`200`** with documented empty/small JSON body (align with [`HelixChatService`](../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) success handling). |
 | **B3** | **Response templates** | Implement **success** plus **401** / **500** branches for future retry tests (see [`HelixChatServiceTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/Unit/HelixChatServiceTests.cs)). Store **last request body** in memory for **`GET /last-request`** (JSON) or structured logs for **`curl`** assertions. |
-| **B4** | **`GET /health`** | JSON **`{ "status": "ok", "service": "MockHelixApi" }`** (same convention as other mocks). |
+| **B4** | **`GET /health`** | JSON **`{ "status": "healthy", "component": "MockHelixApi" }`** (Tier B mocks use **`component`** + **`healthy`**; Tier A mocks remain **`status`:** **`ok`** + **`service`**). |
 | **B5** | **E2E workflow** | Start with **`ASPNETCORE_URLS=http://127.0.0.1:9053`** (or next free port); Backend **`Twitch__HelixApiBaseUrl`** points here; see **D** below. |
 
 **Success criteria (B):** Health green; exactly one **`POST`** recorded after a test **`PATCH`** to **`Sent`** when Tier B chain runs; message text matches SPEC §11 Russian template for the winner name.
@@ -472,7 +473,7 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | **C1** | **New project** | **`src/Mocks/SyntheticDesktop/`** — console or minimal host (**.NET 10.0**) that runs a **scripted HTTP sequence** only (no WPF). Optional name: **`MimironsGoldOMatic.Mocks.SyntheticDesktop`**. |
 | **C2** | **HTTP client sequence** | Use **`HttpClient`** with header **`X-MGM-ApiKey`** = same as workflow **`Mgm__ApiKey`**. Base address = Backend **`http://127.0.0.1:8080`**. Order: resolve **`payoutId`** (e.g. from **`GET /api/payouts/pending`** or seeded state) → **`POST /api/payouts/{id}/confirm-acceptance`** → **`PATCH /api/payouts/{id}/status`** with **`InProgress`** → **`PATCH`** with **`Sent`** (exact JSON bodies per [`DesktopPayoutsController`](../src/MimironsGoldOMatic.Backend/Controllers/DesktopPayoutsController.cs) / DTOs). |
 | **C3** | **`confirm-acceptance` and `PATCH` flows** | Preconditions must match domain rules (acceptance window, pool membership). Reuse seeding patterns from [`RouletteVerifyCandidateIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs) and [`PatchPayoutStatusIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PatchPayoutStatusIntegrationTests.cs). |
-| **C4** | **Verification endpoints** | Expose **`GET /last-run`** on SyntheticDesktop **or** exit code **0** only when all steps returned **2xx**; optionally print **`payoutId`** and final **`GET /api/payouts/pending`** empty for winner row. |
+| **C4** | **Verification endpoints** | Expose **`GET /last-run`** (JSON: **`ok`**, **`steps`**, **`error`**) after **`POST /run-sequence`**; exit code **0** from CI when all steps return **2xx**. |
 
 **Success criteria (C):** End-to-end: after run, payout **`Sent`**, pool row removed for winner, **MockHelixApi** received announcement (with **A** + **B** in place).
 
@@ -501,6 +502,79 @@ Full traceability table: [`docs/TIER_B_IMPLEMENTATION_TASKS.md`](TIER_B_IMPLEMEN
 
 ---
 
+## Tier B Readiness Verification
+
+Run these checks **before** wiring Tier B into [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) or executing the [Tier B First Run Guide](#tier-b-first-run-guide). **Pre-launch checkbox file:** [`docs/TIER_B_PRELAUNCH_CHECKLIST.md`](TIER_B_PRELAUNCH_CHECKLIST.md).
+
+### MockHelixApi
+
+| Check | How | Success criteria |
+|-------|-----|------------------|
+| **Process / bind** | `dotnet run` with **`ASPNETCORE_URLS=http://127.0.0.1:9053`** | Kestrel listens; no “address already in use”. |
+| **Health** | `GET http://127.0.0.1:9053/health` | **200** JSON **`{"status":"healthy","component":"MockHelixApi"}`**. |
+| **Base URL alignment** | Backend (after **A1–A2**) uses same host/port as mock root | **`HelixChatService`** POST targets **`{base}/helix/chat/messages`** (leading slash on relative path). |
+| **POST + capture** | [`scripts/tier_b_verification/check_mockhelixapi.py`](../scripts/tier_b_verification/check_mockhelixapi.py) | Exit **0**; **`GET /last-request`** shows **`captured: true`** and body **`message`** matching probe. |
+| **Response templates** | Mock returns **204** for successful **`POST /helix/chat/messages`** | Matches [`HelixChatService`](../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) success handling (**2xx**). |
+
+Optional strict auth: set **`MockHelix__StrictAuth=true`** on the mock to require **`Authorization: Bearer`** and **`Client-Id`** (mirrors production headers).
+
+### SyntheticDesktop
+
+| Check | How | Success criteria |
+|-------|-----|------------------|
+| **Process / bind** | `dotnet run` with **`ASPNETCORE_URLS=http://127.0.0.1:9054`** | Listens on **9054**. |
+| **Health** | `GET http://127.0.0.1:9054/health` | **200** JSON **`{"status":"healthy","component":"SyntheticDesktop"}`**. |
+| **Config** | Env **`Mgm__ApiKey`** matches Backend **`Mgm__ApiKey`**; **`SyntheticDesktop__BackendBaseUrl`** points at EBS | **`POST /run-sequence`** does not fail with “ApiKey not configured”. |
+| **Sequence (integration)** | Seed **`Pending`** payout, then [`check_syntheticdesktop.py`](../scripts/tier_b_verification/check_syntheticdesktop.py) **`--payout-id {guid}`** | **`POST /run-sequence`** returns **`ok: true`**; **`GET /last-run`** lists **confirm-acceptance** → **InProgress** → **Sent** with **2xx** status codes. |
+| **Verification endpoint** | `GET http://127.0.0.1:9054/last-run` after a run | JSON includes **`ok`**, **`steps`**, **`error`** (null on success). |
+
+### Workflow integration (ports + order)
+
+| Check | How | Success criteria |
+|-------|-----|------------------|
+| **Port map** | Compare running processes to table below | **8080** Backend, **9051** EventSub mock, **9052** JWT mock, **9053** Helix mock, **9054** SyntheticDesktop — no duplicate binders. |
+| **Startup order** | Start **Postgres** → **Backend** → Tier A mocks → **MockHelixApi** → **SyntheticDesktop** | [`check_workflow_integration.py`](../scripts/tier_b_verification/check_workflow_integration.py) exit **0** (omit **`--skip-tier-b`**). |
+| **Tier A regression** | `python3 scripts/tier_b_verification/check_workflow_integration.py --skip-tier-b` with Tier A stack only | Still passes when Tier B processes are stopped. |
+
+**Port map (default local / planned CI):**
+
+| Port | Service |
+|------|---------|
+| **5432** | PostgreSQL (**service container** in Actions) |
+| **8080** | **MimironsGoldOMatic.Backend** |
+| **9051** | **MockEventSubWebhook** |
+| **9052** | **MockExtensionJwt** |
+| **9053** | **MockHelixApi** |
+| **9054** | **SyntheticDesktop** |
+
+---
+
+## Tier B First Run Guide
+
+End-to-end **first** Tier B rehearsal on a developer machine (still requires **Helix base URL** product change **A1–A2** before Backend traffic hits the mock; until then, complete only **readiness** scripts and mock-local checks).
+
+1. **Prerequisites:** Docker or local **PostgreSQL 16**, **.NET 10 SDK**, **Python 3** + `pip install -r scripts/tier_b_verification/requirements.txt`.
+2. **Tier A stack:** Follow **Running Tier A E2E locally (manual)** in [`docs/MimironsGoldOMatic.Backend/ReadME.md`](MimironsGoldOMatic.Backend/ReadME.md) (Postgres + Backend + **9051** + **9052** + synthetic EventSub + pool assertion).
+3. **Start MockHelixApi:**  
+   `ASPNETCORE_URLS=http://127.0.0.1:9053 dotnet run --project src/Mocks/MockHelixApi/MimironsGoldOMatic.Mocks.MockHelixApi.csproj -c Release`
+4. **Verify mock alone:** `python3 scripts/tier_b_verification/check_mockhelixapi.py --base-url http://127.0.0.1:9053`
+5. **Configure Backend for mock Helix (after A1–A2 merge):** set **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`**; restart Backend.
+6. **Start SyntheticDesktop:**  
+   `ASPNETCORE_URLS=http://127.0.0.1:9054`  
+   `Mgm__ApiKey=<same as Backend>`  
+   `SyntheticDesktop__BackendBaseUrl=http://127.0.0.1:8080`  
+   `dotnet run --project src/Mocks/SyntheticDesktop/MimironsGoldOMatic.Mocks.SyntheticDesktop.csproj -c Release`
+7. **Health sweep:** `python3 scripts/tier_b_verification/check_workflow_integration.py`
+8. **Seed payout path:** Enroll → roulette tick / **`verify-candidate`** → obtain **`Pending`** **`payoutId`** (same patterns as [`RouletteVerifyCandidateIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs)).
+9. **Run synthetic Desktop sequence:** `curl -sS -X POST http://127.0.0.1:9054/run-sequence -H "Content-Type: application/json" -d "{\"payoutId\":\"<GUID>\",\"characterName\":\"Etoehero\"}"`  
+   Or: `python3 scripts/tier_b_verification/check_syntheticdesktop.py --payout-id <GUID>`
+10. **Assert Helix capture:** `curl -sS http://127.0.0.1:9053/last-request` — **`message`** must match Russian §11 template for the winner name (see [`HelixChatService`](../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs)).
+11. **Optional:** `GET http://127.0.0.1:9054/last-run` for step-level HTTP status audit.
+
+If step **5** is blocked (Helix URL not merged), stop after step **4** and track **A1–A2** on [`docs/TIER_B_IMPLEMENTATION_TASKS.md`](TIER_B_IMPLEMENTATION_TASKS.md).
+
+---
+
 ## Tier B Troubleshooting Guide
 
 Symptoms, likely causes, and fixes for new Tier B components. Tier A issues remain in [Predictive issue analysis](#predictive-issue-analysis-tier-a-ci).
@@ -510,24 +584,35 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 | Issue | Root cause | Symptoms | Resolution |
 |-------|------------|----------|------------|
 | **Wrong base URL** | Backend still posts to **api.twitch.tv** | Mock never receives traffic; **`GET /last-request`** empty | Set **`Twitch__HelixApiBaseUrl`** to mock root (e.g. `http://127.0.0.1:9053`); verify **`Helix`** `HttpClient` **`BaseAddress`** in [`Program.cs`](../src/MimironsGoldOMatic.Backend/Program.cs). |
+| **MockHelixApi returns 404** | Wrong mock root (missing port), typo in URL, or POST path not under **`/helix/chat/messages`** | Python **`check_mockhelixapi`** or Backend logs show **404 Not Found**; **`last-request`** never updates | Open **`GET /health`** on the same base URL you configured; compare with [`MockHelixApi/Program.cs`](../src/Mocks/MockHelixApi/Program.cs). Ensure Backend uses base **without** trailing slash and relative path **`/helix/chat/messages`**. |
 | **Response format** | Mock returns body Helix client does not treat as success | **`HelixChatService`** logs warnings; payout still **`Sent`** (SPEC: no rollback) | Return **2xx** with empty body or documented Helix JSON; match [`HelixChatService`](../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) `IsSuccessStatusCode` check. |
-| **Auth headers** | Strict mock rejects missing **`Client-Id`** / **`Bearer`** | **401** from mock | Align dummy **`Twitch__BroadcasterAccessToken`** and **`Twitch__HelixClientId`** with mock expectations. |
+| **Auth headers** | Strict mock rejects missing **`Client-Id`** / **`Bearer`** | **401** from mock | Align dummy **`Twitch__BroadcasterAccessToken`** and **`Twitch__HelixClientId`** with mock expectations; or leave **`MockHelix__StrictAuth`** unset/false for local smoke tests. |
+
+**Log patterns:** successful mock capture — **`POST /helix/chat/messages`** returns **204**; **`GET /last-request`** JSON **`captured: true`**. Failure — connection refused (mock not started); **404** (wrong URL path).
 
 ### SyntheticDesktop
 
 | Issue | Root cause | Symptoms | Resolution |
 |-------|------------|----------|------------|
 | **Sequence timing** | **`confirm-acceptance`** before payout is **`Pending`** or wrong user | **400** / **404** from EBS | Seed Marten + run **`verify-candidate`** (or test seed helper) before SyntheticDesktop; align **`characterName`** with enrollment. |
+| **SyntheticDesktop sequence fails (HTTP 4xx/5xx)** | Invalid state transition, wrong **`payoutId`**, or Backend rules reject acceptance | **`POST /run-sequence`** returns **502**; **`last-run`** shows **`ok: false`** and first failing **`steps`** entry | Read **`steps[].bodySnippet`** from **`GET /last-run`**; fix domain order (**`Pending`** → confirm → **`InProgress`** → **`Sent`**). Compare with [`EbsMediator`](../src/MimironsGoldOMatic.Backend/Application/EbsMediator.cs) transitions. |
 | **Status mismatches** | Invalid state transition (e.g. **`Sent`** without **`InProgress`**) | Handler validation error | Follow same order as real Desktop: **acceptance** → **`InProgress`** → **`Sent`** per domain rules in [`EbsMediator`](../src/MimironsGoldOMatic.Backend/Application/EbsMediator.cs) / payout aggregate. |
 | **API key** | **`X-MGM-ApiKey`** missing or wrong | **401** / **403** | Match **`Mgm__ApiKey`** in workflow and SyntheticDesktop config. |
+
+**Log patterns:** harness logs show **`POST confirm-acceptance`** status; Backend logs may show **`PatchPayoutStatus`** validation. **`last-run.error`** summarizes exception message after **`EnsureSuccessStatusCode`**.
 
 ### Workflow integration
 
 | Issue | Root cause | Symptoms | Resolution |
 |-------|------------|----------|------------|
 | **Service startup order** | SyntheticDesktop runs before Backend ready | Connection refused | Keep Tier A wait loops; start SyntheticDesktop only after **`GET /api/pool/me`** or explicit backend health (reuse **`curl`** root). |
-| **Port conflicts** | **9053** (Helix mock) taken | Address in use | Change **`ASPNETCORE_URLS`** and **`Twitch__HelixApiBaseUrl`** together; document port map in workflow comments. |
+| **Workflow integration timeout** | Health probes run before **`dotnet run`** finishes binding; port conflict; Postgres not ready | **`check_workflow_integration.py`** **`HTTPConnectionPool` timeout** or **Connection refused** | Increase wait loops in CI; run integration script only after each **`GET /health`** succeeds manually; use [port map](#workflow-integration-ports--order) to resolve conflicts (**`netstat` / `ss`**). |
+| **Port conflicts** | **9053** (Helix mock) or **9054** (SyntheticDesktop) taken | Address in use | Change **`ASPNETCORE_URLS`** and **`Twitch__HelixApiBaseUrl`** together; document port map in workflow comments. |
 | **Job duration / cost** | Tier B adds two processes + more HTTP | PR minutes increase | Consider **nightly** Tier B only; keep Tier A on every PR to **`main`** ([Optimization](#optimization-and-scalability-ci)). |
+
+**Open discussion (team):** whether to publish **Docker** images for mocks to reduce cold **`dotnet run`** time; whether **CI Tier B** runs on every PR or **nightly** only (**Actions** minute budget); **real WoW + Desktop** remains **out of scope** for default GitHub-hosted Tier B ([Overview](#1-overview)).
+
+**Log patterns:** integration script logs each **`GET …/health`** URL; failure line names the first component that did not return **200** or expected JSON.
 
 ---
 
@@ -612,3 +697,4 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 | 1.3 | 2026-04-05 | **CI/CD Pipeline Architecture:** `e2e-test.yml` scoped PR build; **`release.yml`** parallel builds + sequential **`create-release`**; GHCR Backend image |
 | 1.4 | 2026-04-05 | **Unit and Integration Testing Strategy:** `unit-integration-tests.yml` (PR→`main`, parallel with E2E); per-component jobs + artifacts + PR summary |
 | 1.5 | 2026-04-05 | **Tier A Test Results & Verification** (GitHub API metrics); expanded **Tier B** plan (A–D); **Tier B Troubleshooting**; link to [`TIER_B_IMPLEMENTATION_TASKS.md`](TIER_B_IMPLEMENTATION_TASKS.md) |
+| 1.6 | 2026-04-05 | **Tier B Readiness Verification**, **First Run Guide**, mock projects **MockHelixApi** / **SyntheticDesktop**, [`scripts/tier_b_verification/`](../scripts/tier_b_verification/), expanded troubleshooting; [`TIER_B_PRELAUNCH_CHECKLIST.md`](TIER_B_PRELAUNCH_CHECKLIST.md) |
