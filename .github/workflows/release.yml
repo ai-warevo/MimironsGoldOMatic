@@ -9,7 +9,7 @@
 name: Release
 
 on:
-  push:
+  pull_request:
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -376,6 +376,38 @@ jobs:
           docker tag mimirons-goldomatic-backend:${{ env.RELEASE_VERSION }} \
             "${REPO}:latest"
           docker push "${REPO}:latest"
+
+      # GHCR defaults to private; PATCH package settings (not .../set-visibility). Package name matches image_repo suffix.
+      - name: Make Backend GHCR package public via API
+        run: |
+          set -euo pipefail
+          OWNER="${{ github.repository_owner }}"
+          PKG="mimirons-goldomatic-backend"
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          API_VERSION="2022-11-28"
+          patch_visibility() {
+            local url="$1"
+            curl -sS -w "%{http_code}" -o /tmp/gh_pkg_patch.json \
+              -X PATCH \
+              -H "Authorization: Bearer ${TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: ${API_VERSION}" \
+              -d '{"visibility":"public"}' \
+              "${url}"
+          }
+          code="$(patch_visibility "https://api.github.com/orgs/${OWNER}/packages/container/${PKG}")"
+          if [ "${code}" = "200" ] || [ "${code}" = "204" ]; then
+            echo "GHCR package ${PKG} is public (org: ${OWNER})."
+            exit 0
+          fi
+          echo "Org package PATCH HTTP ${code}; response:" && (cat /tmp/gh_pkg_patch.json || true)
+          code="$(patch_visibility "https://api.github.com/user/packages/container/${PKG}")"
+          if [ "${code}" = "200" ] || [ "${code}" = "204" ]; then
+            echo "GHCR package ${PKG} is public (user packages scope)."
+            exit 0
+          fi
+          echo "User package PATCH HTTP ${code}; response:" && (cat /tmp/gh_pkg_patch.json || true)
+          exit 1
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
