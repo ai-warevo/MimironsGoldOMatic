@@ -1,7 +1,7 @@
 using Testcontainers.PostgreSql;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.UnitTests.Support;
+namespace MimironsGoldOMatic.Backend.IntegrationTests.Support;
 
 /// <summary>One PostgreSQL container per test collection (requires Docker).</summary>
 public sealed class PostgresContainerFixture : IAsyncLifetime

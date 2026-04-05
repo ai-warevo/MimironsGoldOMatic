@@ -16,7 +16,7 @@ End-to-end narrative: **[WORKFLOWS.md](WORKFLOWS.md)** · product digest: **[MVP
 
 - **TC-xxx** rows are **verification targets** derived from `docs/SPEC.md` and related docs. They are **not** bound to existing automated tests until those suites exist.
 - **When to run:** after the relevant MVP slice ships (e.g. **EBS** routes for TC-003+; Desktop WinAPI for TC-005+; addon mail path for TC-007+).
-- **Automation:** **`dotnet test src/MimironsGoldOMatic.slnx`** — **Unit** slice: **`--filter Category=Unit`** (no Docker). **Integration** slice: **`--filter Category=Integration`** (**Testcontainers** / Docker). Full suite: all categories (Integration needs Docker). Extension UI and WoW/Desktop flows remain **Manual** unless a harness is added; see [Automated E2E Scenarios (MVP-6)](#automated-e2e-scenarios-mvp-6).
+- **Automation:** **`dotnet test src/MimironsGoldOMatic.slnx`** — **Unit** project: **`MimironsGoldOMatic.Backend.UnitTests`**, **`--filter Category=Unit`** (no Docker). **Integration** project: **`src/tests/MimironsGoldOMatic.Backend.IntegrationTests`**, **`--filter Category=Integration`** (**Testcontainers** / Docker). Full solution run executes both. Extension UI and WoW/Desktop flows remain **Manual** unless a harness is added; see [Automated E2E Scenarios (MVP-6)](#automated-e2e-scenarios-mvp-6).
 - **Auth notes:** `docs/SPEC.md` requires **real Twitch-issued Extension JWTs** (Dev Rig and production). Tests must not rely on a long-term “mock JWT” bypass unless explicitly labeled as **temporary harness** and called out in test code.
 
 ---

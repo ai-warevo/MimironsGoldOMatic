@@ -9,7 +9,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace MimironsGoldOMatic.Backend.UnitTests.Support;
+namespace MimironsGoldOMatic.Backend.IntegrationTests.Support;
 
 internal static class BackendTestHost
 {

@@ -2,14 +2,14 @@ using MimironsGoldOMatic.Backend.Api;
 using MimironsGoldOMatic.Backend.Application;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Backend.UnitTests.Support;
+using MimironsGoldOMatic.Backend.IntegrationTests.Support;
 using MimironsGoldOMatic.Shared;
 using Marten;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.UnitTests;
+namespace MimironsGoldOMatic.Backend.IntegrationTests;
 
 [Collection(nameof(PostgresCollection))]
 [Trait("Category", "Integration")]
@@ -41,6 +41,7 @@ public sealed class RouletteVerifyCandidateIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Should_CreatePendingPayout_WhenSingleParticipantVerifyOnline()
     {
+        await PostgresMgmTruncate.TruncateAllAsync(_pg.ConnectionString);
         var sp = _services!;
         var store = sp.GetRequiredService<IDocumentStore>();
         var spinCycleId = Guid.NewGuid();

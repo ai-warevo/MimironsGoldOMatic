@@ -1,12 +1,12 @@
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Backend.UnitTests.Support;
+using MimironsGoldOMatic.Backend.IntegrationTests.Support;
 using MimironsGoldOMatic.Shared;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.UnitTests;
+namespace MimironsGoldOMatic.Backend.IntegrationTests;
 
 [Collection(nameof(PostgresCollection))]
 [Trait("Category", "Integration")]

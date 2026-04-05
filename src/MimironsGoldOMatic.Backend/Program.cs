@@ -116,9 +116,10 @@ await using (var scope = app.Services.CreateAsyncScope())
     await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 }
 
-app.UseRateLimiter();
+// After authentication so Extension JWT user_id partitions limits (before auth, all traffic keyed by IP).
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();

@@ -2,10 +2,9 @@
 
 ## Strategy
 
-- **Unit** (`[Trait("Category","Unit")]`, no Docker): pure time/spin-phase logic, FluentValidation, `TwGoldChatEnrollmentParser`, ASP.NET controllers with **Moq** `IMediator`, **ApiKey** authentication via `IAuthenticationService`, **Helix** outbound with mocked `HttpMessageHandler`, **TwitchEventSubController** with **Moq** `IChatEnrollmentIngest`.
-- **Integration** (`[Trait("Category","Integration")]`, Docker): PostgreSQL via **Testcontainers**; Marten schema; MediatR handlers, `ChatEnrollmentService`, `RouletteCycleTick`, `PayoutExpirationProcessor`, and payout/roulette rules aligned with `docs/SPEC.md` and `docs/INTERACTION_SCENARIOS.md`.
+- **Unit** (`[Trait("Category","Unit")]`, no Docker): spin-phase and roulette time math, FluentValidation, `TwGoldChatEnrollmentParser`, ASP.NET controllers with **Moq** `IMediator`, **ApiKey** authentication via `IAuthenticationService`, **Helix** outbound with mocked `HttpMessageHandler`, **TwitchEventSubController** with **Moq** `IChatEnrollmentIngest`.
 
-Coverage is strongest on **services**, **application handlers**, **controllers**, and **auth**; `Program.cs` startup and Marten configuration are exercised indirectly via integration tests, not duplicated with a full `WebApplicationFactory` (optional follow-up).
+PostgreSQL, Marten, and full-host HTTP flows live in **`MimironsGoldOMatic.Backend.IntegrationTests`** (Testcontainers). See `src/tests/MimironsGoldOMatic.Backend.IntegrationTests/README.md`.
 
 ## How to run
 
@@ -15,29 +14,22 @@ From the repository root:
 dotnet test src/tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj
 ```
 
-Unit-only (no Docker):
+Unit-only:
 
 ```bash
 dotnet test src/tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj --filter "Category=Unit"
 ```
 
-Integration (requires Docker):
+Full Backend (unit + integration):
 
 ```bash
-dotnet test src/tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj --filter "Category=Integration"
-```
-
-Solution entry (from `src/`):
-
-```bash
-dotnet test MimironsGoldOMatic.slnx
+dotnet test src/MimironsGoldOMatic.slnx
 ```
 
 ## Coverage goals
 
-- **Target:** ≥ **80%** line coverage on **MimironsGoldOMatic.Backend** core logic (handlers, services, controllers, auth).
-- **Measured scope:** use `coverlet.runsettings` in this folder to exclude **`Program.cs`** (host bootstrap) and **OpenAPI source-generated** `OpenApiXmlCommentSupport.generated.cs`, which are not exercised by this suite. With that filter, **Backend** line coverage is **~87%** (run locally; exact figure varies slightly with compiler/tooling).
-- Collect locally:
+- **Target:** high line coverage on **MimironsGoldOMatic.Backend** core logic exercised by unit tests.
+- **Measured scope:** use `coverlet.runsettings` in this folder to exclude **`Program.cs`** (host bootstrap) and **OpenAPI source-generated** `OpenApiXmlCommentSupport.generated.cs`.
 
 ```bash
 dotnet test src/tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj \
@@ -47,10 +39,6 @@ dotnet test src/tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Ba
   --results-directory ./TestResults/coverage
 ```
 
-Then open the generated `coverage.cobertura.xml` in your IDE or a Cobertura viewer.
-
 ## Layout
 
 - `Unit/` — fast, deterministic tests (AAA, descriptive names).
-- `Support/` — shared Testcontainers fixture and Marten test host factory.
-- `*IntegrationTests.cs` — collection `[PostgresCollection]`, truncate `mgm` between setups.

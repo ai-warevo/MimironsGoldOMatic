@@ -6,8 +6,7 @@
 # "needs:" edges, so they run concurrently on the runner pool (subject to org concurrency limits).
 #
 # TODO: Add proper unit tests for WoWAddon when available (Lua test runner / busted, or extracted pure-Lua modules).
-# TODO: Split Backend into parallel jobs (unit vs integration / filter matrix) if wall-clock time grows; today
-#       one job runs the full Backend.UnitTests suite (Testcontainers-backed integration tests included).
+# Backend: restores/tests the solution so both Backend.UnitTests and Backend.IntegrationTests run (Integration needs Docker).
 
 name: Unit and integration tests
 
@@ -47,8 +46,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p TestResults/backend
-          dotnet restore src/tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj
-          dotnet test src/tests/MimironsGoldOMatic.Backend.UnitTests/ \
+          dotnet restore src/MimironsGoldOMatic.slnx
+          dotnet test src/MimironsGoldOMatic.slnx \
             --configuration Release \
             --no-restore \
             --verbosity normal \

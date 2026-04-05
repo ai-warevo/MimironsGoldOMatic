@@ -1,12 +1,12 @@
 using MimironsGoldOMatic.Backend.Application;
-using MimironsGoldOMatic.Backend.UnitTests.Support;
+using MimironsGoldOMatic.Backend.IntegrationTests.Support;
 using MimironsGoldOMatic.Shared;
 using Marten;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace MimironsGoldOMatic.Backend.UnitTests;
+namespace MimironsGoldOMatic.Backend.IntegrationTests;
 
 /// <summary>Isolated host with <c>DevSkipSubscriberCheck=false</c> (does not share <see cref="PostClaimRulesIntegrationTests"/> DI).</summary>
 [Collection(nameof(PostgresCollection))]
