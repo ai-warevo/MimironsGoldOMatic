@@ -1,0 +1,2 @@
+- Add `.cursor/commands/create-release.md` and skill `github-release` with `scripts/release-skill.js`.
+- Extend `.github/workflows/release.yml`: `on.push.tags`, resolve version from tag, conventional changelog in release notes.

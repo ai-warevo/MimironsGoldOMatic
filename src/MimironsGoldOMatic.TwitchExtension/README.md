@@ -8,4 +8,13 @@ MVP **viewer** panel: **Vite + React + TypeScript** (Zustand, axios, EBS polling
 
 **Scripts:** `npm run dev`, `npm run build`, `npm run lint` — see **`package.json`**.
 
+**Automated tests (Jest, in this package — not under repo `src/Tests/` .NET projects):**
+
+- **`npm test`** — ESLint, **`jest`** (unit + integration), then production **`tsc` + `vite build`** (same as CI).
+- **`npm run test:unit`** — unit tests only (excludes `*.integration.test.ts`).
+- **`npm run test:integration`** — `*.integration.test.ts` (HTTP via **axios-mock-adapter** on the same `AxiosInstance` the panel uses; setup in **`src/test/jest.setup.ts`**).
+- **`npm run test:jest`** — all Jest suites without lint/build.
+
+Backend/Desktop (from repo root): **`dotnet test src/MimironsGoldOMatic.slnx`**.
+
 <!-- Generic Vite / React / ESLint template guidance: https://vite.dev/ -->

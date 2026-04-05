@@ -8,8 +8,15 @@ namespace MimironsGoldOMatic.Desktop.Services;
 /// <summary>Persists payout ids for which <c>NotifyWinnerWhisper</c> was already injected (avoid duplicate §9 whispers after restart).</summary>
 public sealed class NotifiedWhisperStore
 {
-    private static string StorePath =>
-        Path.Combine(DesktopSettingsStore.DataDirectory, "notified-whisper-ids.json");
+    private readonly string _dataDirectory;
+
+    /// <param name="dataDirectory">Optional override for tests; defaults to <see cref="DesktopSettingsStore.DataDirectory"/>.</param>
+    public NotifiedWhisperStore(string? dataDirectory = null)
+    {
+        _dataDirectory = dataDirectory ?? DesktopSettingsStore.DataDirectory;
+    }
+
+    private string StorePath => Path.Combine(_dataDirectory, "notified-whisper-ids.json");
 
     private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
 
@@ -31,7 +38,7 @@ public sealed class NotifiedWhisperStore
 
     public void Save(HashSet<Guid> ids)
     {
-        Directory.CreateDirectory(DesktopSettingsStore.DataDirectory);
+        Directory.CreateDirectory(_dataDirectory);
         File.WriteAllText(StorePath, JsonSerializer.Serialize(ids.OrderBy(x => x).ToList(), JsonOpts));
     }
 }

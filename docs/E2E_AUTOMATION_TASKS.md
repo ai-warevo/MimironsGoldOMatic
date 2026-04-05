@@ -19,7 +19,7 @@ Tasks to implement the E2E automation plan described in [E2E Automation Plan](E2
 Use this before relying on **CI Tier A** as a gate or when debugging a red workflow. Details and mitigations: [Predictive issue analysis](E2E_AUTOMATION_PLAN.md#predictive-issue-analysis-tier-a-ci).
 
 - [ ] Confirm the workflow run is a **`pull_request`** targeting **`main`** (Tier A does **not** run on arbitrary branches unless **`on:`** is extended).
-- [ ] Confirm **PR validation** builds only **Shared + Backend + both mocks** (no **Desktop**, **WoW addon**, **Twitch Extension**, **Backend.Tests**) — see **`Restore and build (Backend + mocks only)`** in [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml).
+- [ ] Confirm **PR validation** builds only **Shared + Backend + both mocks** (no **Desktop**, **WoW addon**, **Twitch Extension**, **Backend.UnitTests**) — see **`Restore and build (Backend + mocks only)`** in [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml).
 - [ ] Confirm **PostgreSQL 16** runs in the job via the **`services.postgres`** container (**`postgres:16-alpine`**) and **`pg_isready`** health checks succeed (not the host image—**`ubuntu-latest`** does not need a local `postgres` package).
 - [ ] Verify **mock services** start: **`GET http://127.0.0.1:9051/health`** (**MockEventSubWebhook**) and **`GET http://127.0.0.1:9052/health`** (**MockExtensionJwt**) return **200** with JSON **`status`** / **`service`** fields.
 - [ ] Test **HMAC** end-to-end: run [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) with the **same** `--secret` as **`Twitch__EventSubSecret`** on mock + Backend; expect **no** **401** from mock or EBS.
@@ -37,8 +37,8 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
-| A1 | Add **`EventSubSignatureHelper`** (or equivalent) in **`MimironsGoldOMatic.Backend.Tests`** that computes Twitch **`Twitch-Eventsub-Message-Signature`** (`sha256=` HMAC-SHA256 over `message-id + timestamp + body`) matching [`VerifySignature`](../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs). | Backend Dev | 0.5–1 day | **Optional** — **CI** already signs in **Python**; in-repo helper reduces drift. |
-| A2 | Add golden JSON bodies for **`channel.chat.message`** under e.g. `Backend.Tests/Fixtures/EventSub/` (`subscription`, `event.message_id`, `chatter_user_id`, `message.text`, subscriber **`badges`**). | Backend Dev | 0.5 day | Align with Twitch EventSub reference; version fixtures when schema changes. |
+| A1 | Add **`EventSubSignatureHelper`** (or equivalent) in **`MimironsGoldOMatic.Backend.UnitTests`** that computes Twitch **`Twitch-Eventsub-Message-Signature`** (`sha256=` HMAC-SHA256 over `message-id + timestamp + body`) matching [`VerifySignature`](../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs). | Backend Dev | 0.5–1 day | **Optional** — **CI** already signs in **Python**; in-repo helper reduces drift. |
+| A2 | Add golden JSON bodies for **`channel.chat.message`** under e.g. `src/Tests/MimironsGoldOMatic.Backend.UnitTests/Fixtures/EventSub/` (`subscription`, `event.message_id`, `chatter_user_id`, `message.text`, subscriber **`badges`**). | Backend Dev | 0.5 day | Align with Twitch EventSub reference; version fixtures when schema changes. |
 | A3 | Integration test: **`HttpClient`** **`POST`** to **`/api/twitch/eventsub`** with headers + body → assert pool enrollment via Marten or follow-up **`GET`** (if test host exposes full pipeline). | Backend Dev | 1 day | Cover both empty secret (dev bypass) and signed path. |
 | A4 | Document fixture maintenance in **`docs/MimironsGoldOMatic.Backend/ReadME.md`** or link this file. | Backend Dev | 0.25 day | Pairs with risk task R1. |
 
@@ -47,7 +47,7 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
 | B1 | Implement a small **test JWT builder** (HS256) using the same signing material as [`Program.cs`](../src/MimironsGoldOMatic.Backend/Program.cs) (**Extension** secret / dev key) with claims **`user_id`**, optional **`display_name`**. | Backend Dev | 0.5 day | **Done** as **`MockExtensionJwt`** **`GET /token`** — keep for parity or retire if service-only approach wins. |
-| B2 | Wire JWT into shared test host factory (same pattern as [`BackendTestHost`](../src/MimironsGoldOMatic.Backend.Tests/Support/) / existing integration setup). | Backend Dev | 0.5 day | |
+| B2 | Wire JWT into shared test host factory (same pattern as [`BackendTestHost`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/Support/) / existing integration setup). | Backend Dev | 0.5 day | |
 | B3 | Tests calling **`GET /api/pool/me`**, **`POST /api/payouts/claim`** ([`RouletteController`](../src/MimironsGoldOMatic.Backend/Controllers/RouletteController.cs)) with **`Authorization: Bearer`**. | Backend Dev | 1 day | Respect **`Mgm:DevSkipSubscriberCheck`** / subscriber rules when exercising **claim**. |
 
 ### C. MockHelixApi
@@ -63,7 +63,7 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
 | D1 | Define ordered **`HttpClient`** calls mirroring **SC-001** steps 10–15: **`POST /api/payouts/{id}/confirm-acceptance`**, **`PATCH .../status`** **`InProgress`**, **`PATCH .../status`** **`Sent`** ([`DesktopPayoutsController`](../src/MimironsGoldOMatic.Backend/Controllers/DesktopPayoutsController.cs)); header **`X-MGM-ApiKey`**. | Backend Dev | 1–2 days | Optional: thin **`Mgm.Desktop.E2EHarness`** console — only if tests need a subprocess; prefer in-proc test helper first. |
-| D2 | Seed Marten state (pool + spin + **`Pending`**) before synthetic calls, or chain after **verify-candidate** test (reuse [`RouletteVerifyCandidateIntegrationTests`](../src/MimironsGoldOMatic.Backend.Tests/RouletteVerifyCandidateIntegrationTests.cs) patterns). | Backend Dev | 1–2 days | |
+| D2 | Seed Marten state (pool + spin + **`Pending`**) before synthetic calls, or chain after **verify-candidate** test (reuse [`RouletteVerifyCandidateIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs) patterns). | Backend Dev | 1–2 days | |
 | D3 | Assert final state: payout **`Sent`**, pool row removed, **MockHelix** received exactly one announcement. | Backend Dev | 0.5 day | Success criteria align with [E2E Automation Plan §6](E2E_AUTOMATION_PLAN.md#6-success-criteria). |
 
 ---

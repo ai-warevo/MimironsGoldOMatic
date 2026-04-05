@@ -41,6 +41,7 @@ builder.Services.AddMarten(opts =>
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(PostClaimHandler).Assembly));
 
 builder.Services.AddSingleton<ChatEnrollmentService>();
+builder.Services.AddSingleton<IChatEnrollmentIngest>(sp => sp.GetRequiredService<ChatEnrollmentService>());
 builder.Services.AddSingleton<HelixChatService>();
 builder.Services.AddHostedService<RouletteSynchronizerHostedService>();
 builder.Services.AddHostedService<PayoutExpirationHostedService>();
@@ -115,9 +116,10 @@ await using (var scope = app.Services.CreateAsyncScope())
     await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 }
 
-app.UseRateLimiter();
+// After authentication so Extension JWT user_id partitions limits (before auth, all traffic keyed by IP).
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();

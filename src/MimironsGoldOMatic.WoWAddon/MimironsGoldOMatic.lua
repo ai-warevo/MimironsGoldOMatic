@@ -40,75 +40,21 @@ local mgmToast = nil
 
 local eventFrame = CreateFrame("Frame")
 
-local function mgmTrim(s)
-  if not s then
-    return ""
-  end
-  return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
-end
-
-local function mgmShortName(name)
-  if not name then
-    return ""
-  end
-  local base = string.match(name, "^([^%-]+)")
-  return base or name
-end
-
-local function mgmNamesEqual(a, b)
-  return string.lower(mgmShortName(a)) == string.lower(mgmShortName(b))
-end
-
-local function mgmUtcIso8601()
-  local t = date("!*t")
-  if not t then
-    return date("!%Y-%m-%dT%H:%M:%SZ")
-  end
-  return string.format(
-    "%04d-%02d-%02dT%02d:%02d:%02dZ",
-    t.year,
-    t.month,
-    t.day,
-    t.hour,
-    t.min,
-    t.sec
-  )
-end
-
-local function mgmJsonEscape(s)
-  if not s then
-    return ""
-  end
-  s = string.gsub(s, "\\", "\\\\")
-  s = string.gsub(s, '"', '\\"')
-  return s
-end
+local Core = assert(MimironsGoldOMaticCore, "MimironsGoldOMatic.Core.lua must load before MimironsGoldOMatic.lua")
+local mgmTrim = Core.Trim
+local mgmShortName = Core.ShortName
+local mgmNamesEqual = Core.NamesEqual
 
 --- SPEC §8: one line [MGM_WHO] + compact JSON (no newlines inside object).
 local function mgmEmitWhoJson(spinCycleId, characterName, online)
-  local capturedAt = mgmUtcIso8601()
-  local json = string.format(
-    '{"schemaVersion":1,"spinCycleId":"%s","characterName":"%s","online":%s,"capturedAt":"%s"}',
-    mgmJsonEscape(spinCycleId),
-    mgmJsonEscape(characterName),
-    online and "true" or "false",
-    capturedAt
-  )
-  DEFAULT_CHAT_FRAME:AddMessage("[MGM_WHO]" .. json)
+  local line = Core.BuildWhoLogLine(spinCycleId, characterName, online)
+  DEFAULT_CHAT_FRAME:AddMessage(line)
 end
 
 local function mgmParseWhoOnline(expectedName)
-  local n = GetNumWhoResults and GetNumWhoResults() or 0
-  if n == 0 then
-    return false
-  end
-  for i = 1, n do
-    local name = GetWhoInfo(i)
-    if name and mgmNamesEqual(name, expectedName) then
-      return true
-    end
-  end
-  return false
+  return Core.FindMatchingWhoName(expectedName, function()
+    return GetNumWhoResults and GetNumWhoResults() or 0
+  end, GetWhoInfo)
 end
 
 --- Desktop/EBS: /run MGM_RunWhoForSpin("<spinCycleId>","<CharacterName>")
@@ -145,17 +91,9 @@ function ReceiveGold(dataString)
     return
   end
   for piece in string.gmatch(dataString, "[^;]+") do
-    piece = mgmTrim(piece)
-    if piece ~= "" then
-      local id, name, copperStr = string.match(piece, "^([%w%-]+):([^:]+):(%d+)$")
-      if id and name and copperStr then
-        table.insert(mgmQueue, {
-          payoutId = id,
-          characterName = name,
-          copper = tonumber(copperStr) or 0,
-          state = "READY",
-        })
-      end
+    local row = Core.ParseGoldSegment(piece)
+    if row then
+      table.insert(mgmQueue, row)
     end
   end
   if mgmPanel and mgmPanel:IsShown() then

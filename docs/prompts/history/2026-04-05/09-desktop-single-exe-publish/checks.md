@@ -1,0 +1,3 @@
+- [x] Confirm self-contained single-file yields one EXE (+ strip PDBs)
+- [x] Add publish profile and Desktop `RemovePublishPdbsWhenSingleFile` target
+- [x] Update `release.yml` desktop publish step

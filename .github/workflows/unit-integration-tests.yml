@@ -1,0 +1,287 @@
+# Unit and integration tests per component (PRs → main).
+# Runs in parallel with .github/workflows/e2e-test.yml: same pull_request trigger, separate workflow file →
+# GitHub schedules both workflows independently on the same event.
+#
+# Job-level parallelism: test-backend, test-desktop, test-wowaddon, and test-twitch-extension have no mutual
+# "needs:" edges, so they run concurrently on the runner pool (subject to org concurrency limits).
+#
+# WoWAddon: LuaUnit tests in src/Tests/MimironsGoldOMatic.WoWAddon.Tests (python3 run_tests.py → lua run_tests.lua).
+# Backend: restores/tests Backend.UnitTests + Backend.IntegrationTests only (full slnx includes net10.0-windows Desktop; Linux cannot restore WPF without excluding it). Desktop tests run in test-desktop (windows-latest).
+
+name: Unit and integration tests
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  DOTNET_VERSION: "10.0.x"
+
+jobs:
+  test-backend:
+    name: Backend — unit & integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj', 'src/Tests/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore and test Backend
+        run: |
+          set -euo pipefail
+          mkdir -p TestResults/backend
+          BACKEND_UT="src/Tests/MimironsGoldOMatic.Backend.UnitTests/MimironsGoldOMatic.Backend.UnitTests.csproj"
+          BACKEND_IT="src/Tests/MimironsGoldOMatic.Backend.IntegrationTests/MimironsGoldOMatic.Backend.IntegrationTests.csproj"
+          dotnet restore "$BACKEND_UT"
+          dotnet restore "$BACKEND_IT"
+          dotnet test "$BACKEND_UT" \
+            --configuration Release \
+            --no-restore \
+            --verbosity normal \
+            --logger "trx;LogFileName=backend-unit-tests.trx" \
+            --results-directory "${GITHUB_WORKSPACE}/TestResults/backend"
+          dotnet test "$BACKEND_IT" \
+            --configuration Release \
+            --no-restore \
+            --verbosity normal \
+            --logger "trx;LogFileName=backend-integration-tests.trx" \
+            --results-directory "${GITHUB_WORKSPACE}/TestResults/backend"
+
+      - name: Upload Backend test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-backend
+          path: |
+            TestResults/backend/**
+          retention-days: 7
+
+  test-desktop:
+    name: Desktop — unit & integration
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj', 'src/Tests/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore and test Desktop
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path TestResults/desktop | Out-Null
+          # Release Desktop sets RuntimeIdentifier=win-x64; restore the test project once with -r win-x64 so Desktop's
+          # project.assets.json keeps net10.0-windows/win-x64 (a second restore without -r overwrites and breaks NETSDK1047).
+          dotnet restore src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj -r win-x64
+          dotnet test src/Tests/MimironsGoldOMatic.Desktop.UnitTests/MimironsGoldOMatic.Desktop.UnitTests.csproj `
+            --configuration Release `
+            --no-restore `
+            --verbosity normal `
+            --logger "trx;LogFileName=desktop-unit-tests.trx" `
+            --results-directory "$env:GITHUB_WORKSPACE/TestResults/desktop"
+
+      - name: Upload Desktop test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-desktop
+          path: |
+            TestResults/desktop/**
+          retention-days: 7
+
+  test-wowaddon:
+    name: WoW addon — Lua tests & syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lua (luac syntax check)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y lua5.4
+
+      - name: Validate addon layout, Lua syntax, and LuaUnit tests
+        run: |
+          set -euo pipefail
+          REPORT_DIR="TestResults/wowaddon"
+          mkdir -p "$REPORT_DIR"
+          REPORT_FILE="$REPORT_DIR/wowaddon-validation.log"
+          {
+            echo "=== MimironsGoldOMatic.WoWAddon validation ==="
+            TOC="src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.toc"
+            CORE="src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.Core.lua"
+            LUA="src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua"
+            test -f "$TOC" || { echo "FAIL: missing $TOC"; exit 1; }
+            test -f "$CORE" || { echo "FAIL: missing $CORE"; exit 1; }
+            test -f "$LUA" || { echo "FAIL: missing $LUA"; exit 1; }
+            if ! grep -qx 'MimironsGoldOMatic.Core.lua' "$TOC"; then
+              echo "FAIL: .toc must list: MimironsGoldOMatic.Core.lua (before main .lua)"
+              exit 1
+            fi
+            if ! grep -qx 'MimironsGoldOMatic.lua' "$TOC"; then
+              echo "FAIL: .toc must list: MimironsGoldOMatic.lua"
+              exit 1
+            fi
+            echo "Structure: OK"
+            luac -p "$CORE"
+            luac -p "$LUA"
+            echo "luac -p: OK"
+            (cd "src/Tests/MimironsGoldOMatic.WoWAddon.Tests" && python3 run_tests.py)
+            echo "LuaUnit: OK"
+            echo "=== All WoW addon checks passed ==="
+          } 2>&1 | tee "$REPORT_FILE"
+
+      - name: Upload WoW addon validation log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-wowaddon
+          path: |
+            TestResults/wowaddon/**
+          retention-days: 7
+
+  test-twitch-extension:
+    name: Twitch Extension — lint & build (npm test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/MimironsGoldOMatic.TwitchExtension
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: src/MimironsGoldOMatic.TwitchExtension/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm test (lint, Jest, production build)
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/TestResults/twitch-extension"
+          npm test 2>&1 | tee "$GITHUB_WORKSPACE/TestResults/twitch-extension/npm-test.log"
+          echo "Jest runs via npm test (see src/MimironsGoldOMatic.TwitchExtension). Optional: add jest --coverage and emit lcov for artifacts." > "$GITHUB_WORKSPACE/TestResults/twitch-extension/coverage-note.txt"
+
+      - name: Upload Twitch Extension logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-twitch-extension
+          path: |
+            TestResults/twitch-extension/**
+          retention-days: 7
+
+  aggregate-results:
+    name: Aggregate results (PR summary)
+    runs-on: ubuntu-latest
+    needs:
+      - test-backend
+      - test-desktop
+      - test-wowaddon
+      - test-twitch-extension
+    if: always()
+    steps:
+      - name: Post or update PR comment
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- mgm-unit-integration-summary -->';
+            const backend = '${{ needs.test-backend.result }}';
+            const desktop = '${{ needs.test-desktop.result }}';
+            const wow = '${{ needs.test-wowaddon.result }}';
+            const twitch = '${{ needs.test-twitch-extension.result }}';
+            const rows = [
+              ['Backend', backend],
+              ['Desktop', desktop],
+              ['WoW addon', wow],
+              ['Twitch Extension', twitch],
+            ];
+            const failed = rows.some(([, r]) => r !== 'success');
+            const status = failed ? 'Some component jobs failed' : 'All component jobs succeeded';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const table = rows
+              .map(([name, r]) => `| **${name}** | ${r === 'success' ? 'passed' : `**${r}**`} |`)
+              .join('\n');
+            const footer = failed
+              ? '**Next step:** open the failed job log and the matching artifact for details (xUnit TRX, eslint/tsc output, etc.).'
+              : '';
+            const parts = [
+              marker,
+              '',
+              `### Unit / integration CI — ${status}`,
+              '',
+              '| Component | Result |',
+              '|-----------|--------|',
+              table,
+              '',
+              `[Open this workflow run](${runUrl}) for job logs. Download **test-results-** artifacts for TRX files, \`npm test\` logs, and WoW addon validation output.`,
+            ];
+            if (footer) {
+              parts.push('', footer);
+            }
+            const body = parts.join('\n');
+
+            const issue_number = context.payload.pull_request?.number;
+            if (!issue_number) {
+              core.info('No pull_request payload; skipping comment.');
+              return;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const prev = comments.find((c) => c.body?.includes(marker));
+            if (prev) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                body,
+              });
+            }

@@ -1,0 +1,3 @@
+- [x] release-skill.js + SKILL.md + create-release.md
+- [x] release.yml tag trigger + PREV_TAG + changelog sections
+- [x] node --check on script

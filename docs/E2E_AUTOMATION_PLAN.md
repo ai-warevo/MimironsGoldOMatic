@@ -1,5 +1,5 @@
 <!-- Created: 2026-04-05 (E2E automation plan) -->
-<!-- Updated: 2026-04-05 (Sequential release CI/CD pipeline) -->
+<!-- Updated: 2026-04-05 (Unit/integration PR workflow + strategy section) -->
 
 # E2E automation plan (MVP-6): Chat → WoW → Helix
 
@@ -12,7 +12,7 @@ This document proposes how to automate the **full operator workflow** currently 
 - Backend (EBS): `src/MimironsGoldOMatic.Backend/` — **not** `MimironsGoldOMatic.WEBAPI.Backend`.
 - WoW addon: `src/MimironsGoldOMatic.WoWAddon/`.
 - Desktop: `src/MimironsGoldOMatic.Desktop/`.
-- CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
+- CI: `.github/workflows/e2e-test.yml` — **Tier A** (Backend + Postgres + mocks + synthetic EventSub) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). **Unit/integration (parallel):** `.github/workflows/unit-integration-tests.yml` (Backend, Desktop, WoW addon validation, Twitch Extension `npm test`) on the **same** PR trigger. CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
 - Tier A mocks: `src/Mocks/MockEventSubWebhook/`, `src/Mocks/MockExtensionJwt/`.
 
 **CI tier labels (this repository):** **Tier A** is the current [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) job: **Postgres + Backend + mocks + synthetic EventSub → `GET /api/pool/me`**. **Tier B** is the **planned CI extension** with **MockHelixApi**, **SyntheticDesktop**, and a **configurable Helix base URL** (see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension)). In **Section 1**, optional **real WoW + self-hosted** validation is **operational / full-stack** work—**not** the same as **CI Tier B**.
@@ -66,7 +66,7 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 | Field | Content |
 |--------|---------|
 | **Action** | Spin cycle selects candidate; **`POST /api/roulette/verify-candidate`** with **`online: true`** creates **`Pending`** payout when rules pass. |
-| **Trigger** | **CI:** existing pattern: seed Marten docs + call [`RouletteCycleTick`](../src/MimironsGoldOMatic.Backend/Services/RouletteCycleTick.cs), then **`POST /api/roulette/verify-candidate`** via [`DesktopRouletteController`](../src/MimironsGoldOMatic.Backend/Controllers/DesktopRouletteController.cs) with header **`X-MGM-ApiKey`** ([`ApiKeyAuthenticationHandler`](../src/MimironsGoldOMatic.Backend/Auth/ApiKeyAuthenticationHandler.cs)). Extend or compose one **linear E2E test** that chains enrollment → tick → verify (today partially split across [`PostClaimRulesIntegrationTests`](../src/MimironsGoldOMatic.Backend.Tests/PostClaimRulesIntegrationTests.cs), [`RouletteVerifyCandidateIntegrationTests`](../src/MimironsGoldOMatic.Backend.Tests/RouletteVerifyCandidateIntegrationTests.cs)). |
+| **Trigger** | **CI:** existing pattern: seed Marten docs + call [`RouletteCycleTick`](../src/MimironsGoldOMatic.Backend/Services/RouletteCycleTick.cs), then **`POST /api/roulette/verify-candidate`** via [`DesktopRouletteController`](../src/MimironsGoldOMatic.Backend/Controllers/DesktopRouletteController.cs) with header **`X-MGM-ApiKey`** ([`ApiKeyAuthenticationHandler`](../src/MimironsGoldOMatic.Backend/Auth/ApiKeyAuthenticationHandler.cs)). Extend or compose one **linear E2E test** that chains enrollment → tick → verify (today partially split across [`PostClaimRulesIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PostClaimRulesIntegrationTests.cs), [`RouletteVerifyCandidateIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs)). |
 | **Mock / stub** | **Time:** use injectable **`TimeProvider`** / fixed **`DateTime`** only if introduced; otherwise keep “wall-clock safe” windows like existing roulette tests. **No real Desktop.** |
 | **Verification** | HTTP **`200`** on verify; payout **`Pending`**; **`GET /api/payouts/pending`** returns row; optional **`GET /api/roulette/state`** ([`GetRouletteStateQuery`](../src/MimironsGoldOMatic.Backend/Application/EbsMediator.cs)) with JWT. |
 | **Test data** | [`VerifyCandidateRequest`](../src/MimironsGoldOMatic.Backend/Api/ApiContracts.cs): `schemaVersion`, `spinCycleId`, `characterName`, `online: true`, `capturedAt` within verification window per **`docs/SPEC.md`**. |
@@ -86,7 +86,7 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 | Field | Content |
 |--------|---------|
 | **Action** | On transition to **`Sent`**, Backend calls Helix **`Send Chat Message`** ([`HelixChatService`](../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs)) with Russian copy per **SPEC** §11. |
-| **Trigger** | **CI:** **`PATCH /api/payouts/{id}/status`** with **`Sent`** in Tier A test (see [`PatchPayoutStatusIntegrationTests`](../src/MimironsGoldOMatic.Backend.Tests/PatchPayoutStatusIntegrationTests.cs) for pool removal; extend to assert Helix outbound). |
+| **Trigger** | **CI:** **`PATCH /api/payouts/{id}/status`** with **`Sent`** in Tier A test (see [`PatchPayoutStatusIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PatchPayoutStatusIntegrationTests.cs) for pool removal; extend to assert Helix outbound). |
 | **Mock / stub** | **MockHelixAPI:** `HttpMessageHandler` fake or **WireMock.NET** listening on loopback; inject **`HttpClient`** base address for **`Helix`** named client. **Today** URL is hardcoded to `https://api.twitch.tv/helix/chat/messages` in `HelixChatService` — **requires a small product change**: e.g. optional **`Twitch:HelixApiBaseUrl`** (empty = production URL) so tests can point to **`http://localhost:9xxx`**. |
 | **Verification** | Mock receives **POST** with JSON containing `broadcaster_id`, `sender_id`, `message` matching **`Награда отправлена персонажу {name} на почту, проверяй ящик!`**. |
 | **Test data** | [`TwitchOptions`](../src/MimironsGoldOMatic.Backend/Configuration/TwitchOptions.cs): `BroadcasterUserId`, `BroadcasterAccessToken` set to dummy values; mock returns **`204`** / documented Helix success shape. |
@@ -107,7 +107,7 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 
 - **`HelixChatService` refactor (small):** inject `IOptions<TwitchOptions>` and optional **`Uri HelixApiBase`** (default `https://api.twitch.tv`). Tests register **`HttpClient`** with **`PrimaryHttpMessageHandler`** = **`StubHelixHandler`**.
 - **`EventSubSignatureHelper` (test project):** static method to compute `sha256=` HMAC from Twitch headers + body for golden tests.
-- **`E2EApiTierATests` (new):** one test class, **`[Trait("Category","E2E")`** or **`Integration`**, building `WebApplicationFactory` **or** reusing [`BackendTestHost`](../src/MimironsGoldOMatic.Backend.Tests/Support/) pattern with mocked `IHttpClientFactory` for **`Helix`**.
+- **`E2EApiTierATests` (new):** one test class, **`[Trait("Category","E2E")`** or **`Integration`**, building `WebApplicationFactory` **or** reusing [`BackendTestHost`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/Support/) pattern with mocked `IHttpClientFactory` for **`Helix`**.
 
 ---
 
@@ -154,7 +154,7 @@ This section describes the **split** between **fast PR validation** (Tier A E2E)
 |------|--------|
 | **Trigger** | `pull_request` targeting **`main`** only. |
 | **Runner** | `ubuntu-latest`. |
-| **Build scope** | **Shared + Backend + MockEventSubWebhook + MockExtensionJwt** only (excludes **Desktop**, **Backend.Tests**, **WoW addon**, **Twitch Extension**) for shorter wall time and fewer prerequisites. |
+| **Build scope** | **Shared + Backend + MockEventSubWebhook + MockExtensionJwt** only (excludes **Desktop**, **Backend.UnitTests**, **WoW addon**, **Twitch Extension**) for shorter wall time and fewer prerequisites. |
 | **Data plane** | PostgreSQL **16** service container (unchanged health / port / credentials pattern). |
 | **Runtime** | Backend + both mocks on loopback; **Python** [`.github/scripts/send_e2e_eventsub.py`](../.github/scripts/send_e2e_eventsub.py) + **`curl`** assertions unchanged from Tier A. |
 | **Proof** | Synthetic **`channel.chat.message`** → **`GET /api/pool/me`** enrollment check (`E2EHero`). |
@@ -263,8 +263,8 @@ A **passed** Tier A **E2E** run should demonstrate:
 
 | Risk | Mitigation |
 |------|------------|
-| **Mock EventSub diverges** from Twitch payload schema | Versioned JSON **golden files** under `Backend.Tests/Fixtures/`; update when Twitch changelog affects `channel.chat.message`. |
-| **Flaky time** in roulette / verify window | Use patterns from [`RouletteVerifyCandidateIntegrationTests`](../src/MimironsGoldOMatic.Backend.Tests/RouletteVerifyCandidateIntegrationTests.cs) (bounded `capturedAt`, known cycle anchors). |
+| **Mock EventSub diverges** from Twitch payload schema | Versioned JSON **golden files** under `src/Tests/MimironsGoldOMatic.Backend.UnitTests/Fixtures/` (or similar); update when Twitch changelog affects `channel.chat.message`. |
+| **Flaky time** in roulette / verify window | Use patterns from [`RouletteVerifyCandidateIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs) (bounded `capturedAt`, known cycle anchors). |
 | **Helix URL hardcoded** blocks mock | Add configurable base URL (**small refactor**) — see §3. |
 | **Tier A skips real WoW** — false confidence | Label tests **`E2E-API`** vs **`E2E-Full`**; keep **IMPLEMENTATION_READINESS** matrix honest; run Tier B before major releases. |
 | **Secrets leak** in workflows | Use GitHub **Environments** + **OIDC** where possible; never log tokens; mock Helix in default **CI**. |
@@ -390,7 +390,7 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | **1** | Backend Dev | **0.5 d** | Create **`MockHelixApi`** project in **`src/Mocks/`**, wire into **`MimironsGoldOMatic.slnx`**, **`GET /health`**. |
 | **2** | Backend Dev | **0.5–1 d** | Implement **`POST /helix/chat/messages`** stub: validate **`Authorization`**, **`Client-Id`**, return **2xx**; expose last payload via **`GET /last-request`** or structured log for CI. |
 | **3** | DevOps / Backend Dev | **0.5–1 d** | Integrate into **`.github/workflows/e2e-test.yml`**: start mock on a free port (e.g. **9053**), set **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`** on Backend so **`HelixChatService`** actually calls Helix; assert Russian §11 message template. |
-| **4** | Backend Dev | **1–2 d** | **SyntheticDesktop**: ordered **`HttpClient`** calls (or shell) with **`Mgm__ApiKey`**; seed or reuse **pool + spin + `Pending`** (see [`RouletteVerifyCandidateIntegrationTests`](../src/MimironsGoldOMatic.Backend.Tests/RouletteVerifyCandidateIntegrationTests.cs)). |
+| **4** | Backend Dev | **1–2 d** | **SyntheticDesktop**: ordered **`HttpClient`** calls (or shell) with **`Mgm__ApiKey`**; seed or reuse **pool + spin + `Pending`** (see [`RouletteVerifyCandidateIntegrationTests`](../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs)). |
 | **5** | Backend Dev | **1 d** | **`HelixChatService` + `TwitchOptions`**: configurable base URL; regression test that default URL unchanged when option unset. |
 | **6** | DevOps | **0.5 d** | Extend workflow: start **MockHelixApi**, run synthetic chain, fail job if Helix mock did not receive exactly one announcement (or match xUnit artifact strategy). |
 
@@ -420,11 +420,48 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 
 ---
 
+## Unit and Integration Testing Strategy
+
+**Workflow:** [`.github/workflows/unit-integration-tests.yml`](../.github/workflows/unit-integration-tests.yml)
+
+### Trigger conditions
+
+- **`pull_request`** targeting **`main`** only — same event filter as [`.github/workflows/e2e-test.yml`](../.github/workflows/e2e-test.yml) (**Tier A E2E**).
+- Because this is a **separate workflow file**, GitHub Actions starts it **in parallel** with **E2E** on each qualifying PR (independent workflow graphs, subject to org concurrency limits).
+
+### Component breakdown
+
+| Component | Job | Runner | What runs today |
+|-----------|-----|--------|-----------------|
+| **Backend** | `test-backend` | `ubuntu-latest` | `dotnet test` on **`src/MimironsGoldOMatic.slnx`** (Backend unit + integration under **`src/Tests/`**; xUnit + **Testcontainers** where applicable); TRX under **`TestResults/backend/`** |
+| **Desktop** | `test-desktop` | `windows-latest` | `dotnet test` on **`src/Tests/MimironsGoldOMatic.Desktop.UnitTests/`** (WPF-linked unit tests); TRX under **`TestResults/desktop/`** |
+| **WoW addon** | `test-wowaddon` | `ubuntu-latest` | Required files + **`.toc`** consistency + **`luac -p`** on **`MimironsGoldOMatic.lua`**; log artifact (**placeholder** until a Lua test runner exists) |
+| **Twitch Extension** | `test-twitch-extension` | `ubuntu-latest` | **`npm ci`** + **`npm test`** (**`eslint`** + **`tsc`/`vite build`**); logs under **`TestResults/twitch-extension/`** |
+
+### Parallel execution model
+
+- **Across workflows:** **Unit/integration** vs **E2E** — parallel (same trigger, different `name:` workflows).
+- **Within unit/integration:** **`test-backend`**, **`test-desktop`**, **`test-wowaddon`**, **`test-twitch-extension`** have **no** mutual **`needs:`**, so they are eligible to run **concurrently**.
+- **`aggregate-results`** runs **`if: always()`** after all four, posts or updates a **PR comment** (summary table + link to the workflow run). It is designed **not** to fail the workflow by itself; failing **test-*** jobs still mark the overall workflow **failed**.
+
+### Artifact retention
+
+- Per-component artifacts (**`test-results-backend`**, **`test-results-desktop`**, **`test-results-wowaddon`**, **`test-results-twitch-extension`**) use **`retention-days: 7`** (TRX, validation logs, **`npm test`** output).
+
+### Future expansion
+
+- **WoW addon:** add a real Lua unit suite (e.g. **Busted** / extracted pure modules) and invoke it from **`test-wowaddon`** instead of syntax-only checks.
+- **Twitch Extension:** add **Vitest** (or similar), emit **lcov**, and upload coverage next to logs.
+- **Backend:** optional **matrix** or split jobs (**fast unit** vs **Testcontainers integration**) if wall-clock time grows.
+- **PR comment:** fork PRs may not allow **`pull-requests: write`** on `GITHUB_TOKEN`; the comment step uses **`continue-on-error: true`** so the summary is best-effort.
+
+---
+
 ## 8. Next steps (implementation checklist)
 
 1. **Refactor `HelixChatService`** — tracked as **Tier B Task 5**; see [Tier B Implementation Plan](#tier-b-implementation-plan-ci-extension).
 2. **Add `MockHelixApi` + assertions** — **Tier B Tasks 1–3, 6**.
-3. **Optional:** Add in-repo **`EventSubSignatureHelper`** in **`Backend.Tests`** (or reuse **Python** script logic) for xUnit coverage of **`POST /api/twitch/eventsub`** with **non-empty** `EventSubSecret` — **Tier A CI** already exercises the full path via mocks + script.
+3. **Optional:** Add in-repo **`EventSubSignatureHelper`** in **`MimironsGoldOMatic.Backend.UnitTests`** (or reuse **Python** script logic) for xUnit coverage of **`POST /api/twitch/eventsub`** with **non-empty** `EventSubSecret` — **Tier A CI** already exercises the full path via mocks + script.
 4. **SyntheticDesktop + chained workflow** — **Tier B Task 4**; enroll → spin tick → verify-candidate → confirm-acceptance → patch statuses → assert Helix mock + pool.
 5. ~~**Create `.github/workflows/e2e-test.yml`**~~ **Done (Tier A).** Optionally add **`ci.yml`** for PR **build/test** only; add **`Category=E2E`** **dotnet test** when in-process E2E tests exist.
 6. **Document** test filters in **`docs/MimironsGoldOMatic.Backend/ReadME.md`** (Tier A + local E2E).
@@ -440,3 +477,4 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | 1.1 | 2026-04-05 | **Tier A:** `MockEventSubWebhook`, `MockExtensionJwt`, `e2e-test.yml`, `send_e2e_eventsub.py` |
 | 1.2 | 2026-04-05 | **Tier A** runbook, predictive issues, **CI Tier B** plan, optimization notes; terminology aligned with workflow |
 | 1.3 | 2026-04-05 | **CI/CD Pipeline Architecture:** `e2e-test.yml` scoped PR build; **`release.yml`** parallel builds + sequential **`create-release`**; GHCR Backend image |
+| 1.4 | 2026-04-05 | **Unit and Integration Testing Strategy:** `unit-integration-tests.yml` (PR→`main`, parallel with E2E); per-component jobs + artifacts + PR summary |

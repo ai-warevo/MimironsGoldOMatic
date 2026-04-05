@@ -6,6 +6,7 @@ namespace MimironsGoldOMatic.Backend.Services;
 
 /// <summary>EventSub <c>!twgold &lt;CharacterName&gt;</c> enrollment (SPEC section 5).</summary>
 public sealed class ChatEnrollmentService(IDocumentStore store, ILogger<ChatEnrollmentService> log)
+    : IChatEnrollmentIngest
 {
     public async Task IngestAsync(
         string messageId,

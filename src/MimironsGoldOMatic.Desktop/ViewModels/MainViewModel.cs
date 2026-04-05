@@ -12,7 +12,7 @@ namespace MimironsGoldOMatic.Desktop.ViewModels;
 
 public partial class MainViewModel : ObservableObject, IDisposable
 {
-    private readonly EbsDesktopClient _api;
+    private readonly IEbsDesktopClient _api;
     private readonly WoWInjectionCoordinator _inject;
     private readonly PayoutSnapshotCache _cache;
     private readonly NotifiedWhisperStore _whisperStore;
@@ -43,7 +43,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _isBusy;
 
     public MainViewModel(
-        EbsDesktopClient api,
+        IEbsDesktopClient api,
         WoWInjectionCoordinator inject,
         PayoutSnapshotCache cache,
         NotifiedWhisperStore whisperStore,
@@ -63,7 +63,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _tail = new WoWChatLogTailService(connection, api, cache, AppendLog);
         _tail.Start();
 
-        _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(Math.Clamp(connection.Settings.PollIntervalSeconds, 5, 600)) };
+        _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(connection.GetClampedPollIntervalSeconds()) };
         _pollTimer.Tick += (_, _) => _ = PollRefreshAsync();
         _pollTimer.Start();
 
@@ -80,7 +80,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void ApplyPollIntervalFromSettings()
     {
-        _pollTimer.Interval = TimeSpan.FromSeconds(Math.Clamp(_connection.Settings.PollIntervalSeconds, 5, 600));
+        _pollTimer.Interval = TimeSpan.FromSeconds(_connection.GetClampedPollIntervalSeconds());
     }
 
     public void ReloadTailAfterSettingsChanged()

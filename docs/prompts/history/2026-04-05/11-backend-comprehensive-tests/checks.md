@@ -1,0 +1,3 @@
+- [x] Test project under `tests/` with xUnit + Moq + coverlet
+- [x] Integration + unit tests; CI path updated
+- [x] `dotnet test` solution green; coverage README note + runsettings

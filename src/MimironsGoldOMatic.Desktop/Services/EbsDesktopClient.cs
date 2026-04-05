@@ -9,7 +9,7 @@ using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Desktop.Services;
 
-public sealed class EbsDesktopClient
+public sealed class EbsDesktopClient : IEbsDesktopClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly Func<(string BaseUrl, string ApiKey)> _getConnection;

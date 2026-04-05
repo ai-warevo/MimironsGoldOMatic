@@ -20,4 +20,30 @@
     <ProjectReference Include="..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <Content Remove="**/*.log" />
+    <Content Remove="temp/**" />
+    <None Update="appsettings.Development.json">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+  </ItemGroup>
+
+  <!-- ProjectReference builds can still copy *.pdb into the publish folder; remove them for a true single-file folder. -->
+  <Target Name="RemovePublishPdbsWhenSingleFile" AfterTargets="Publish" Condition="'$(PublishSingleFile)' == 'true'">
+    <ItemGroup>
+      <_PdbInPublishDir Include="$(PublishDir)*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(_PdbInPublishDir)" ContinueOnError="true" />
+  </Target>
+
 </Project>
