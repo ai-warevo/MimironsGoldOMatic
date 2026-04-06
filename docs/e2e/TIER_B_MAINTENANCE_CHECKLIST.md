@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Post‑Tier B execution) -->
+<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
 
 # Tier B / E2E pipeline — maintenance checklist
 
@@ -9,6 +9,18 @@
 ## Verification of monitoring & alerting (operators)
 
 These checks validate that **monitoring** and **alerting** remain functional after workflow edits.
+
+### Validation results (fill during execution)
+
+> Note: In this workspace, GitHub CLI (`gh`) is not available, and no
+> authenticated GitHub API token is configured. As a result, the steps below
+> were reviewed for correctness but not executed from this environment.
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| Weekly health report manual dispatch | [!] Blocked (needs Actions UI) | Run URL: *TBD* |
+| Consecutive failure alert dedupe | [!] Blocked (needs failed runs) | Issue URL: *TBD* |
+| `e2e-test.yml` Summary timing table | [!] Blocked (needs Actions UI) | Run URL: *TBD* |
 
 ### A) Weekly health report (manual dispatch)
 

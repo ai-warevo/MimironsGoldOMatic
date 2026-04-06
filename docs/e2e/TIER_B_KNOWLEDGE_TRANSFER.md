@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Post‑Tier B execution) -->
+<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
 
 # Tier B — knowledge transfer (demo script + environment checklist)
 
@@ -102,7 +102,15 @@ If you want to run the Tier B flow locally (mirrors CI):
 - **Duration:** 60 min
 - **Presenter:** Anatoly Ivanov (`ai.vibeqodez@vk.com`)
 - **Audience:** CI maintainers, Backend maintainers, future Tier C implementers
+- **Proposed time:** *TBD*
+- **Meeting link:** *TBD*
 - **Preread:**
   - `docs/e2e/TIER_B_HANDOVER.md`
   - `docs/e2e/TIER_B_MAINTENANCE_CHECKLIST.md`
   - `docs/e2e/TIER_C_KICKOFF_PLAN.md`
+
+### Live demo prep (if doing a live Actions walkthrough)
+
+- Pick a **known green** `e2e-test.yml` run URL ahead of time.
+- Pick a **known red** run URL (or download and save `e2e-service-logs`) for artifact walkthrough.
+- Have the port matrix handy: **8080 / 9051–9054**.

@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Post‑Tier B execution) -->
+<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
 
 # Tier B — maintainer handover
 

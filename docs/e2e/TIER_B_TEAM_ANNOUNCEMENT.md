@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Post‑Tier B execution) -->
+<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
 
 # Team message — Tier B complete & Tier C kick-off (template)
 
@@ -46,6 +46,13 @@ Hi team,
 | **Docs** | Is the handover clear? What’s missing? |
 
 **Calendar placeholder:** *— owner: set invite; attach this agenda + link `TIER_B_KNOWLEDGE_TRANSFER.md` —*
+
+### Knowledge transfer session (schedule)
+
+- **Proposed time:** *TBD*
+- **Invite list:** *TBD*
+- **Meeting link:** *TBD*
+- **Preread:** `TIER_B_KNOWLEDGE_TRANSFER.md`
 
 ---
 
