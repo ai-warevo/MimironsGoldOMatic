@@ -1,0 +1,1 @@
+Implement Desktop "Check for Updates" end-to-end using the requirements in `tmp/cursor_prompt_desktop_updates.md`, including Desktop service/UI integration and WoW chat-log proxy behavior for `[MGM_UPDATE_CHECK]`.

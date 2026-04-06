@@ -160,4 +160,40 @@ public sealed class EbsDesktopClientTests
         var dto = new VerifyCandidateRequestDto(1, Guid.NewGuid(), "X", true, DateTime.UtcNow);
         await api.VerifyCandidateAsync(dto, CancellationToken.None);
     }
+
+    [Fact]
+    public async Task GetVersionInfoAsync_success_returns_version_payload()
+    {
+        var handler = new DelegatingHttpHandler
+        {
+            SendAsyncImpl = (req, _) =>
+            {
+                Assert.Equal(HttpMethod.Get, req.Method);
+                Assert.EndsWith("/api/version", req.RequestUri!.AbsolutePath, StringComparison.Ordinal);
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"version\":\"1.2.3\"}", Encoding.UTF8, "application/json"),
+                });
+            },
+        };
+        var api = new EbsDesktopClient(new TestHttpClientFactory(handler), () => ("https://example/", "key"));
+
+        var dto = await api.GetVersionInfoAsync(CancellationToken.None);
+        Assert.Equal("1.2.3", dto.Version);
+    }
+
+    [Fact]
+    public async Task GetVersionInfoAsync_missing_required_version_throws_json_exception()
+    {
+        var handler = new DelegatingHttpHandler
+        {
+            SendAsyncImpl = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{}", Encoding.UTF8, "application/json"),
+            }),
+        };
+        var api = new EbsDesktopClient(new TestHttpClientFactory(handler), () => ("https://example/", "key"));
+
+        await Assert.ThrowsAsync<JsonException>(() => api.GetVersionInfoAsync(CancellationToken.None));
+    }
 }

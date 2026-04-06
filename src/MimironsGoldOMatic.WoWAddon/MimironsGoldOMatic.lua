@@ -9,6 +9,8 @@ local L = {
   OPEN_MAILBOX = "Open the mailbox to use the queue.",
   MAIL_SUBJECT = "Mimiron's Gold-o-Matic",
   TOAST_SENT = "Mail sent — %s",
+  UPDATE_CHECK_RUNNING = "Mimiron's Gold-o-Matic: выполняется проверка обновлений...",
+  UPDATE_CHECK_GUIDANCE = "Mimiron's Gold-o-Matic: если вы не увидите ответ в чате, убедитесь, что запущено Desktop-приложение.",
 }
 
 local MGM_WINNER_WHISPER_BODY =
@@ -55,6 +57,17 @@ local function mgmParseWhoOnline(expectedName)
   return Core.FindMatchingWhoName(expectedName, function()
     return GetNumWhoResults and GetNumWhoResults() or 0
   end, GetWhoInfo)
+end
+
+local function mgmEmitUpdateCheck()
+  -- Keep this tag unmodified so Desktop can detect it in WoWChatLog.txt.
+  DEFAULT_CHAT_FRAME:AddMessage("[MGM_UPDATE_CHECK]")
+end
+
+local function mgmRequestUpdateCheck()
+  DEFAULT_CHAT_FRAME:AddMessage(L.UPDATE_CHECK_RUNNING)
+  DEFAULT_CHAT_FRAME:AddMessage(L.UPDATE_CHECK_GUIDANCE)
+  mgmEmitUpdateCheck()
 end
 
 --- Desktop/EBS: /run MGM_RunWhoForSpin("<spinCycleId>","<CharacterName>")
@@ -342,7 +355,12 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 end)
 
 SLASH_MGM1 = "/mgm"
-SlashCmdList["MGM"] = function()
+SlashCmdList["MGM"] = function(msg)
+  local command = string.lower(mgmTrim(msg))
+  if command == "update" or command == "checkupdate" then
+    mgmRequestUpdateCheck()
+    return
+  end
   MGM_ToggleQueuePanel()
 end
 

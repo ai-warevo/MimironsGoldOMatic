@@ -21,6 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<MgmOptions>(builder.Configuration.GetSection(MgmOptions.SectionName));
 builder.Services.Configure<TwitchOptions>(builder.Configuration.GetSection(TwitchOptions.SectionName));
+builder.Services.Configure<VersionOptions>(builder.Configuration.GetSection(VersionOptions.SectionName));
 
 builder.Services.AddControllers().AddJsonOptions(o =>
 {

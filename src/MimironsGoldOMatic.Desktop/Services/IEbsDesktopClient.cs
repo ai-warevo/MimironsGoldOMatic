@@ -13,4 +13,6 @@ public interface IEbsDesktopClient
     Task ConfirmAcceptanceAsync(Guid id, string characterName, CancellationToken ct);
 
     Task VerifyCandidateAsync(VerifyCandidateRequestDto dto, CancellationToken ct);
+
+    Task<VersionInfoDto> GetVersionInfoAsync(CancellationToken ct);
 }

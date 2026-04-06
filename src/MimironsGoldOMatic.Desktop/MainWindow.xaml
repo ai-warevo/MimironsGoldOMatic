@@ -16,6 +16,10 @@
       <MenuItem Header="_View">
         <MenuItem Header="_Event log…" Click="MenuLog_Click"/>
       </MenuItem>
+      <MenuItem Header="_Help">
+        <MenuItem Header="Check for _updates" Command="{Binding CheckForUpdatesCommand}"/>
+        <MenuItem Header="_Open release notes" Command="{Binding OpenUpdatePageCommand}"/>
+      </MenuItem>
     </Menu>
     <StatusBar DockPanel.Dock="Bottom">
       <StatusBarItem>
@@ -28,6 +32,26 @@
       <Separator/>
       <StatusBarItem>
         <TextBlock Text="Injection: PostMessage → SendInput fallback (see Settings)"/>
+      </StatusBarItem>
+      <Separator/>
+      <StatusBarItem>
+        <TextBlock Text="{Binding UpdateStatusMessage}"/>
+      </StatusBarItem>
+      <StatusBarItem>
+        <Button Content="More info"
+                Margin="8,0,0,0"
+                Command="{Binding OpenUpdatePageCommand}">
+          <Button.Style>
+            <Style TargetType="Button">
+              <Setter Property="Visibility" Value="Collapsed"/>
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsUpdateAvailable}" Value="True">
+                  <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Button.Style>
+        </Button>
       </StatusBarItem>
     </StatusBar>
     <Grid Margin="12">

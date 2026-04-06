@@ -15,6 +15,7 @@
 - **Twitch Integration:** Uses `window.Twitch.ext` for viewer identity and **polls** the **EBS** for pool size, spin state, and winner/payout status.
 - **API Interaction (typical):**
   - **GET** `/api/roulette/state`, **`GET /api/pool/me`**, **`GET /api/payouts/my-last`** — all use **Twitch Extension JWT (Bearer)** only in MVP (`docs/overview/SPEC.md` §5, §5.1). **Dev Rig** uses **real Twitch-issued** tokens; **EBS** validates per Twitch (`docs/overview/SPEC.md` deployment scope).
+  - **GET** `/api/version` — update metadata check (`version`, optional `releaseNotesUrl`, optional minimum component versions). The panel checks in background on mount and at low frequency; failures are logged only and do not show an error banner.
   - **`GET /api/roulette/state`** + **`GET /api/pool/me`** — server-authoritative **`nextSpinAt`** (UTC **:00/:05/…**), **`spinPhase`** enum, optional **`currentSpinCycleId`**. **Must** drive the **countdown** from `nextSpinAt` / `serverNow`.
   - **`GET /api/payouts/my-last`** — **`PayoutDto`** or **`404`** when the viewer has **no** winner payout yet.
   - **Optional:** **POST** `/api/payouts/claim` for Dev Rig / testing only — requires **`Mgm:DevSkipSubscriberCheck`** on the EBS until Helix subscriber verification is implemented for this path (`docs/overview/SPEC.md` §5).

@@ -90,4 +90,19 @@ public sealed class EbsDesktopClient : IEbsDesktopClient
             return;
         throw new HttpRequestException($"verify-candidate failed {(int)resp.StatusCode}: {body}");
     }
+
+    public async Task<VersionInfoDto> GetVersionInfoAsync(CancellationToken ct)
+    {
+        using var c = CreateClient();
+        using var resp = await c.GetAsync("api/version", ct).ConfigureAwait(false);
+        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!resp.IsSuccessStatusCode)
+            throw new HttpRequestException($"GET version failed {(int)resp.StatusCode}: {body}");
+
+        var dto = JsonSerializer.Deserialize<VersionInfoDto>(body, JsonOptions);
+        if (dto is null || string.IsNullOrWhiteSpace(dto.Version))
+            throw new JsonException("Version payload is missing required 'version' field.");
+
+        return dto;
+    }
 }
