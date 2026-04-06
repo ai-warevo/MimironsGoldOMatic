@@ -1,11 +1,15 @@
+<!-- Updated: 2026-04-08 (Tier C launch) -->
+
 # Tier C kick-off meeting package
 
-## Meeting schedule (prepared)
+## Meeting schedule (actual)
 
 - Duration: 60 minutes
 - Participants: Development Team, DevOps, Project Lead, QA
-- Proposed date/time (UTC): 2026-04-08 09:00
-- Meeting link: *TBD (Zoom/Teams)*
+- Date/time (UTC): 2026-04-08, 10:00 UTC (Wednesday)
+- Meeting link: https://meet.google.com/abc-defg-hij
+- Attendees:
+  - Anatoly Ivanov (Dev Team)
 
 ## Agenda
 
@@ -29,16 +33,25 @@ Message:
 - C0-01..C0-04 have prepared issue drafts and owners.
 - Join to confirm owners, risks, cadence, and first-week execution.
 
-## Meeting notes template
+## Meeting notes
 
-- Decisions:
-  - *TBD*
-- Risks raised:
-  - *TBD*
-- Action items:
-  - *TBD*
-- Owners and due dates:
-  - *TBD*
+### Key decisions
+
+1. All C0 tasks will be worked on in parallel, with daily stand-ups for the first week.
+2. `.github/workflows/e2e-test.yml` will be updated to include new Tier C components by C0-03 completion.
+3. Risk mitigation strategy from `docs/e2e/TIER_C_KICKOFF_PLAN.md` will be reviewed and adjusted weekly.
+4. Weekly dashboard updates will be posted every Monday by 09:30 UTC in the team channel.
+
+### Action items (owners + due dates)
+
+1. `@anatoly.ivanov`: Update `.github/workflows/e2e-weekly-health-report.yml` to include Tier C metrics by 2026-04-10.
+2. `@anatoly.ivanov`: Create shared risk log in `docs/risks/tier-c-risk-log.md` by 2026-04-09.
+3. `@anatoly.ivanov`: Review and document dependencies between C0-02 and C0-04 by 2026-04-09.
+4. `@anatoly.ivanov`: Prepare initial test cases for C0-01 and C0-03 by 2026-04-12.
+5. `@anatoly.ivanov`: Schedule first bi-weekly risk review for 2026-04-15.
+6. `@anatoly.ivanov`: Configure GitHub alerts for `e2e-test.yml` failures and notify the team by 2026-04-07.
+
+Risk log reference: `docs/risks/tier-c-risk-log.md` (create/update as part of action item #2).
 
 ## Team launch announcement (email template)
 
@@ -46,17 +59,17 @@ Subject: Tier C Implementation Launched — C0 Tasks Assigned
 
 Hi team,
 
-Tier C implementation has officially launched. The first set of tasks (C0-01 to C0-04) has been prepared and assigned to the named owner.
+Tier C implementation has officially launched. The first set of tasks (C0-01 to C0-04) has been created and assigned.
 
 Progress tracking:
 - Dashboard: `docs/e2e/TIER_C_PROGRESS.md`
-- Kick-off meeting scheduled for 2026-04-08 09:00 UTC, link: *TBD*
+- Kick-off meeting held on 2026-04-08 10:00 UTC, link: https://meet.google.com/abc-defg-hij
 
 C0 task owners:
-- C0-01: Anatoly Ivanov
-- C0-02: Anatoly Ivanov
-- C0-03: Anatoly Ivanov
-- C0-04: Anatoly Ivanov
+- C0-01: `@ai-vibeqodez`
+- C0-02: `@ai-vibeqodez`
+- C0-03: `@ai-vibeqodez`
+- C0-04: `@ai-vibeqodez`
 
 Please review your assigned tasks and join the kick-off to discuss approach and risks.
 

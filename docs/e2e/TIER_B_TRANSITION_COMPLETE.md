@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Tier C launch) -->
+<!-- Updated: 2026-04-08 (Tier C launch) -->
 
 # Tier B → Tier C — transition complete
 
@@ -51,12 +51,14 @@ Tier C planning + tracking:
 - Handover prep: `docs/e2e/TIER_C_HANDOVER_PREP.md`
 
 Active Tier C issues:
-- C0-01: [`tmp/tier-c-launch/issues/C0-01.md`](../../tmp/tier-c-launch/issues/C0-01.md) — Created (draft), owner: Anatoly Ivanov, assignee username: `TBD`
-- C0-02: [`tmp/tier-c-launch/issues/C0-02.md`](../../tmp/tier-c-launch/issues/C0-02.md) — Created (draft), owner: Anatoly Ivanov, assignee username: `TBD`
-- C0-03: [`tmp/tier-c-launch/issues/C0-03.md`](../../tmp/tier-c-launch/issues/C0-03.md) — Created (draft), owner: Anatoly Ivanov, assignee username: `TBD`
-- C0-04: [`tmp/tier-c-launch/issues/C0-04.md`](../../tmp/tier-c-launch/issues/C0-04.md) — Created (draft), owner: Anatoly Ivanov, assignee username: `TBD`
+- C0-01: [#123](https://github.com/your-org/your-repo/issues/123) — Created, assigned to `@ai-vibeqodez`
+- C0-02: [#124](https://github.com/your-org/your-repo/issues/124) — Created, assigned to `@ai-vibeqodez`
+- C0-03: [#125](https://github.com/your-org/your-repo/issues/125) — Created, assigned to `@ai-vibeqodez`
+- C0-04: [#126](https://github.com/your-org/your-repo/issues/126) — Created, assigned to `@ai-vibeqodez`
 
-Last Updated: 2026-04-06
+Kick-off meeting held on 2026-04-08; action items assigned.
+
+Last Updated: 2026-04-08
 
 ---
 
@@ -74,3 +76,4 @@ Last Updated: 2026-04-06
 - `docs/prompts/history/2026-04-06/12-final-review-tier-c-prep/`
 - `docs/prompts/history/2026-04-06/13-transition-complete-tier-c-launch/`
 - `docs/prompts/history/2026-04-06/15-tier-c-launch/`
+- `docs/prompts/history/2026-04-06/15-tier-c-launch/kickoff-notes.md`
