@@ -1,11 +1,11 @@
-<!-- Updated: 2026-04-05 (docs directory restructure) -->
+<!-- Updated: 2026-04-06 (Tier B closure + Tier C kick-off) -->
 
 # MimironsGoldOMatic Documentation
 
 ## Navigation
 
 - **Project overview**: [Architecture](overview/ARCHITECTURE.md), [Roadmap](overview/ROADMAP.md), [MVP summary](overview/MVP_PRODUCT_SUMMARY.md), [Interaction scenarios](overview/INTERACTION_SCENARIOS.md), [Specification](overview/SPEC.md)
-- **E2E automation**: [Plan](e2e/E2E_AUTOMATION_PLAN.md), [Tasks](e2e/E2E_AUTOMATION_TASKS.md), [Tier B implementation](e2e/TIER_B_IMPLEMENTATION_TASKS.md), [Pre-launch checklist](e2e/TIER_B_PRELAUNCH_CHECKLIST.md), [Post-launch verification](e2e/TIER_B_POSTLAUNCH_VERIFICATION.md)
+- **E2E automation**: [Plan](e2e/E2E_AUTOMATION_PLAN.md), [Tasks](e2e/E2E_AUTOMATION_TASKS.md), [Tier B implementation](e2e/TIER_B_IMPLEMENTATION_TASKS.md), [Tier B handover](e2e/TIER_B_HANDOVER.md), [Tier B maintenance checklist](e2e/TIER_B_MAINTENANCE_CHECKLIST.md), [Pre-launch checklist](e2e/TIER_B_PRELAUNCH_CHECKLIST.md), [Post-launch verification](e2e/TIER_B_POSTLAUNCH_VERIFICATION.md), [Tier C requirements (draft)](e2e/TIER_C_REQUIREMENTS.md), [Tier C implementation tasks](e2e/TIER_C_IMPLEMENTATION_TASKS.md), [Team announcement template](e2e/TIER_B_TEAM_ANNOUNCEMENT.md)
 - **Components**:
   - [Backend](components/backend/ReadME.md)
   - [Desktop app](components/desktop/ReadME.md), [Desktop UI spec](components/desktop/UI_SPEC.md)

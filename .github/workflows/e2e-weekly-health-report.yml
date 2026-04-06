@@ -1,0 +1,71 @@
+# Created: 2026-04-06 (Tier B closure + Tier C kick-off)
+# Rolling success/failure counts for e2e-test.yml over the last 30 days (sampled via API); manual dispatch supported.
+name: E2E weekly health report
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const workflow_id = 'e2e-test.yml';
+            const runs = [];
+            for (let page = 1; page <= 5; page++) {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id,
+                per_page: 100,
+                page,
+              });
+              runs.push(...data.workflow_runs);
+              if (data.workflow_runs.length < 100) break;
+            }
+
+            const cutoffMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            const recent = runs.filter((r) => new Date(r.created_at).getTime() >= cutoffMs);
+            const done = recent.filter(
+              (r) => r.status === 'completed' && r.conclusion !== 'cancelled'
+            );
+            const ok = done.filter((r) => r.conclusion === 'success').length;
+            const bad = done.filter((r) => r.conclusion === 'failure').length;
+            const other = done.length - ok - bad;
+            const total = done.length;
+            const rate = total ? ((100 * ok) / total).toFixed(1) : 'n/a';
+
+            const md = [
+              '## E2E Tier A+B — rolling health (last 30 days)',
+              '',
+              '| Metric | Value |',
+              '|---|---:|',
+              '| Window | Last 30 days (UTC) |',
+              '| Completed runs (excl. cancelled) | ' + total + ' |',
+              '| Success | ' + ok + ' |',
+              '| Failure | ' + bad + ' |',
+              '| Other conclusions | ' + other + ' |',
+              '| Approx. success rate | ' + rate + '% |',
+              '',
+              '_Sample: up to the **500** most recent workflow runs from the API (5 pages × 100). For high churn, prefer **GitHub → Insights → Actions** for authoritative trends._',
+              '',
+              '| Link | URL |',
+              '|---|---|',
+              '| Workflow | [`e2e-test.yml`](https://github.com/' + owner + '/' + repo + '/actions/workflows/e2e-test.yml) |',
+              '| Actions metrics | [Insights](https://github.com/' + owner + '/' + repo + '/actions/metrics/performance) |',
+            ].join('\n');
+
+            const fs = require('fs');
+            const out = process.env.GITHUB_STEP_SUMMARY;
+            if (out) fs.appendFileSync(out, md + '\n');
+            else console.log(md);

@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-06 (Project structure alignment + Tier B finalization) -->
 
 ## MimironsGoldOMatic.Desktop (WPF | Bridge between EBS & Lua addon)
 
@@ -57,6 +57,11 @@ The Desktop app uses an explicit claim model to avoid accidentally locking payou
 
 ## Resilience
 - **Polly Integration:** Use Polly for all outgoing HTTP calls to the Backend to handle transient network issues with retries and exponential backoff.
+
+## E2E testing (CI vs real Desktop)
+
+- **Default GitHub Actions E2E** ([`.github/workflows/e2e-test.yml`](../../../.github/workflows/e2e-test.yml)) does **not** launch WPF. It uses **`src/Mocks/SyntheticDesktop/`** to replay the same **HTTP** sequence (**`X-MGM-ApiKey`**, **`confirm-acceptance`**, **`PATCH`** statuses) against **`MimironsGoldOMatic.Backend`**. See [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) and [`PROJECT_STRUCTURE.md`](../../reference/PROJECT_STRUCTURE.md).
+- **Real Desktop + WoW** validation remains **manual** or **Tier C** (self-hosted / operator) — [`docs/e2e/TIER_C_REQUIREMENTS.md`](../../e2e/TIER_C_REQUIREMENTS.md).
 
 ## WinAPI / WoW 3.3.5a compatibility (MVP)
 

@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Tier B integration & first run) -->
+<!-- Updated: 2026-04-06 (Project structure alignment + Tier B finalization) -->
 
 ## MimironsGoldOMatic.Backend — EBS (Extension Backend Service) (ASP.NET Core | Bridge between Twitch Extension & WPF Desktop)
 
@@ -56,8 +56,10 @@
 - **Unit (no Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit`** — time/spin phase, `!twgold` parser, controllers (Moq), ApiKey auth, Helix client, EventSub controller, FluentValidation.
 - **Integration (Docker):** **`dotnet test src/MimironsGoldOMatic.slnx --filter Category=Integration`** — PostgreSQL via **Testcontainers**, Marten + MediatR (claims, chat enrollment, `verify-candidate`, expiration, payout status, roulette tick).
 - **All tests:** **`dotnet test src/MimironsGoldOMatic.slnx`** — runs unit + integration; full suite needs Docker. Not a substitute for Twitch/WoW manual scenarios.
-- **CI Tier A + B (E2E mocks):** GitHub Actions **`.github/workflows/e2e-test.yml`** runs Backend + Postgres + **`MockEventSubWebhook`** + **`MockExtensionJwt`** + **`MockHelixApi`** + **`SyntheticDesktop`**, synthetic EventSub enrollment, then **[`.github/scripts/run_e2e_tier_b.py`](../../../.github/scripts/run_e2e_tier_b.py)** for **`Sent`** + Helix capture + pool removal. See [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) ([Tier B Integration Results](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-integration-results)).
+- **CI Tier A + B (E2E mocks):** GitHub Actions **`.github/workflows/e2e-test.yml`** runs Backend + Postgres + **`MockEventSubWebhook`** + **`MockExtensionJwt`** + **`MockHelixApi`** + **`SyntheticDesktop`**, synthetic EventSub enrollment, then **[`.github/scripts/run_e2e_tier_b.py`](../../../.github/scripts/run_e2e_tier_b.py)** for **`Sent`** + Helix capture + pool removal. **Formal success record:** [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) — [Tier B Final Validation & Success Report](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-final-validation--success-report). **Code layout:** mocks in **`src/Mocks/`** — [`PROJECT_STRUCTURE.md`](../../reference/PROJECT_STRUCTURE.md).
 - **Tier B verification scripts:** [`.github/scripts/tier_b_verification/`](../../../.github/scripts/tier_b_verification/) — health + **MockHelixApi** POST probe + optional **SyntheticDesktop** sequence (see **Setting up Tier B Environment** below).
+
+**Tier B integration (summary):** **SyntheticDesktop** (HTTP-only stand-in for WPF Desktop) calls the same REST routes as **`MimironsGoldOMatic.Desktop`**: **`confirm-acceptance`**, **`PATCH`** status **`InProgress`** → **`Sent`**. On **`Sent`**, **EBS** posts to **Helix**; in CI, **`Twitch:HelixApiBaseUrl`** points at **MockHelixApi** (`9053`), which records **`POST /helix/chat/messages`** for assertions. **Development-only** **`POST /api/e2e/prepare-pending-payout`** seeds a **`Pending`** payout when **`Mgm:EnableE2eHarness`** is **true** (see [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md)).
 
 ### Running Tier A E2E locally (manual)
 
@@ -90,7 +92,7 @@ Full checklist: [`docs/e2e/E2E_AUTOMATION_TASKS.md`](../../e2e/E2E_AUTOMATION_TA
 
 ### Setting up Tier B Environment
 
-Tier B adds **MockHelixApi** (loopback Helix stub on **9053**), **SyntheticDesktop** (HTTP harness on **9054**), and (when **A1–A2** land) a **configurable Helix base URL** in [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs). Use this sequence for local integration and for [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) **[Tier B First Run Guide](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-first-run-guide)**.
+Tier B adds **MockHelixApi** (loopback Helix stub on **9053**), **SyntheticDesktop** (HTTP harness on **9054**), and **`Twitch:HelixApiBaseUrl`** in [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) / [`TwitchOptions`](../../../src/MimironsGoldOMatic.Backend/Configuration/TwitchOptions.cs). Use this sequence for local integration and for [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) **[Tier B First Run Guide](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-first-run-guide)**.
 
 1. Complete **Tier A** local steps above (Postgres + Backend + **9051** + **9052** + synthetic enrollment).
 2. **Python deps:** `pip install -r .github/scripts/tier_b_verification/requirements.txt`
@@ -105,7 +107,7 @@ Tier B adds **MockHelixApi** (loopback Helix stub on **9053**), **SyntheticDeskt
    `dotnet run --project src/Mocks/SyntheticDesktop/MimironsGoldOMatic.Mocks.SyntheticDesktop.csproj -c Release`  
    Verify: `python3 .github/scripts/tier_b_verification/check_syntheticdesktop.py`  
    Full sequence (needs **`Pending`** payout): `python3 .github/scripts/tier_b_verification/check_syntheticdesktop.py --payout-id <GUID>`
-5. **Backend Helix → mock (after `Twitch:HelixApiBaseUrl` exists):** set **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, plus non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`** so [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) does not skip the outbound call. Restart Backend.
+5. **Backend Helix → mock:** set **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, plus non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`** so [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) does not skip the outbound call. Restart Backend.
 6. **Sweep:** `python3 .github/scripts/tier_b_verification/check_workflow_integration.py` (or **`--skip-tier-b`** if Tier B processes are stopped).
 
 **References:** [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) (**[Tier B Readiness Verification](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-readiness-verification)**), **[Tier B Troubleshooting](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-troubleshooting-guide)**, [`docs/e2e/TIER_B_PRELAUNCH_CHECKLIST.md`](../../e2e/TIER_B_PRELAUNCH_CHECKLIST.md).
@@ -121,17 +123,18 @@ Tier B adds **MockHelixApi** (loopback Helix stub on **9053**), **SyntheticDeskt
 | `MockHelix__StrictAuth` | MockHelixApi | If **`true`**, require **`Authorization: Bearer`** and **`Client-Id`** on **`POST /helix/chat/messages`**. |
 | `SyntheticDesktop__BackendBaseUrl` | SyntheticDesktop | EBS root (default `http://127.0.0.1:8080`). |
 | `Mgm__ApiKey` | Backend + SyntheticDesktop | Must match for **`X-MGM-ApiKey`**. |
+| `Mgm__EnableE2eHarness` | Backend | **`true`** (Development only) enables **`POST /api/e2e/prepare-pending-payout`** for CI Tier B. |
 | `ASPNETCORE_URLS` | All ASP.NET processes | **8080** Backend; **9051** / **9052** Tier A mocks; **9053** MockHelixApi; **9054** SyntheticDesktop. |
 
-### Running Tier B E2E locally (full chain — blocked on Helix URL until A1–A2)
+### Running Tier B E2E locally (full chain)
 
-After **Setting up Tier B Environment** and seeding a **`Pending`** payout (enrollment → roulette tick → **`POST /api/roulette/verify-candidate`** with **`X-MGM-ApiKey`**):
+After **Setting up Tier B Environment**, either seed a **`Pending`** payout via **`POST /api/e2e/prepare-pending-payout`** (Development + **`Mgm:EnableE2eHarness`**) as in CI, or via enrollment → roulette tick → **`POST /api/roulette/verify-candidate`** with **`X-MGM-ApiKey`**.
 
-1. `POST http://127.0.0.1:9054/run-sequence` with JSON **`{"payoutId":"<GUID>","characterName":"Etoehero"}`** (or use **`check_syntheticdesktop.py --payout-id`**).
+1. `POST http://127.0.0.1:9054/run-sequence` with JSON **`{"payoutId":"<GUID>","characterName":"Etoehero"}`** (or use **`check_syntheticdesktop.py --payout-id`** / **`run_e2e_tier_b.py`**).
 2. When Backend calls Helix on **`Sent`**, **`GET http://127.0.0.1:9053/last-request`** should show the Russian §11 template message for the winner.
 3. Inspect **`GET http://127.0.0.1:9054/last-run`** if any step returns non-2xx.
 
-Until **A1–A2** ship, Helix traffic still targets production URL in code — use **MockHelixApi** scripts only for mock-local validation.
+With **`Twitch__HelixApiBaseUrl`** unset, **`HelixChatService`** uses the production Twitch host — use **MockHelixApi** + base URL for local/CI validation.
 
 ### Debugging mock services
 
