@@ -1,0 +1,90 @@
+# Created: 2026-04-06 (Tier B closure + Tier C kick-off)
+# Opens a single open issue when the two most recent completed e2e-test.yml runs (non-cancelled) are both failure.
+name: E2E consecutive failure alert
+
+on:
+  workflow_run:
+    workflows: [E2E Tier A+B (mocks)]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+jobs:
+  check-consecutive-failures:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const workflowRun = context.payload.workflow_run;
+            if (workflowRun.conclusion !== 'failure') {
+              core.info('Not a failure conclusion; skipping.');
+              return;
+            }
+
+            const { data } = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: workflowRun.workflow_id,
+              per_page: 15,
+            });
+
+            const completed = data.workflow_runs.filter(
+              (r) =>
+                r.status === 'completed' &&
+                r.conclusion !== 'cancelled' &&
+                r.conclusion !== 'skipped'
+            );
+
+            if (completed.length < 2) {
+              core.info('Not enough completed runs to compare.');
+              return;
+            }
+
+            const latest = completed[0];
+            const prev = completed[1];
+
+            if (latest.conclusion !== 'failure' || prev.conclusion !== 'failure') {
+              core.info('No consecutive failures on the two latest completed runs.');
+              return;
+            }
+
+            const search = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue is:open in:title "E2E Tier A+B: consecutive"`,
+              per_page: 5,
+            });
+
+            if (search.data.total_count > 0) {
+              core.info('An open alert issue already exists; not creating another.');
+              return;
+            }
+
+            const body = [
+              'The **two most recent** completed runs of **`e2e-test.yml`** (excluding cancelled/skipped) both **failed**.',
+              '',
+              '| Run | URL |',
+              '|--------|-----|',
+              `| Latest | ${latest.html_url} |`,
+              `| Previous | ${prev.html_url} |`,
+              '',
+              '### Next steps',
+              '1. Download the **e2e-service-logs** artifact from each run.',
+              '2. Follow **Tier B Troubleshooting** and **E2E Pipeline Maintenance Guide** in `docs/e2e/E2E_AUTOMATION_PLAN.md`.',
+              '3. Close this issue when the pipeline is green again and the root cause is documented (or linked).',
+              '',
+              `*Opened automatically by workflow \`${context.workflow}\`.*`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: 'E2E Tier A+B: consecutive workflow failures',
+              body,
+            });
+            core.info('Created consecutive-failure alert issue.');

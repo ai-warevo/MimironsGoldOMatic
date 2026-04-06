@@ -1,5 +1,5 @@
 # Created: 2026-04-05 (Tier A E2E mocks)
-# Updated: 2026-04-06 (Project structure alignment + Tier B finalization: NuGet+pip cache keys, service logs, artifacts always(), concurrency)
+# Updated: 2026-04-06 (Tier B closure + Tier C kick-off: job Summary performance table; see E2E_AUTOMATION_PLAN v1.9)
 #
 # Optimization / ops notes (Tier A + B):
 # - NuGet: actions/cache on ~/.nuget/packages — key includes **/packages.lock.json (when present) + src/**/*.csproj hash for lockfile-less repos.
@@ -208,10 +208,35 @@ jobs:
 
       - name: Job timing summary
         if: always()
+        env:
+          REPO: ${{ github.repository }}
         run: |
           END=$(date +%s)
           START="${E2E_JOB_START_SEC:-$END}"
-          echo "E2E job wall-clock (approx): $((END - START))s (ubuntu runner; includes build + all services + Tier A + Tier B)"
+          TOTAL=$((END - START))
+          echo "E2E job wall-clock (approx): ${TOTAL}s (ubuntu runner; includes build + all services + Tier A + Tier B)"
+          TB_START="${E2E_TIER_B_START_SEC:-}"
+          TB_END="${E2E_TIER_B_END_SEC:-}"
+          TB_DELTA=""
+          if [ -n "$TB_START" ] && [ -n "$TB_END" ]; then
+            TB_DELTA=$((TB_END - TB_START))
+          fi
+          {
+            echo "## E2E performance (this run)"
+            echo ""
+            echo "| Segment | Seconds (approx.) |"
+            echo "|---|---:|"
+            echo "| Total job wall-clock | ${TOTAL} |"
+            if [ -n "$TB_DELTA" ]; then
+              echo "| Tier B step boundary (orchestrator step env timestamps) | ${TB_DELTA} |"
+            else
+              echo "| Tier B step boundary | *n/a (timestamps missing)* |"
+            fi
+            echo ""
+            echo "**Workflow:** [\`e2e-test.yml\`](https://github.com/${REPO}/actions/workflows/e2e-test.yml) · **Insights:** [Actions metrics](https://github.com/${REPO}/actions/metrics/performance) (if enabled for this repo)."
+            echo ""
+            echo "Use the **five-run metrics** table in \`docs/e2e/E2E_AUTOMATION_PLAN.md\` (**Tier B: Implementation Complete**) for release audits."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Logs (on failure)
         if: failure()

@@ -1,34 +1,50 @@
-<!-- Updated: 2026-04-06 (Project structure alignment + Tier B finalization) -->
+<!-- Updated: 2026-04-06 (Tier B closure + Tier C kick-off) -->
 
-# Team message — Tier B E2E complete (template)
+# Team message — Tier B complete & Tier C kick-off (template)
 
-**Subject:** Mimiron’s Gold-o-Matic — Tier B E2E (CI) complete + docs refresh
+**Subject:** Mimiron’s Gold-o-Matic — Tier B E2E closed (CI) + Tier C planning + handover docs
 
 ---
 
 Hi team,
 
-**Tier B** of our GitHub Actions E2E pipeline is **done and green**: the PR workflow **[E2E Tier A+B (mocks)](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml)** runs **Backend + PostgreSQL + MockEventSubWebhook + MockExtensionJwt + MockHelixApi + SyntheticDesktop**, exercises the **enrollment → harness → payout `Sent` → Helix capture → pool removal** path, and matches the plan in **`docs/e2e/E2E_AUTOMATION_PLAN.md`**.
+**Tier B implementation is officially complete** for our default **PR → `main`** pipeline: **[E2E Tier A+B (mocks)](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml)** runs **Backend + PostgreSQL + MockEventSubWebhook + MockExtensionJwt + MockHelixApi + SyntheticDesktop**, exercises **enrollment → E2E harness → payout `Sent` → Helix capture → pool removal**, and matches **[`docs/e2e/E2E_AUTOMATION_PLAN.md`](E2E_AUTOMATION_PLAN.md)** (see **Tier B: Implementation Complete**).
 
-**Useful links**
+**Tracking:** **[GitHub issue #16](https://github.com/ai-warevo/MimironsGoldOMatic/issues/16)** — please close or reconcile once the merge record is final.
 
-- **Workflow runs:** [e2e-test.yml runs](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml) — open the latest **success** to see job **`e2e-tier-a-b`** (expand steps for logs).
-- **Formal write-up:** **`docs/e2e/E2E_AUTOMATION_PLAN.md`** — sections **Tier B Final Validation & Success Report** and **Pipeline optimization (E2E workflow)**.
-- **Structure map:** **`docs/reference/PROJECT_STRUCTURE.md`** — updated tree and **old path → new path** table for `src/Tests/`, `src/Mocks/`, etc.
+### Useful links
 
-**What we achieved**
+- **Workflow runs (pin your merge verification here):** [e2e-test.yml on GitHub Actions](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml) — open the latest **successful** run on the merge commit; attach the URL in the issue / release notes.
+- **Formal write-up:** [`E2E_AUTOMATION_PLAN.md`](E2E_AUTOMATION_PLAN.md) — **Tier B Final Validation**, **Tier B: Implementation Complete**, **E2E Pipeline Maintenance Guide**.
+- **Handover for maintainers:** [`TIER_B_HANDOVER.md`](TIER_B_HANDOVER.md) · **Recurring checklist:** [`TIER_B_MAINTENANCE_CHECKLIST.md`](TIER_B_MAINTENANCE_CHECKLIST.md).
+- **Tier C (next):** [`TIER_C_REQUIREMENTS.md`](TIER_C_REQUIREMENTS.md) · [`TIER_C_IMPLEMENTATION_TASKS.md`](TIER_C_IMPLEMENTATION_TASKS.md).
+- **Structure map:** [`docs/reference/PROJECT_STRUCTURE.md`](../reference/PROJECT_STRUCTURE.md).
 
-- **Tier A** (synthetic EventSub + JWT pool check) and **Tier B** (Development E2E harness, synthetic Desktop HTTP sequence, MockHelix **`/last-request`**) run in **one** Linux job with fixed localhost ports — same contracts as production APIs, without real WoW in default CI.
-- **Docs** now point at the current **`src/`** layout; component READMEs (**Backend / Desktop / WoW addon**) reference E2E and Tier B env vars where relevant.
+### What we achieved (short)
 
-**What’s next (short)**
+- **MockHelixApi** + **SyntheticDesktop** integrated with **`Twitch:HelixApiBaseUrl`** and the Development-only **E2E harness** — same REST contracts as production **EBS ↔ Desktop**, without **WoW** on GitHub-hosted runners.
+- **Pipeline hardening:** NuGet + pip **cache** keys, **PR concurrency**, background services logged to **`/tmp`**, **`e2e-service-logs`** artifacts on every run, Tier B orchestrator **`tee`**.
+- **Monitoring (new):** **[`e2e-weekly-health-report.yml`](../../.github/workflows/e2e-weekly-health-report.yml)** (rolling success stats) and **[`e2e-consecutive-failure-alert.yml`](../../.github/workflows/e2e-consecutive-failure-alert.yml)** (opens an issue after **two** consecutive E2E failures). Each E2E job posts a **Summary** performance table.
 
-- **CI:** NuGet + pip caching, **always()** log artifacts, and concurrency tuning are documented in the E2E plan and implemented in **`.github/workflows/e2e-test.yml`** — reduces flake diagnosis time and duplicate PR churn.
-- **Tier C:** requirements draft — **`docs/e2e/TIER_C_REQUIREMENTS.md`** (real Desktop/WoW/self-hosted runner, staging Twitch). We should align on **priority** (Windows runner vs staging API vs addon tests) and **cost** (minutes, secrets).
+### Next steps — Tier C
 
-**Invitation**
+- Review **priorities:** self-hosted **Windows + WoW** vs **staging Twitch** vs **addon parity tests** (see **C0** in [`TIER_C_IMPLEMENTATION_TASKS.md`](TIER_C_IMPLEMENTATION_TASKS.md)).
+- **Please read** [`TIER_B_HANDOVER.md`](TIER_B_HANDOVER.md) before changing mocks or the **`e2e-test.yml`** port matrix.
 
-Reply in thread or in the next stand-up with **Tier C** priorities (e.g. self-hosted Windows E2E vs real Helix staging vs deeper addon tests). If you touch **`src/Tests/`** or **`src/Mocks/`**, use **`docs/reference/PROJECT_STRUCTURE.md`** as the path reference.
+### Tier B retrospective (schedule)
+
+**Proposed agenda (45–60 min):**
+
+| Topic | Prompt |
+|--------|--------|
+| **What went well** | CI slice, docs, mock separation, caching |
+| **Lessons learned** | Harness design, Helix base URL, JSON contracts |
+| **Improve** | Docker for mocks?, nightly-only Tier B?, Tier C order |
+| **Docs** | Is the handover clear? What’s missing? |
+
+**Calendar placeholder:** *— owner: set invite; attach this agenda —*
+
+---
 
 Thanks,
 
@@ -36,4 +52,4 @@ Thanks,
 
 ---
 
-*This file is a reusable template; copy into email or chat as needed.*
+*Copy into email or team chat. Update the “pin your merge verification” link after each release.*

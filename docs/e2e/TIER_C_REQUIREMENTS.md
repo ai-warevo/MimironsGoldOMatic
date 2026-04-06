@@ -1,8 +1,8 @@
-<!-- Updated: 2026-04-06 (Project structure alignment + Tier B finalization) -->
+<!-- Updated: 2026-04-06 (Tier B closure + Tier C kick-off) -->
 
 # Tier C — requirements (draft)
 
-**Parent plan:** [`E2E_AUTOMATION_PLAN.md`](E2E_AUTOMATION_PLAN.md) — section **Tier C: Future Scope & Requirements**. **Tier B** (CI mocks, **Backend ↔ MockHelixApi ↔ SyntheticDesktop**) is closed; Tier C extends toward **real clients** and optional **additional mocks**.
+**Parent plan:** [`E2E_AUTOMATION_PLAN.md`](E2E_AUTOMATION_PLAN.md) — section **Tier C: Future Scope & Requirements**. **Tier B** (CI mocks, **Backend ↔ MockHelixApi ↔ SyntheticDesktop**) is **implementation-complete**; Tier C extends toward **real clients** and optional **staging Twitch**. **Tasks:** [`TIER_C_IMPLEMENTATION_TASKS.md`](TIER_C_IMPLEMENTATION_TASKS.md). **Handover (Tier B):** [`TIER_B_HANDOVER.md`](TIER_B_HANDOVER.md).
 
 ---
 
@@ -66,10 +66,97 @@
 
 ---
 
-## 7. Risks and mitigations
+## 7. Risks and mitigations (summary)
 
 | Risk | Mitigation |
 |------|------------|
 | Flaky UI/WinAPI | Keep **SyntheticDesktop** path in CI; Tier C as optional/nightly. |
 | Secret exposure | Environments, OIDC, no token echo in artifacts. |
 | Runner cost | Path filters, schedule-only Tier C, cache **NuGet**/pip as in [`e2e-test.yml`](../../.github/workflows/e2e-test.yml). |
+
+---
+
+## 8. Detailed feature breakdown
+
+### F1 — Real WoW + Desktop (self-hosted or manual)
+
+| Field | Specification |
+|--------|----------------|
+| **Goal** | Execute **SC-001** segments with **`WoW.exe` 3.3.5a**, production addon, **`WoWChatLog.txt`** tags, and **`MimironsGoldOMatic.Desktop`** WinAPI / HTTP bridge to EBS. |
+| **Trigger** | Nightly **`workflow_dispatch`**, label-gated PR, or **manual** runbook only — **not** default Linux PR CI. |
+| **Integration points** | Desktop log tail → `confirm-acceptance` / `verify-candidate` per [`SPEC.md`](../overview/SPEC.md); same EBS routes as Tier B. |
+| **Artifacts** | Redacted **`WoWChatLog.txt`**, Desktop trace, EBS correlation logs. |
+| **Dependencies** | Licensed client; operator-controlled machine; Windows runner registration. |
+
+### F2 — Staging Twitch (Helix + optional EventSub)
+
+| Field | Specification |
+|--------|----------------|
+| **Goal** | Validate real **Helix** `POST /helix/chat/messages` and optional **EventSub** delivery using **test channel / dev rig** credentials. |
+| **Trigger** | **GitHub Environments** with required reviewers; **`workflow_dispatch`**; never auto-run on untrusted PRs. |
+| **Integration points** | [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs), [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs), Extension JWT contract. |
+| **Dependencies** | Broadcaster OAuth refresh strategy; Twitch app Client-Id; compliance with Twitch developer policies. |
+
+### F3 — Parity tests (SyntheticDesktop vs Desktop)
+
+| Field | Specification |
+|--------|----------------|
+| **Goal** | Detect drift in **URL paths**, **headers** (`X-MGM-ApiKey`), **JSON bodies**, **ordering**, and **error handling** between [`SyntheticDesktop`](../../src/Mocks/SyntheticDesktop/) and WPF client. |
+| **Implementation options** | Shared **.NET** client library; golden-file HTTP recordings; scripted diff of **`GET /last-run`** vs Desktop telemetry. |
+| **Dependencies** | C2-01 / C2-02 owners ([`TIER_C_IMPLEMENTATION_TASKS.md`](TIER_C_IMPLEMENTATION_TASKS.md)). |
+
+### F4 — Addon contract expansion
+
+| Field | Specification |
+|--------|----------------|
+| **Goal** | Automated validation of **`[MGM_WHO]`**, **`[MGM_ACCEPT:UUID]`**, **`[MGM_CONFIRM:UUID]`** formats and mail-send gating per [`SPEC.md`](../overview/SPEC.md). |
+| **Integration points** | [`src/MimironsGoldOMatic.WoWAddon/`](../../src/MimironsGoldOMatic.WoWAddon/), `src/Tests/MimironsGoldOMatic.WoWAddon.Tests/`. |
+
+---
+
+## 9. Technical specifications (cross-cutting)
+
+| Topic | Requirement |
+|--------|-------------|
+| **Secrets** | Store in **GitHub Environments**; mask in **Actions**; no tokens in **E2E** artifacts; **Production** EBS must never enable **`Mgm:EnableE2eHarness`**. |
+| **Observability** | Correlation id (payout id) propagated from orchestrator to Backend logs; Desktop logs tag line numbers for **`[MGM_*]`** matches. |
+| **Determinism** | Tier B PR workflow remains **single-job**, fixed ports; Tier C may use dynamic ports **only** if documented in [`TIER_B_HANDOVER.md`](TIER_B_HANDOVER.md) successor. |
+| **Backward compatibility** | Changes to **`Desktop` HTTP** contract require **SyntheticDesktop** + **`run_e2e_tier_b.py`** updates in the **same** PR unless Tier B intentionally deprecated (major version bump). |
+
+---
+
+## 10. Integration points (expanded)
+
+| Component | Path | Tier C touch |
+|-----------|------|--------------|
+| **EBS** | [`src/MimironsGoldOMatic.Backend/`](../../src/MimironsGoldOMatic.Backend/) | Optional **Helix** / **EventSub** env-specific config; harness remains **Development-only**. |
+| **SyntheticDesktop** | [`src/Mocks/SyntheticDesktop/`](../../src/Mocks/SyntheticDesktop/) | Source for parity tests; may reference shared library with Desktop. |
+| **Desktop** | [`src/MimironsGoldOMatic.Desktop/`](../../src/MimironsGoldOMatic.Desktop/) | Real WinAPI + log paths; CI may compile-test only. |
+| **Addon** | [`src/MimironsGoldOMatic.WoWAddon/`](../../src/MimironsGoldOMatic.WoWAddon/) | Contract tests + optional headless log replay fixtures. |
+| **Mocks** | [`src/Mocks/`](../../src/Mocks/) | Unchanged for Tier B; optional **Record/Replay** Helix stub for Tier C offline tests. |
+| **Workflows** | [`.github/workflows/`](../../.github/workflows/) | New Tier C YAML must not weaken **Tier A+B** `on:` filters without team sign-off. |
+
+---
+
+## 11. Dependencies (roles and external systems)
+
+| Dependency | Type | Owner (placeholder) |
+|------------|------|---------------------|
+| **WoW 3.3.5a** install media / ToS | External | Operator |
+| **Twitch** dev app + broadcaster tokens | External | Streamer / Backend |
+| **GitHub** larger runners or self-hosted Windows | Infra | DevOps |
+| **Desktop** WinAPI expertise | Team | Desktop engineer |
+| **Lua / addon** expertise | Team | Addon engineer |
+
+---
+
+## 12. Risk assessment matrix
+
+| Risk | Impact | Likelihood | Mitigation strategy |
+|------|--------|------------|---------------------|
+| **Token leak** in runner artifact | Critical (account compromise) | Low (if Environments used) | Secret scanning; Environment protection rules; no `echo` of tokens; short-lived tokens. |
+| **WinAPI flake** (focus, timing) | High (false failures) | Medium | Nightly-only; retries with caps; keep Tier B as PR gate. |
+| **Helix rate limits / 5xx** | Medium | Low on test channel | Exponential backoff in **`HelixChatService`**; mock fallback tests. |
+| **Runner cost overrun** | Medium | Medium | Scheduled Tier C; path filters; org billing alerts. |
+| **SPEC / code drift** on **`[MGM_*]`** | High | Medium | Addon contract tests + SPEC review in Tier C PR template. |
+| **Fork PR malicious code** with secrets exfil | Critical | Low | No secrets on fork workflows; `pull_request_target` avoided for Tier C. |
