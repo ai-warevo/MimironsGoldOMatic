@@ -6,7 +6,7 @@
 
 - **Repository status:** `src/MimironsGoldOMatic.WoWAddon` implements **MVP-3** per `docs/overview/ROADMAP.md`: queue + **`MAIL_SHOW`** side panel, **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin`**, chat-log tags, and mail-send confirmation. **UI-405** debug frame and richer scroll UX are optional follow-ups ([`UI_SPEC.md`](UI_SPEC.md)).
 - **UI spec:** [`UI_SPEC.md`](UI_SPEC.md) (addon **UI-401–405**: entry point, MAIL_SHOW panel, toasts, debug frame). Hub: [`docs/reference/UI_SPEC.md`](../../reference/UI_SPEC.md).
-- **Role:** Receives injected commands and provides the final UX for the streamer; **detects `!twgold` whispers** (willingness to accept gold) and **prints `[MGM_CONFIRM:UUID]`** after mail is sent (**required** for **`Sent`** on the server).
+- **Role:** Receives Desktop-injected commands and executes the in-game operator flow. It detects `!twgold` whisper consent and emits `[MGM_CONFIRM:UUID]` after successful mail send (required for backend transition to `Sent`).
 - **Target:** WoW 3.3.5a (WotLK).
 - **Files:** `MimironsGoldOMatic.toc` (Interface: 30300), `MimironsGoldOMatic.lua`.
 
@@ -24,9 +24,9 @@ Slash **`/mgm`** and the minimap coin button toggle the queue panel.
 
 - **ReceiveGold(dataString):** Semicolon-separated entries; populates **`mgmQueue`** (`READY` → **Prepare Mail** → `PROCESSING` → success pop).
 - **NotifyWinnerWhisper(payoutId, characterName):** **`SendChatMessage(..., "WHISPER", ...)`** with exact §9 Russian body.
-- **Event handling:** **`MAIL_SHOW`** opens/anchors the panel; **`MAIL_SEND_SUCCESS`** / **`MAIL_FAILED`** / **`MAIL_CLOSED`** for MGM-armed sends only (**§9**).
+- **Event handling:** **`MAIL_SHOW`** opens/anchors the panel. **`MAIL_SEND_SUCCESS`** / **`MAIL_FAILED`** / **`MAIL_CLOSED`** logic is restricted to MGM-armed sends only (**§9**), preventing side effects on unrelated manual mail.
 - **`/who` (roulette):** **`MGM_RunWhoForSpin`** → **`RunMacroText("/who …")`** → **`WHO_LIST_UPDATE`** → **`[MGM_WHO]`** + JSON (`docs/overview/SPEC.md` §8).
-- **Whisper acceptance:** **`CHAT_MSG_WHISPER`**: body **`!twgold`** (case-insensitive), sender matches pending notification target → **`[MGM_ACCEPT:UUID]`**.
+- **Whisper acceptance:** On **`CHAT_MSG_WHISPER`**, when body is exactly **`!twgold`** (case-insensitive after trim) and sender matches the pending notification target, emit **`[MGM_ACCEPT:UUID]`**.
 - **Mail-send tag + completion whisper:** **`MAIL_SEND_SUCCESS`** for MGM-armed send → **`[MGM_CONFIRM:UUID]`** then whisper **`Награда отправлена тебе на почту, проверяй ящик!`**
 
 ## UI Features

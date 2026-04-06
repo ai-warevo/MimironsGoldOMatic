@@ -1,0 +1,5 @@
+- [x] Review `docs/prod` prompts for overlap and sequencing.
+- [x] Refactor overlapping task scopes and add handoff notes.
+- [x] Update production index with explicit scope boundaries.
+- [x] Run docs lint diagnostics.
+- [x] Write completion report.

@@ -1,10 +1,10 @@
-<!-- Updated: 2026-04-05 (MVP-6 status sync; E2E cross-refs) -->
+<!-- Updated: 2026-04-06 (post-MVP status sync; Tier C completion reflected) -->
 
 # Project Roadmap: Mimiron's Gold-o-Matic
 
-This roadmap reflects the **finalized MVP specification** agreed during design clarification.
+This roadmap reflects the finalized MVP specification and serves as the implementation sequence reference.
 
-**Current stage:** The project is in the **late MVP phase (MVP-6)**. **Core components** — Backend (EBS), WoW addon, WPF Desktop, and Twitch Extension (viewer panel) — are **implemented**. **Current focus:** verification, hardening, and **E2E automation** before the **Beta** milestone (see **Beta** section below).
+**Current stage:** The project has completed the MVP implementation track (**MVP-0..MVP-6** with split verification) and is now in **Beta readiness hardening**. Core components (EBS, WoW addon, WPF Desktop, Twitch Extension viewer panel) are implemented; CI E2E Tier A+B is in place, with operational real-stack validation tracked separately.
 
 Canonical implementation contracts live in:
 
@@ -14,7 +14,7 @@ Canonical implementation contracts live in:
 
 **UI/UX (screens, element inventory, flows):** Hub [`docs/reference/UI_SPEC.md`](../reference/UI_SPEC.md) (tokens, navigation); implement against [`docs/components/twitch-extension/UI_SPEC.md`](../components/twitch-extension/UI_SPEC.md), [`docs/components/desktop/UI_SPEC.md`](../components/desktop/UI_SPEC.md), and [`docs/components/wow-addon/UI_SPEC.md`](../components/wow-addon/UI_SPEC.md) for **UI-1xx–UI-4xx** (Twitch ~318px panel, WPF windows, WoW frames) while building MVP-3 / MVP-4 / MVP-5.
 
-**Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today versus **MVP-6** (tests, E2E harness) and residual risks, see [`docs/reference/IMPLEMENTATION_READINESS.md`](../reference/IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*. For **Manual** vs **Automated** E2E mapping, see **[Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)** in `docs/overview/INTERACTION_SCENARIOS.md`.
+**Implementation snapshot (repository):** The steps below describe the target MVP sequence. For current repo parity versus MVP-6 (tests, E2E harness) and residual risks, see [`docs/reference/IMPLEMENTATION_READINESS.md`](../reference/IMPLEMENTATION_READINESS.md) (*Source code parity (MVP track)*). For manual vs automated E2E mapping, see [Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6) in `docs/overview/INTERACTION_SCENARIOS.md`.
 
 ### Mandatory checklist (every roadmap step)
 
@@ -264,20 +264,20 @@ Acting as **[Frontend/Twitch Expert]**:
 **Status — MVP-6 (verification split):**
 
 - **Automated (in place):** `src/Tests/MimironsGoldOMatic.Backend.UnitTests` — xUnit, **PostgreSQL via Testcontainers** (Docker required for **Integration** category), plus **Unit** tests (no Docker) for time/spin-phase and **`!twgold`** line parsing. Integration coverage includes MediatR/HTTP paths aligned with the bullets above (claim rules, **`verify-candidate`**, expiration sweep, **`PATCH` → `Sent`** pool removal). See `docs/components/backend/ReadME.md` §Automated tests.
-- **Manual (required today):** The **full E2E** path **Twitch chat → EventSub → … → WoW client → `WoWChatLog.txt` → Desktop → Helix §11 announcement** is **not** automated in **CI/CD**. Operators validate it using **`docs/overview/INTERACTION_SCENARIOS.md`** (e.g. SC-001, SC-005) and live/Dev Rig setup. Step-by-step mapping of manual vs target automation: **[Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)**.
+- **Manual (operational):** The **full live-stack E2E** path **Twitch chat → EventSub → … → WoW client → `WoWChatLog.txt` → Desktop → Helix §11 announcement** remains an operator validation flow (Dev Rig/live setup), documented in **`docs/overview/INTERACTION_SCENARIOS.md`** (e.g. SC-001, SC-005). Step-by-step mapping of manual vs automated slices: **[Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)**.
 
 **Next steps (MVP-6):**
 
-- **Automate full E2E demo in CI/CD** — extend automation beyond Backend integration tests (e.g. workflow jobs, harnesses, or mocks) only when an approach is chosen; `.github/workflows/` remains a placeholder today.
+- **Sustain CI E2E reliability (Tier A+B)** — keep `e2e-test.yml` healthy and monitor failures/trends.
 - **Validate complete operator workflow** — run the full manual scenario end-to-end and record results against **TC-** rows in **`docs/overview/INTERACTION_SCENARIOS.md`**.
 
 For details on the automation approach, see [E2E Automation Plan](../e2e/E2E_AUTOMATION_PLAN.md). Actionable work items: [E2E Automation Tasks](../e2e/E2E_AUTOMATION_TASKS.md).
 
 ### E2E Automation Progress
 
-- **Plan:** [E2E Automation Plan](../e2e/E2E_AUTOMATION_PLAN.md) (Tier A **CI** vs Tier B self-hosted; mocks and **SyntheticDesktop**).
+- **Plan:** [E2E Automation Plan](../e2e/E2E_AUTOMATION_PLAN.md) (Tier A/B CI slices, mocks, **SyntheticDesktop**, and Tier C forward scope).
 - **Task list:** [E2E Automation Tasks](../e2e/E2E_AUTOMATION_TASKS.md) (ownership, estimates).
-- **Status:** documentation linked; implementation pending (see task file).
+- **Status:** **Tier A + Tier B completed in CI**; **Tier C marked completed** at governance/closure level (see [`TIER_C_CLOSURE_REPORT.md`](../e2e/TIER_C_CLOSURE_REPORT.md), [`TIER_C_HANDOVER.md`](../e2e/TIER_C_HANDOVER.md)). Remaining C1/C2/C3 follow-up backlog is tracked in Tier C docs.
 
 **Solution layout:** `MimironsGoldOMatic.slnx` includes **MimironsGoldOMatic.Backend.UnitTests**; **Twitch Extension** and **WoW addon** stay non-MSBuild trees (same as MVP-0).
 
@@ -310,5 +310,5 @@ Acting as **[Senior Architect]**:
 - Harden Twitch JWT validation (**issuer** validation, secret rotation runbooks; current MVP uses **symmetric** Extension secret / HS256, not OIDC JWKS)
 - Secrets/config hardening across environments
 - Security review (abuse cases, logging hygiene)
-- CI pipelines for .NET and frontend builds/tests (as of 2026-04-05, `.github/workflows/` contains only a placeholder — add workflows when ready)
+- Continue hardening existing CI workflows for .NET, frontend, and E2E (`unit-integration-tests.yml`, `e2e-test.yml`, release/monitoring workflows)
 

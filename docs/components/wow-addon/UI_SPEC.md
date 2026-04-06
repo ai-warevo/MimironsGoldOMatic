@@ -3,7 +3,8 @@
 
 # WoW 3.3.5a addon — UI specification
 
-**Implementation:** `src/MimironsGoldOMatic.WoWAddon` — **UI-401–405** (MVP-3). Lua / FrameXML: [`ReadME.md`](ReadME.md).
+**Implementation:** `src/MimironsGoldOMatic.WoWAddon` — **UI-401–405** (MVP-3). Lua / FrameXML: [`WoW Addon component guide`](ReadME.md).
+**Normative behavior source:** addon lifecycle and chat-log contract semantics are defined in [`docs/overview/SPEC.md`](../../overview/SPEC.md). This file focuses on in-game UI shape and interaction ergonomics.
 
 ## Related documentation
 
@@ -17,18 +18,18 @@
 
 ## WoW 3.3.5a addon UI
 
-**MVP Stage:** MVP-3  
+**MVP Stage:** MVP-3
 **Widgets:** `Frame`, `Button`, `EditBox`, `FontString`, `Texture`, `ScrollingMessageFrame` or scroll frame pattern.
 
-> ⚠️ **WOW CONSTRAINT:** No arbitrary HTML; all layout via **`SetPoint`** anchors; **XML** or runtime CreateFrame only; **Interface: 30300**.
+> ⚠️ **WOW CONSTRAINT:** No arbitrary HTML. Layout is driven by **`SetPoint`** anchors with XML and/or runtime `CreateFrame`, targeting **Interface: 30300**.
 
 ---
 
 ## UI-401: Addon — Entry point (minimap / slash / launcher)
 
-**Component:** Addon  
-**Actor:** Streamer  
-**Trigger:** Player logs in.  
+**Component:** Addon
+**Actor:** Streamer
+**Trigger:** Player login/session start.
 **MVP Stage:** MVP-3
 
 ### Element Inventory
@@ -38,7 +39,7 @@
 | EL-401-01 | Minimap icon | Texture button | hover | toggle UI-402 |
 | EL-401-02 | Slash | `/mgm` (DECISION) | | opens UI-402 |
 
-> ⚠️ **DECISION:** **`docs/components/wow-addon`** emphasizes **MAIL_SHOW** side panel; minimap button is **standard** but optional if slash-only.
+> ⚠️ **DECISION:** The primary operator path is the **MAIL_SHOW** side panel; minimap icon remains optional when slash-only control is preferred.
 
 ### Frame props
 
@@ -56,15 +57,15 @@
 
 ### States
 
-- Hidden in combat (DECISION) vs always show — **DECISION:** hide in combat to reduce taint risk.
+- Visibility in combat is a local implementation decision; recommended default is hidden-in-combat to reduce taint risk.
 
 ---
 
 ## UI-402: Addon — Main side panel (MAIL_SHOW)
 
-**Component:** Addon  
-**Actor:** Streamer  
-**Trigger:** **`MAIL_SHOW`** or `/mgm`.  
+**Component:** Addon
+**Actor:** Streamer
+**Trigger:** **`MAIL_SHOW`** event or `/mgm` command.
 **MVP Stage:** MVP-3
 
 ### Element Inventory
@@ -96,8 +97,8 @@
 
 ### States
 
-- **Mailbox closed:** EL-402-04 "Open mailbox".
-- **Queue empty:** empty state string.
+- **Mailbox closed:** EL-402-04 prompts user to open mailbox first.
+- **Queue empty:** explicit empty-state message.
 
 ### ASCII — Mailbox closed
 
@@ -108,15 +109,15 @@
 ╚══════════════════════╝
 ```
 
-> ⚠️ **WOW CONSTRAINT:** Tainted execution paths — do not hook secure buttons without care; **Prepare Mail** should only touch **SendMail** frames when allowed in 3.3.5a.
+> ⚠️ **WOW CONSTRAINT:** Avoid insecure taint paths. `Prepare Mail` should mutate `SendMail*` controls only in allowed 3.3.5a contexts.
 
 ---
 
 ## UI-403: Addon — Success toast (mail sent / tag emitted)
 
-**Component:** Addon  
-**Actor:** System  
-**Trigger:** After successful send + `[MGM_CONFIRM:…]` printed.  
+**Component:** Addon
+**Actor:** System
+**Trigger:** Successful mail send followed by `[MGM_CONFIRM:…]` emission.
 **MVP Stage:** MVP-3
 
 ### Element Inventory
@@ -144,9 +145,9 @@
 
 ## UI-404: Addon — Error toast
 
-**Component:** Addon  
-**Actor:** System  
-**Trigger:** Mailbox closed; validation fail; no gold.  
+**Component:** Addon
+**Actor:** System
+**Trigger:** Mailbox unavailable, validation failure, or insufficient gold/input constraints.
 **MVP Stage:** MVP-3
 
 ### ASCII Visualization
@@ -159,15 +160,15 @@
 
 ### Frame props
 
-Strata **HIGH**; short duration (~3s).
+Strata **HIGH**; short-lived notification (~3s).
 
 ---
 
 ## UI-405: Addon — Debug / log frame (streamer-only toggle)
 
-**Component:** Addon  
-**Actor:** Streamer  
-**Trigger:** `/mgm debug` (DECISION) or checkbox in UI-402.  
+**Component:** Addon
+**Actor:** Streamer
+**Trigger:** `/mgm debug` command (optional) or toggle in UI-402.
 **MVP Stage:** MVP-3 (optional)
 
 ### Element Inventory
@@ -179,7 +180,7 @@ Strata **HIGH**; short duration (~3s).
 
 ### Frame props
 
-Strata **LOW** (don't block play); **Movable** (DECISION).
+Strata **LOW** (non-blocking during gameplay); optional movable behavior.
 
 ### ASCII Visualization
 
@@ -193,8 +194,7 @@ Strata **LOW** (don't block play); **Movable** (DECISION).
 ╚══════════════════════╝
 ```
 
-> ⚠️ **DECISION:** Strip or noop in **release** build for performance.
-
+> ⚠️ **DECISION:** Optional debug frame can be stripped or no-op in release profiles for performance and noise control.
 
 
 ---

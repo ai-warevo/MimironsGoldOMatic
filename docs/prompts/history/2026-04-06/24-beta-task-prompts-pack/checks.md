@@ -1,0 +1,4 @@
+- [x] Draft beta task list and ordering.
+- [x] Create one-file-per-task prompt files in `docs/beta`.
+- [x] Verify all prompts are actionable and reference project docs.
+- [x] Write completion report.

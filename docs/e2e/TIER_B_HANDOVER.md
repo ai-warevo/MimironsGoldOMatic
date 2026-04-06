@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Tier B closure + Tier C kick-off) -->
+<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
 
 # Tier B — maintainer handover
 
@@ -119,16 +119,88 @@ Full checklist: [`TIER_B_MAINTENANCE_CHECKLIST.md`](TIER_B_MAINTENANCE_CHECKLIST
 
 ## 6. Subject-matter experts (update in-repo)
 
-Replace placeholders with real names/handles as the team stabilizes:
-
-| Area | Expert (placeholder) |
-|------|----------------------|
-| **Backend / Marten / Helix integration** | *Assign: Backend owner* |
-| **GitHub Actions / mocks / Python harness** | *Assign: CI owner* |
-| **WPF Desktop (parity with SyntheticDesktop)** | *Assign: Desktop owner* |
-| **WoW addon / `[MGM_*]` tags** | *Assign: Addon owner* |
-| **Twitch Extension / Helix product behavior** | *Assign: Extension owner* |
+| Area | SME (name / contact) |
+|------|-----------------------|
+| **Backend / Marten / Helix integration** | **Anatoly Ivanov** (`ai.vibeqodez@vk.com`) |
+| **GitHub Actions / mocks / Python harness** | **Anatoly Ivanov** (`ai.vibeqodez@vk.com`) |
+| **WPF Desktop (parity with SyntheticDesktop)** | **Anatoly Ivanov** (`ai.vibeqodez@vk.com`) |
+| **WoW addon / `[MGM_*]` tags** | **Anatoly Ivanov** (`ai.vibeqodez@vk.com`) |
+| **Twitch Extension / Helix product behavior** | **Anatoly Ivanov** (`ai.vibeqodez@vk.com`) |
 
 ---
 
 *Tier B CI does not replace manual **WinAPI + WoW** validation; see [`TIER_C_REQUIREMENTS.md`](TIER_C_REQUIREMENTS.md).*
+
+---
+
+## 7. Retrospective Summary & Lessons Learned
+
+This section summarizes the Tier B implementation retrospective (agenda template: [`TIER_B_TEAM_ANNOUNCEMENT.md`](TIER_B_TEAM_ANNOUNCEMENT.md)).
+
+### Successes
+
+- **MockHelixApi + SyntheticDesktop integration**: exercised the Desktop→EBS→Helix path in CI without real Twitch/WoW.
+- **Pipeline optimization**: NuGet + pip caching, `concurrency` cancellation for PRs, and **always-on artifacts** (`e2e-service-logs`) for post-mortem.
+- **Operational clarity**: troubleshooting matrix and runbooks reduced “tribal knowledge” requirements.
+
+### Challenges
+
+- **Backend startup time variance** (cold restore/JIT + DB readiness): required conservative wait loops.
+- **Missing `tee` logs initially**: harder to debug Tier B without an orchestrator log file; fixed by writing `mgm-tier-b-orchestrator.log`.
+- **Lockfile strategy**: cache key behavior when `packages.lock.json` is absent can surprise maintainers; mitigated by including `src/**/*.csproj` hashes.
+
+### Lessons learned
+
+- **Monitoring early pays off**: weekly health report + consecutive-failure alert reduces mean time to notice regressions.
+- **Troubleshooting matrices need concrete artifacts**: “download `e2e-service-logs` and read X/Y/Z files” is more actionable than general advice.
+
+### Improvement ideas (Tier C candidates)
+
+- **Docker for mocks (optional)**: reduce cold `dotnet run` startup; trade-off is image build/publish maintenance.
+- **`docs/`-only path filters (policy decision)**: save Actions minutes, but requires risk acceptance for workflow-only changes.
+- **Nightly Tier B runs (optional)**: keep Tier A+B on PRs or move Tier B to scheduled gating depending on minute budget.
+
+---
+
+## 8. Maintainer quick-start (Tier B)
+
+### When something fails in PR CI
+
+1. Open the failing run for [`.github/workflows/e2e-test.yml`](../../.github/workflows/e2e-test.yml) → job **`e2e-tier-a-b`**.
+2. Check **Job summary** timing table (helps spot startup regressions).
+3. Download artifact **`e2e-service-logs`** and inspect:
+   - `mgm-backend.log`
+   - `mgm-tier-b-orchestrator.log`
+   - `mgm-mock-helix.log`
+   - `mgm-synthetic-desktop.log`
+4. Use **Troubleshooting matrix** (§4) to map the first failing symptom to the likely cause.
+
+### When you change mocks / orchestrator
+
+- Update **both**:
+  - the mock/project (under `src/Mocks/`)
+  - the Python harness/assertions (under `.github/scripts/`)
+- Keep the port matrix **8080 / 9051–9054** aligned in:
+  - `.github/workflows/e2e-test.yml`
+  - this handover doc
+  - `E2E_AUTOMATION_PLAN.md` (port map + first-run guide)
+
+---
+
+## 9. FAQ
+
+### Why does Tier B use `POST /api/e2e/prepare-pending-payout`?
+
+Because real roulette timing is wall-clock aligned (5‑minute boundaries). The Development-only harness makes Tier B deterministic for CI while still exercising the same Desktop REST contracts and payout transitions.
+
+### What exactly is “Tier B” here—does it run WoW?
+
+No. Tier B in CI uses **MockHelixApi** + **SyntheticDesktop** on GitHub-hosted Linux runners. Real **WinAPI + WoW 3.3.5a** is planned for Tier C (self-hosted Windows or manual).
+
+### Why must `Twitch:HelixApiBaseUrl` be the service root (not `.../helix`)?
+
+The Backend posts to a **relative path** `helix/chat/messages`. The base URL must be the mock’s root (e.g. `http://127.0.0.1:9053`) so the combined URL resolves correctly.
+
+### How do we verify monitoring is working?
+
+Follow `TIER_B_MAINTENANCE_CHECKLIST.md` section **Verification of monitoring & alerting** to run the weekly report, simulate consecutive failures, and confirm the `e2e-test.yml` Summary timing table.

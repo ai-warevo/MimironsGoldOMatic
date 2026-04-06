@@ -3,7 +3,8 @@
 
 # WPF Desktop — UI specification
 
-**Implementation:** `src/MimironsGoldOMatic.Desktop` — **UI-301–308** (MVP-4). WinAPI / process discovery: [`ReadME.md`](ReadME.md).
+**Implementation:** `src/MimironsGoldOMatic.Desktop` — **UI-301–308** (MVP-4). WinAPI / process discovery: [`Desktop component guide`](ReadME.md).
+**Normative behavior source:** lifecycle, endpoint, and state semantics are defined in [`docs/overview/SPEC.md`](../../overview/SPEC.md). This document defines WPF presentation and operator interaction shape.
 
 ## Related documentation
 
@@ -18,14 +19,15 @@
 ## WPF Desktop application
 
 **MVP Stage:** MVP-4
+**Scope note:** this spec describes the operator-facing desktop flow from API setup through queue handling and delivery logging.
 
 ---
 
 ## UI-301: Desktop — API configuration / “login”
 
-**Component:** Desktop  
-**Actor:** Streamer  
-**Trigger:** First launch or settings.  
+**Component:** Desktop
+**Actor:** Streamer
+**Trigger:** First launch or when opening settings.
 **MVP Stage:** MVP-4
 
 ### Element Inventory
@@ -39,9 +41,9 @@
 
 ### States
 
-- **Default:** Empty or saved values.
+- **Default:** Inputs show either empty values (first run) or persisted values.
 - **Success:** Toast "Connected".
-- **Error:** `403` forbidden_apikey messaging.
+- **Error:** `403 forbidden_apikey` style message with remediation hint.
 
 ### ASCII Visualization
 
@@ -60,19 +62,19 @@
 
 ### Transitions
 
-- Save → close → UI-302/303.
+- Save → close setup dialog → return to UI-302 or UI-303 depending on WoW detection state.
 
 ### Constraints & Notes
 
-- Store secrets with **DPAPI** or credential manager (DECISION: implementation).
+- Store secrets with **DPAPI** or OS credential manager (implementation choice).
 
 ---
 
 ## UI-302: Desktop — Main window idle (WoW not connected)
 
-**Component:** Desktop  
-**Actor:** Streamer  
-**Trigger:** No `WoW.exe` / foreground target.  
+**Component:** Desktop
+**Actor:** Streamer
+**Trigger:** No eligible foreground `WoW.exe` target is detected.
 **MVP Stage:** MVP-4
 
 ### Element Inventory
@@ -101,15 +103,15 @@
 
 ### Transitions
 
-- Idle → Active: process found (`src/MimironsGoldOMatic.Desktop` state machine).
+- Idle → Active when eligible process is detected by desktop state machine.
 
 ---
 
 ## UI-303: Desktop — Main window active (WoW connected)
 
-**Component:** Desktop  
-**Actor:** Streamer  
-**Trigger:** Foreground `WoW.exe` found.  
+**Component:** Desktop
+**Actor:** Streamer
+**Trigger:** Foreground `WoW.exe` is detected and ready for injection flow.
 **MVP Stage:** MVP-4
 
 ### Element Inventory
@@ -138,20 +140,20 @@
 
 ### Transitions
 
-- Ready → Waiting for mailbox: game state change.
+- Ready → Waiting for mailbox when mail UI conditions are not yet satisfied.
 - `Sync/Inject` → `PATCH InProgress` + WinAPI inject.
 
 ### Constraints & Notes
 
-- **WinAPI:** `PostMessage` primary; `SendInput` fallback — show active strategy in status (DECISION).
+- **WinAPI:** `PostMessage` is primary and `SendInput` is fallback; current strategy should be visible in status UI.
 
 ---
 
 ## UI-304: Desktop — Request queue panel (winner payouts)
 
-**Component:** Desktop  
-**Actor:** Streamer  
-**Trigger:** Embedded in main or side panel.  
+**Component:** Desktop
+**Actor:** Streamer
+**Trigger:** Visible as embedded main section or side panel.
 **MVP Stage:** MVP-4
 
 ### Element Inventory
@@ -178,15 +180,15 @@
 
 ### Transitions
 
-- Row status updates from poll + **`WoWChatLog.txt`** watcher (**`MGM_ACCEPT`** / **`MGM_CONFIRM`**).
+- Row status updates from API polling and **`WoWChatLog.txt`** watcher events (**`MGM_ACCEPT`** / **`MGM_CONFIRM`**).
 
 ---
 
 ## UI-305: Desktop — WoW connection status bar
 
-**Component:** Desktop  
-**Actor:** System  
-**Trigger:** Always visible (footer or top).  
+**Component:** Desktop
+**Actor:** System
+**Trigger:** Always visible (footer or header area).
 **MVP Stage:** MVP-4
 
 ### Element Inventory
@@ -209,9 +211,9 @@
 
 ## UI-306: Desktop — Settings window
 
-**Component:** Desktop  
-**Actor:** Streamer  
-**Trigger:** Menu → Settings.  
+**Component:** Desktop
+**Actor:** Streamer
+**Trigger:** Menu → Settings.
 **MVP Stage:** MVP-4
 
 ### Element Inventory
@@ -240,9 +242,9 @@
 
 ## UI-307: Desktop — Error / alert modal
 
-**Component:** Desktop  
-**Actor:** System  
-**Trigger:** API unreachable; WoW not found; injection failure.  
+**Component:** Desktop
+**Actor:** System
+**Trigger:** API unavailable, WoW target missing, or injection failure.
 **MVP Stage:** MVP-4
 
 ### Element Inventory
@@ -264,15 +266,15 @@
 
 ### Transitions
 
-- Modal blocks interaction modal-DLG (DECISION).
+- Modal blocks foreground interaction until dismissed or action chosen.
 
 ---
 
 ## UI-308: Desktop — Delivery / event log
 
-**Component:** Desktop  
-**Actor:** Streamer  
-**Trigger:** Menu View log.  
+**Component:** Desktop
+**Actor:** Streamer
+**Trigger:** Menu action: View log.
 **MVP Stage:** MVP-4
 
 ### Element Inventory
@@ -295,7 +297,6 @@
 ║  └──────────────────────────────────────────────┘ ║
 ╚════════════════════════════════════════════════════╝
 ```
-
 
 
 ---

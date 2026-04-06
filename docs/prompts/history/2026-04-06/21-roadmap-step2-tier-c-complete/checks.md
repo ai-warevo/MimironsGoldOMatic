@@ -1,0 +1,4 @@
+- [x] Read and identify stale status text in `docs/overview/ROADMAP.md`.
+- [x] Update roadmap status sections (MVP-6, E2E progress, Tier C completion, CI note).
+- [x] Verify final wording is internally consistent with Tier B/Tier C docs.
+- [x] Write completion report.

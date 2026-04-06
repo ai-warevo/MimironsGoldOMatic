@@ -698,17 +698,17 @@ End-to-end **first** Tier B rehearsal on a developer machine (mirrors **CI** [`.
 
 1. **Prerequisites:** Docker or local **PostgreSQL 16**, **.NET 10 SDK**, **Python 3** + `pip install -r .github/scripts/tier_b_verification/requirements.txt`.
 2. **Tier A stack:** Follow **Running Tier A E2E locally (manual)** in [`docs/components/backend/ReadME.md`](../components/backend/ReadME.md) (Postgres + Backend + **9051** + **9052** + synthetic EventSub + pool assertion). For Tier B, add to Backend env: **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`**, **`Mgm__EnableE2eHarness=true`** (Development only).
-3. **Start MockHelixApi:**  
+3. **Start MockHelixApi:**
    `ASPNETCORE_URLS=http://127.0.0.1:9053 dotnet run --project src/Mocks/MockHelixApi/MimironsGoldOMatic.Mocks.MockHelixApi.csproj -c Release`
 4. **Verify mock alone:** `python3 .github/scripts/tier_b_verification/check_mockhelixapi.py --base-url http://127.0.0.1:9053`
-5. **Start SyntheticDesktop:**  
-   `ASPNETCORE_URLS=http://127.0.0.1:9054`  
-   `Mgm__ApiKey=<same as Backend>`  
-   `SyntheticDesktop__BackendBaseUrl=http://127.0.0.1:8080`  
+5. **Start SyntheticDesktop:**
+   `ASPNETCORE_URLS=http://127.0.0.1:9054`
+   `Mgm__ApiKey=<same as Backend>`
+   `SyntheticDesktop__BackendBaseUrl=http://127.0.0.1:8080`
    `dotnet run --project src/Mocks/SyntheticDesktop/MimironsGoldOMatic.Mocks.SyntheticDesktop.csproj -c Release`
 6. **Health sweep:** `python3 .github/scripts/tier_b_verification/check_workflow_integration.py`
-7. **Full orchestrator (recommended):** after Tier A enrollment, run  
-   `python3 .github/scripts/run_e2e_tier_b.py --api-key <Mgm:ApiKey>`  
+7. **Full orchestrator (recommended):** after Tier A enrollment, run
+   `python3 .github/scripts/run_e2e_tier_b.py --api-key <Mgm:ApiKey>`
    (calls **`POST /api/e2e/prepare-pending-payout`**, **`POST /run-sequence`**, asserts **MockHelix** + **`/last-run`** + **`GET /api/pool/me`**).
 8. **Manual alternative:** `curl -sS -X POST http://127.0.0.1:8080/api/e2e/prepare-pending-payout -H "Content-Type: application/json" -H "X-MGM-ApiKey: <key>" -d "{\"twitchUserId\":\"e2e-viewer-1\"}"` → use returned **`payoutId`** with **`check_syntheticdesktop.py --payout-id …`** or **`curl`** **`/run-sequence`** as in older steps.
 9. **Assert Helix capture:** `curl -sS http://127.0.0.1:9053/last-request` — **`message`** must match Russian §11 template (see [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs)).

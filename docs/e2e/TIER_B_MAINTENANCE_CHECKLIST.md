@@ -1,10 +1,79 @@
-<!-- Updated: 2026-04-06 (Tier B closure + Tier C kick-off) -->
+<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
 
 # Tier B / E2E pipeline — maintenance checklist
 
 **Workflow:** [`.github/workflows/e2e-test.yml`](../../.github/workflows/e2e-test.yml) · **Handover context:** [`TIER_B_HANDOVER.md`](TIER_B_HANDOVER.md) · **Full guide:** [`E2E_AUTOMATION_PLAN.md` — E2E Pipeline Maintenance Guide](E2E_AUTOMATION_PLAN.md#e2e-pipeline-maintenance-guide)
 
 ---
+
+## Verification of monitoring & alerting (operators)
+
+These checks validate that **monitoring** and **alerting** remain functional after workflow edits.
+
+### Validation results (fill during execution)
+
+> Note: In this workspace, GitHub CLI (`gh`) is not available, and no
+> authenticated GitHub API token is configured. As a result, the steps below
+> were reviewed for correctness but not executed from this environment.
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| Weekly health report manual dispatch | [!] Blocked (needs Actions UI) | Run URL: *TBD* |
+| Consecutive failure alert dedupe | [!] Blocked (needs failed runs) | Issue URL: *TBD* |
+| `e2e-test.yml` Summary timing table | [!] Blocked (needs Actions UI) | Run URL: *TBD* |
+
+### A) Weekly health report (manual dispatch)
+
+**Workflow:** [`.github/workflows/e2e-weekly-health-report.yml`](../../.github/workflows/e2e-weekly-health-report.yml)
+
+1. GitHub → **Actions** → workflow **“E2E weekly health report”**.
+2. Select **Run workflow** (manual `workflow_dispatch`).
+3. Open the run → confirm the **Summary** includes:
+   - 30‑day rolling success/failure counts
+   - Data sourced from the **GitHub Actions REST API** (see the script’s call to `actions.listWorkflowRuns`)
+
+**What “good” looks like**
+- Summary table shows **Completed runs (excl. cancelled)** and non-negative counts for **Success** and **Failure**.
+- The workflow link points at `e2e-test.yml` runs.
+
+**Record**
+- **Latest manual run URL**: *TBD (paste Actions run URL)*
+- **Observed counts**: *TBD*
+
+### B) Consecutive-failure alert (deduplicated issue)
+
+**Workflow:** [`.github/workflows/e2e-consecutive-failure-alert.yml`](../../.github/workflows/e2e-consecutive-failure-alert.yml)
+
+This workflow should open **exactly one** GitHub issue when the **two most recent** completed runs of `e2e-test.yml` are both **failure** (excluding cancelled/skipped).
+
+**How to simulate two consecutive failures safely**
+- Create a temporary PR to `main` that introduces a deliberate failure in `.github/workflows/e2e-test.yml` (e.g., add a one-off step `run: exit 1` near the end of the job).
+- Run the workflow twice as **two separate completed failures**:
+  - Push commit (run fails)
+  - Push another commit (run fails again) or use **Re-run jobs** if it creates a new completed run entry
+- Confirm that:
+  - **Exactly one** open issue exists with title `E2E Tier A+B: consecutive workflow failures`
+  - The issue body contains links to the **latest** and **previous** failed runs
+  - Additional failures while the issue is open do **not** create duplicate issues (dedupe works)
+
+**Record**
+- **Alert issue URL**: *TBD*
+- **Failed run URLs**: *TBD (latest)*, *TBD (previous)*
+- **Deduplication check**: *TBD (confirmed one open issue only)*
+
+### C) `e2e-test.yml` job Summary table (timing boundaries)
+
+**Workflow:** [`.github/workflows/e2e-test.yml`](../../.github/workflows/e2e-test.yml)
+
+1. Open any recent run → job **`e2e-tier-a-b`**.
+2. Confirm the job **Summary** contains a table titled **“E2E performance (this run)”** with:
+   - **Total job wall-clock** seconds
+   - **Tier B step boundary** seconds (or explicitly `n/a` if timestamps missing)
+
+**Record**
+- **Example run URL**: *TBD*
+- **Observed total wall time**: *TBD*
+- **Observed Tier B boundary time**: *TBD*
 
 ## Weekly verification (≈15 min)
 

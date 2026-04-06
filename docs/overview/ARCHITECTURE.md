@@ -2,7 +2,7 @@
 
 # Architecture — Mimiron's Gold-o-Matic
 
-Non-normative overview. **Canonical contracts:** [`docs/overview/SPEC.md`](SPEC.md). **UI:** [`docs/reference/UI_SPEC.md`](../reference/UI_SPEC.md) (hub) · [`docs/components/twitch-extension/UI_SPEC.md`](../components/twitch-extension/UI_SPEC.md) · [`docs/components/desktop/UI_SPEC.md`](../components/desktop/UI_SPEC.md) · [`docs/components/wow-addon/UI_SPEC.md`](../components/wow-addon/UI_SPEC.md).
+This page is a non-normative architecture map. For contracts, payloads, and lifecycle rules, use [`docs/overview/SPEC.md`](SPEC.md) as the source of truth. UI behavior and screen inventory live in [`docs/reference/UI_SPEC.md`](../reference/UI_SPEC.md) (hub) and component specs for [Twitch Extension](../components/twitch-extension/UI_SPEC.md), [Desktop](../components/desktop/UI_SPEC.md), and [WoW Addon](../components/wow-addon/UI_SPEC.md).
 
 ## System pipeline
 
@@ -10,11 +10,11 @@ Non-normative overview. **Canonical contracts:** [`docs/overview/SPEC.md`](SPEC.
 Twitch Extension → EBS (MimironsGoldOMatic.Backend / ASP.NET Core) → WPF Desktop (WinAPI / PostMessage) → WoW 3.3.5a Addon (Lua)
 ```
 
-Viewers use the **Extension** plus **broadcast Twitch chat**; the streamer uses **Desktop** and **WoW**. There is **no** direct peer link between Extension and Desktop.
+Viewers interact through the **Twitch Extension** and **broadcast Twitch chat**. The streamer operates through **Desktop** and the **WoW client**. The Extension and Desktop do not communicate directly; the EBS is the only integration hub.
 
 ## Extension Backend Service (EBS)
 
-**`MimironsGoldOMatic.Backend`** is the **EBS**: Twitch Extension **JWT** validation, **EventSub** (`channel.chat.message`) for **`!twgold <CharacterName>`** enrollment, **Helix** (e.g. §11 reward-sent chat line), REST for the Extension (Bearer) and for Desktop (**`X-MGM-ApiKey`**). Single-broadcaster MVP per deployment — see [`docs/overview/SPEC.md`](SPEC.md) deployment scope.
+**`MimironsGoldOMatic.Backend`** is the **EBS**. It validates Twitch Extension JWTs, ingests EventSub (`channel.chat.message`) for **`!twgold <CharacterName>`** enrollment, executes Helix actions (including §11 reward-sent chat announcements), and exposes REST APIs for both the Extension (Bearer JWT) and Desktop (`X-MGM-ApiKey`). MVP deployment scope is single-broadcaster per environment (see [`docs/overview/SPEC.md`](SPEC.md)).
 
 ## Runtime components
 
@@ -35,13 +35,13 @@ Viewers use the **Extension** plus **broadcast Twitch chat**; the streamer uses 
 
 ## Key relationships
 
-- **Extension ↔ EBS:** HTTPS + Bearer JWT (pool/roulette/payout read APIs).
-- **Desktop ↔ EBS:** HTTPS + **`X-MGM-ApiKey`** (pending payouts, status, verify-candidate, confirm-acceptance).
-- **Desktop ↔ WoW:** Win32 injection of **`/run`** command lines; single tail of **`Logs\WoWChatLog.txt`** for MGM tags.
-- **EBS:** Owns authoritative payout lifecycle and pool state; Desktop drives WoW automation and forwards log-derived events.
+- **Extension ↔ EBS:** HTTPS with Bearer JWT for pool, roulette, and payout status reads.
+- **Desktop ↔ EBS:** HTTPS with **`X-MGM-ApiKey`** for payout operations and roulette verification calls.
+- **Desktop ↔ WoW:** Win32 command injection (`/run ...`) plus a single `Logs\WoWChatLog.txt` tail for MGM tags.
+- **EBS authority:** payout lifecycle and pool state remain authoritative on the backend; Desktop acts as a bridge for WoW actions and log-derived confirmations.
 
 ## Compatibility (WoW 3.3.5a)
 
 - Addon must use correct **FrameXML** mail frame names and events for **3.3.5a**.
-- Desktop **WinAPI** focus, **`PostMessage`** vs **`SendInput`**, and **`/run`** chunking (&lt;255 characters) must stay aligned with [`docs/overview/SPEC.md`](SPEC.md) §8–10.
+- Desktop WinAPI strategy (**`PostMessage`** primary, **`SendInput`** fallback), focus behavior, and **`/run`** chunking (&lt;255 characters) must stay aligned with [`docs/overview/SPEC.md`](SPEC.md) §8–10.
 - WoW **addon payload** format stays compatible with Desktop chunking (see [`docs/overview/SPEC.md`](SPEC.md) §9).

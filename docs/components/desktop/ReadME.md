@@ -4,34 +4,34 @@
 
 **Cross-cutting:** [`docs/overview/ARCHITECTURE.md`](../../overview/ARCHITECTURE.md) · [`docs/overview/MVP_PRODUCT_SUMMARY.md`](../../overview/MVP_PRODUCT_SUMMARY.md) · [`docs/reference/WORKFLOWS.md`](../../reference/WORKFLOWS.md)
 
-- **Repository status:** `src/MimironsGoldOMatic.Desktop` ships the **MVP-4** WPF utility: queue UI, **`HttpClient`** + Polly to the EBS ( **`X-MGM-ApiKey`** ), single-file tail of **`WoWChatLog.txt`**, and foreground **`WoW.exe`** injection per `docs/overview/SPEC.md` §8–10. See `docs/reference/IMPLEMENTATION_READINESS.md` for parity notes.
+- **Repository status:** `src/MimironsGoldOMatic.Desktop` ships the **MVP-4** WPF utility: queue UI, EBS integration via **`HttpClient`** + Polly (**`X-MGM-ApiKey`**), single-tail processing of **`WoWChatLog.txt`**, and foreground **`WoW.exe`** command injection per `docs/overview/SPEC.md` §8–10. See `docs/reference/IMPLEMENTATION_READINESS.md` for parity notes.
 - **UI spec:** [`UI_SPEC.md`](UI_SPEC.md) (WPF **UI-301–308**). Hub: [`docs/reference/UI_SPEC.md`](../../reference/UI_SPEC.md).
-- **Role:** Monitors the **EBS** and injects **winner** payout data into the WoW client; bridges **addon → EBS** for **`!twgold`** (acceptance) and **`WoWChatLog.txt`** tailing for **`[MGM_CONFIRM:UUID]`** (required **mail-sent → `Sent`**).
+- **Role:** Bridges backend payout flow to in-game execution: monitors EBS winner states, injects addon commands into WoW, and forwards addon log tags back to EBS for acceptance/confirmation lifecycle updates.
 - **Stack:** .NET 10, WPF, MVVM (CommunityToolkit.Mvvm).
 
 ## Key Functions
 
-- **API Polling:** Periodically fetches the pending **winner** payout queue from the **EBS**.
+- **API polling:** Periodically fetches pending **winner** payouts from the EBS.
 - **Roulette `/who`:** Tails **`Logs\WoWChatLog.txt`** for **`[MGM_WHO]`** lines from the addon (`docs/overview/SPEC.md` §8) and **`POST`s** **`/api/roulette/verify-candidate`** with **`X-MGM-ApiKey`**; **EBS** creates **`Pending`** or **no winner** (no re-draw same cycle).
-- **Process Targeting (MVP):** Targets the **foreground** `WoW.exe` (3.3.5a) process. Process selection from a list is a roadmap feature.
+- **Process targeting (MVP):** Uses only the **foreground** `WoW.exe` (3.3.5a) process. Multi-process/manual picker support is a roadmap feature.
 
 ## Command Injection (WPF to Addon)
 
-- **Winner notification (before mail queue):** After the **EBS** reports **`Pending`** for a winner, inject **`/run NotifyWinnerWhisper("<payoutId>","<CharacterName>")`** so the addon sends the §9 whisper (`docs/overview/SPEC.md` §8–9). **Then** use **`ReceiveGold`** when the streamer syncs mail (**`InProgress`**).
+- **Winner notification (before mail queue):** Once EBS reports **`Pending`**, inject **`/run NotifyWinnerWhisper("<payoutId>","<CharacterName>")`** so the addon sends the §9 whisper (`docs/overview/SPEC.md` §8–9). Only after that, use **`ReceiveGold`** when the streamer runs Sync/Inject (transition to **`InProgress`**).
 - Converts the list of payouts into a Lua-compatible string with canonical entry format:
   - `UUID:CharacterName:GoldCopper;`
   - Example: `/run ReceiveGold("2d2b7b2a-1111-2222-3333-444444444444:Somecharacter:10000000;")`
 - Splits strings into chunks of < 255 characters (WoW chat limit).
-- Uses `PostMessage` as primary strategy.
-- Uses `SendInput` fallback strategy (operator-switchable) when primary injection is blocked/unreliable.
+- Uses `PostMessage` as the primary injection strategy.
+- Uses `SendInput` as an operator-switchable fallback when primary injection is blocked or unreliable.
 
 ## Explicit Claim Flow (Desktop to EBS)
 
 The Desktop app uses an explicit claim model to avoid accidentally locking payouts:
 
-1. Desktop fetches the queue via **GET** `/api/payouts/pending`.
-2. When the streamer clicks **Sync/Inject**, Desktop **must** have located the **WoW** target (`WoW.exe`, MVP: foreground) **before** marking payouts as `InProgress` via **PATCH** `/api/payouts/{id}/status` (see `docs/overview/SPEC.md` §3).
-3. Desktop injects the payload into WoW via `/run ReceiveGold("...")`.
+1. Desktop fetches candidate payouts through **GET** `/api/payouts/pending`.
+2. On **Sync/Inject**, Desktop must confirm a valid WoW target (`WoW.exe`, MVP: foreground) before sending **PATCH** `/api/payouts/{id}/status` → `InProgress` (see `docs/overview/SPEC.md` §3).
+3. Desktop injects the queue payload into WoW via `/run ReceiveGold("...")`.
 
 ### Feedback Loop (Addon to WPF to EBS)
 
@@ -48,7 +48,7 @@ The Desktop app uses an explicit claim model to avoid accidentally locking payou
 ## Architecture & Patterns
 - **Strategy Pattern (Injection):**
   Implement `IWoWInputStrategy`. Create `PostMessageStrategy` (primary) and `SendInputStrategy` (fallback). Allow the streamer to switch strategies in settings if one is blocked by a specific private server's anti-cheat.
-  
+
 - **Observer Pattern (ChatLogWatcher):**
   The **`ChatLogWatcher`** (single tail of **`WoWChatLog.txt`**) must be observable. On **`[MGM_WHO]`** vs **`[MGM_ACCEPT:UUID]`** vs **`[MGM_CONFIRM:UUID]`**, route to **`verify-candidate`** vs **`confirm-acceptance`** vs **`PATCH` `Sent`** respectively (`docs/overview/SPEC.md` §10).
 

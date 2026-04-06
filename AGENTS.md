@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-08 (Tier C complete) -->
 
 # AI Agent Operational Protocol (AGENTS.md)
 
@@ -107,4 +107,40 @@ Responsibilities:
 - Implement **visual roulette** (fixed **5-minute** spin; **no** early spins) and copy that directs viewers to **`!twgold <CharacterName>`** in **stream chat** (subscriber); show a **countdown to the next spin** using **server-authoritative** schedule fields from the API (`docs/overview/SPEC.md` §5, §11). **“You won”** UX and instructions that **in-game whisper reply `!twgold`** (case-insensitive) is **required** for consent before gold mail (`docs/overview/SPEC.md` §9–11). Hardcode **`Награда отправлена персонажу <WINNER_NAME> на почту, проверяй ящик!`** for **`Sent`** panel copy and coordinate **broadcast chat** announcement per **`docs/overview/SPEC.md` §11** (Backend Helix and/or Extension-triggered API).
 - Integrate with the expected Twitch auth/token mechanism for the API.
 - Align client-side types with shared DTOs produced/consumed by the backend.
+
+---
+
+## 9. Audit log (recent agent work)
+
+### 2026-04-06 — Post‑Tier B closure + Tier C prep
+
+- **Audit trails**
+  - `docs/prompts/history/2026-04-06/11-post-tier-b-closure-next-steps/`
+  - `docs/prompts/history/2026-04-06/12-final-review-tier-c-prep/`
+- **Key deliverables**
+  - Tier B closure report: `docs/e2e/TIER_B_CLOSURE_REPORT.md`
+  - Tier B handover (retrospective + quick-start + FAQ): `docs/e2e/TIER_B_HANDOVER.md`
+  - Monitoring/alerting verification runbook: `docs/e2e/TIER_B_MAINTENANCE_CHECKLIST.md`
+  - Knowledge transfer script/checklist: `docs/e2e/TIER_B_KNOWLEDGE_TRANSFER.md`
+  - Tier C plan + dashboard + handover-prep: `docs/e2e/TIER_C_KICKOFF_PLAN.md`, `docs/e2e/TIER_C_PROGRESS.md`, `docs/e2e/TIER_C_HANDOVER_PREP.md`
+
+### 2026-04-06 — Transition complete & Tier C launch
+
+- Transition report: `docs/e2e/TIER_B_TRANSITION_COMPLETE.md`
+- Audit trail: `docs/prompts/history/2026-04-06/13-transition-complete-tier-c-launch/`
+
+### 2026-04-06 — Tier C launch execution (C0 initialized)
+
+- Action: Tier C launch — C0 issue package prepared, kick-off artifacts scheduled, reporting cadence documented.
+- Links:
+  - `docs/prompts/history/2026-04-06/15-tier-c-launch/`
+  - `docs/e2e/TIER_C_PROGRESS.md`
+  - `docs/prompts/history/2026-04-06/15-tier-c-launch/kickoff-notes.md`
+
+### 2026-04-08 — Tier C completion closure
+
+- Closure report: `docs/e2e/TIER_C_CLOSURE_REPORT.md`
+- Maintainer handover: `docs/e2e/TIER_C_HANDOVER.md`
+- Risk log: `docs/risks/tier-c-risk-log.md`
+- Audit trail: `docs/prompts/history/2026-04-06/16-tier-c-completion/`
 

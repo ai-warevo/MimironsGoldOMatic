@@ -3,7 +3,7 @@
  * Local release helper:
  * - Analyze Conventional Commits since the last tag.
  * - Suggest a SemVer version and generate a Markdown changelog.
- * - Save a release draft locally and (optionally) create/push vX.Y.Z tag.
+ * - (Optionally) create/push vX.Y.Z tag.
  *
  * Run from repo root:
  *   node .cursor/skills/github-release/scripts/release-skill.js
@@ -18,8 +18,6 @@
  */
 
 const { spawnSync } = require("child_process");
-const fs = require("fs");
-const path = require("path");
 const readline = require("readline");
 
 // Strict SemVer: no leading zeroes except for 0 itself.
@@ -359,28 +357,6 @@ function buildChangelog({ version, date, fromTag, analysis }) {
   return lines.join("\n");
 }
 
-// Persist the changelog under .cursor/skills/github-release/history/.
-function saveChangelogDraft(root, version, content) {
-  const historyDir = path.join(
-    root,
-    ".cursor",
-    "skills",
-    "github-release",
-    "history"
-  );
-  fs.mkdirSync(historyDir, { recursive: true });
-
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const dd = String(today.getDate()).padStart(2, "0");
-  const filename = `${yyyy}-${mm}-${dd}-v${version}.md`;
-  const filePath = path.join(historyDir, filename);
-
-  fs.writeFileSync(filePath, content, { encoding: "utf8" });
-  log(`Saved changelog draft: ${path.relative(root, filePath)}`);
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
@@ -418,8 +394,6 @@ async function main() {
     fromTag: lastTag,
     analysis,
   });
-
-  saveChangelogDraft(cwd, suggestedVersion, changelog);
 
   const tag = `v${suggestedVersion}`;
   const msg = args.message || `Release ${tag}`;

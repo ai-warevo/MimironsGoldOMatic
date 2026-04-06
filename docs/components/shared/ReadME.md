@@ -2,7 +2,7 @@
 
 ## MimironsGoldOMatic.Shared (.NET 10)
 
-- **Role:** Single source of truth for data structures used by both the **EBS** (`MimironsGoldOMatic.Backend`) and the Desktop app.
+- **Role:** Shared contract library for data structures and validation used by the EBS (`MimironsGoldOMatic.Backend`) and Desktop app.
 - **Stack:** .NET 10 Class Library.
 
 ## High-level patterns
@@ -12,7 +12,7 @@
 ## Low-level Patterns
 - **FluentValidation:** Shared validators for `PayoutDto` and `CreatePayoutRequest`; **`CharacterNameRules`** for format checks.
 - **Primary constructors / records:** DTOs such as **`PayoutDto`**, **`CreatePayoutRequest`** are **`record`** types in this assembly.
-- **Application results:** The **EBS** uses **`HandlerResult<T>`** + **`ApiErrorDto`** in MediatR handlers — **not** part of this library.
+- **Application results:** EBS-specific handler wrappers like **`HandlerResult<T>`** and **`ApiErrorDto`** are intentionally outside this library.
 
 ## Core Entities
 
@@ -33,17 +33,17 @@
   - `PayoutStatus Status`
   - `DateTime CreatedAt`
   - `bool IsRewardSentAnnouncedToChat` (read/API shape; Helix §11 at-most-once flag per `docs/overview/SPEC.md` §6 — defaults to `false` in Shared)
-- **CreatePayoutRequest (Record):** Used by Twitch Extension to **join the participant pool**:
+- **CreatePayoutRequest (Record):** Used by Extension/Dev Rig paths to request **pool enrollment**:
   - `string CharacterName`
   - `string EnrollmentRequestId`
 
 ## Validation / Logic
 
-Contains shared validation for **`CharacterName`**: **length 2–12** (after trim) and **Unicode letters in Latin or Cyrillic script blocks only** (no digits, punctuation, or spaces), implemented in **`CharacterNameRules`** and FluentValidation (`docs/overview/SPEC.md` §4).
+Shared validation for **`CharacterName`** enforces **length 2–12** (after trim) and letters-only input in Latin/Cyrillic Unicode script blocks (no digits, punctuation, or spaces), implemented in **`CharacterNameRules`** and FluentValidation (`docs/overview/SPEC.md` §4).
 
 **`PayoutEconomics.MvpWinningPayoutGold`:** fixed **1,000g** per winning payout on `PayoutDto` (SPEC §2); validated in **`PayoutDtoValidator`**.
 
-Other MVP business rules (lifetime caps, concurrency limits) are enforced by the Backend.
+Other MVP business rules (lifetime caps, concurrency limits, roulette gating) are enforced in Backend domain/application layers.
 
 Status and API semantics are normative in `docs/overview/SPEC.md`:
 

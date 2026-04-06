@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Tier B closure + Tier C kick-off) -->
+<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
 
 # Team message — Tier B complete & Tier C kick-off (template)
 
@@ -15,9 +15,12 @@ Hi team,
 ### Useful links
 
 - **Workflow runs (pin your merge verification here):** [e2e-test.yml on GitHub Actions](https://github.com/ai-warevo/MimironsGoldOMatic/actions/workflows/e2e-test.yml) — open the latest **successful** run on the merge commit; attach the URL in the issue / release notes.
+- **Tier B closure report:** [`TIER_B_CLOSURE_REPORT.md`](TIER_B_CLOSURE_REPORT.md)
 - **Formal write-up:** [`E2E_AUTOMATION_PLAN.md`](E2E_AUTOMATION_PLAN.md) — **Tier B Final Validation**, **Tier B: Implementation Complete**, **E2E Pipeline Maintenance Guide**.
 - **Handover for maintainers:** [`TIER_B_HANDOVER.md`](TIER_B_HANDOVER.md) · **Recurring checklist:** [`TIER_B_MAINTENANCE_CHECKLIST.md`](TIER_B_MAINTENANCE_CHECKLIST.md).
+- **Knowledge transfer materials:** [`TIER_B_KNOWLEDGE_TRANSFER.md`](TIER_B_KNOWLEDGE_TRANSFER.md)
 - **Tier C (next):** [`TIER_C_REQUIREMENTS.md`](TIER_C_REQUIREMENTS.md) · [`TIER_C_IMPLEMENTATION_TASKS.md`](TIER_C_IMPLEMENTATION_TASKS.md).
+- **Tier C kick-off plan:** [`TIER_C_KICKOFF_PLAN.md`](TIER_C_KICKOFF_PLAN.md)
 - **Structure map:** [`docs/reference/PROJECT_STRUCTURE.md`](../reference/PROJECT_STRUCTURE.md).
 
 ### What we achieved (short)
@@ -42,7 +45,14 @@ Hi team,
 | **Improve** | Docker for mocks?, nightly-only Tier B?, Tier C order |
 | **Docs** | Is the handover clear? What’s missing? |
 
-**Calendar placeholder:** *— owner: set invite; attach this agenda —*
+**Calendar placeholder:** *— owner: set invite; attach this agenda + link `TIER_B_KNOWLEDGE_TRANSFER.md` —*
+
+### Knowledge transfer session (schedule)
+
+- **Proposed time:** *TBD*
+- **Invite list:** *TBD*
+- **Meeting link:** *TBD*
+- **Preread:** `TIER_B_KNOWLEDGE_TRANSFER.md`
 
 ---
 

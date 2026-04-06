@@ -1,0 +1,5 @@
+- [x] Extract production scope from `docs/overview/ROADMAP.md`.
+- [x] Create production gate and task prompt files in `docs/prod`.
+- [x] Create/validate production index and coverage mapping.
+- [x] Run lint diagnostics for edited docs.
+- [x] Write completion report.

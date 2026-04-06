@@ -1,0 +1,3 @@
+- [x] Update `BETA_GO_NO_GO.md` for solo-owner sign-off model.
+- [x] Mark decision record as `Go`.
+- [x] Verify consistency and write report.
