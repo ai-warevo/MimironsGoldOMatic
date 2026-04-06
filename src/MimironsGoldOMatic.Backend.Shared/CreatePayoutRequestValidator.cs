@@ -1,6 +1,7 @@
 using FluentValidation;
+using MimironsGoldOMatic.Backend.Abstract;
 
-namespace MimironsGoldOMatic.Shared;
+namespace MimironsGoldOMatic.Backend.Shared;
 
 public sealed class CreatePayoutRequestValidator : AbstractValidator<CreatePayoutRequest>
 {
@@ -16,4 +17,3 @@ public sealed class CreatePayoutRequestValidator : AbstractValidator<CreatePayou
             .NotEmpty();
     }
 }
-

@@ -1,6 +1,7 @@
 using FluentValidation;
+using MimironsGoldOMatic.Backend.Abstract;
 
-namespace MimironsGoldOMatic.Shared;
+namespace MimironsGoldOMatic.Backend.Shared;
 
 public sealed class PayoutDtoValidator : AbstractValidator<PayoutDto>
 {
@@ -20,4 +21,3 @@ public sealed class PayoutDtoValidator : AbstractValidator<PayoutDto>
         RuleFor(x => x.EnrollmentRequestId).NotEmpty();
     }
 }
-

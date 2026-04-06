@@ -1,4 +1,4 @@
-namespace MimironsGoldOMatic.Shared;
+namespace MimironsGoldOMatic.Backend.Abstract;
 
 public sealed record VersionInfoDto(
     string Version,
@@ -6,4 +6,3 @@ public sealed record VersionInfoDto(
     string? MinimumDesktopVersion,
     string? MinimumAddonVersion,
     string? MinimumExtensionVersion);
-

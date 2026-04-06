@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace MimironsGoldOMatic.Shared;
+namespace MimironsGoldOMatic.Backend.Shared;
 
 /// <summary>
 /// Shared rules for <c>CharacterName</c> per <c>docs/overview/SPEC.md</c> §4 (length, Latin/Cyrillic letters only).
@@ -65,4 +65,3 @@ public static class CharacterNameRules
             or >= 0x2C60 and <= 0x2C7F // Latin Extended-C
             or (>= 0xA722 and <= 0xA787); // Latin Extended-D (letter subrange)
 }
-
