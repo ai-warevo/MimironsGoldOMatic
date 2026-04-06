@@ -2,9 +2,9 @@
 
 # Project Roadmap: Mimiron's Gold-o-Matic
 
-This roadmap reflects the **finalized MVP specification** agreed during design clarification.
+This roadmap reflects the finalized MVP specification and serves as the implementation sequence reference.
 
-**Current stage:** The project is in the **late MVP phase (MVP-6)**. **Core components** — Backend (EBS), WoW addon, WPF Desktop, and Twitch Extension (viewer panel) — are **implemented**. **Current focus:** verification, hardening, and **E2E automation** before the **Beta** milestone (see **Beta** section below).
+**Current stage:** The project is in the **late MVP phase (MVP-6)**. Core components (EBS, WoW addon, WPF Desktop, Twitch Extension viewer panel) are implemented. Current focus is verification, hardening, and E2E automation before the **Beta** milestone (see Beta section).
 
 Canonical implementation contracts live in:
 
@@ -14,7 +14,7 @@ Canonical implementation contracts live in:
 
 **UI/UX (screens, element inventory, flows):** Hub [`docs/reference/UI_SPEC.md`](../reference/UI_SPEC.md) (tokens, navigation); implement against [`docs/components/twitch-extension/UI_SPEC.md`](../components/twitch-extension/UI_SPEC.md), [`docs/components/desktop/UI_SPEC.md`](../components/desktop/UI_SPEC.md), and [`docs/components/wow-addon/UI_SPEC.md`](../components/wow-addon/UI_SPEC.md) for **UI-1xx–UI-4xx** (Twitch ~318px panel, WPF windows, WoW frames) while building MVP-3 / MVP-4 / MVP-5.
 
-**Implementation snapshot (repository):** The steps below are the **target** MVP sequence. For what is **actually checked in** today versus **MVP-6** (tests, E2E harness) and residual risks, see [`docs/reference/IMPLEMENTATION_READINESS.md`](../reference/IMPLEMENTATION_READINESS.md) — *Source code parity (MVP track)*. For **Manual** vs **Automated** E2E mapping, see **[Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)** in `docs/overview/INTERACTION_SCENARIOS.md`.
+**Implementation snapshot (repository):** The steps below describe the target MVP sequence. For current repo parity versus MVP-6 (tests, E2E harness) and residual risks, see [`docs/reference/IMPLEMENTATION_READINESS.md`](../reference/IMPLEMENTATION_READINESS.md) (*Source code parity (MVP track)*). For manual vs automated E2E mapping, see [Automated E2E Scenarios (MVP-6)](INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6) in `docs/overview/INTERACTION_SCENARIOS.md`.
 
 ### Mandatory checklist (every roadmap step)
 

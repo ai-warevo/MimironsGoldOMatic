@@ -43,8 +43,8 @@ All paths below are under **`src/MimironsGoldOMatic.Backend/`**.
 
 Override in production with:
 
-- **[.NET User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets)** (dev machine), or  
-- **Environment variables** (double underscore for nested keys, e.g. `ConnectionStrings__PostgreSQL`), or  
+- **[.NET User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets)** (dev machine), or
+- **Environment variables** (double underscore for nested keys, e.g. `ConnectionStrings__PostgreSQL`), or
 - **Azure Key Vault / secret manager** (hosted).
 
 ### 4.2 `appsettings.Development.json`: `Mgm` and `Twitch` (lines 5–17)

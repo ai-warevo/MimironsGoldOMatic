@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-08 (Tier C launch) -->
+<!-- Updated: 2026-04-08 (Tier C complete) -->
 
 # Tier B → Tier C — transition complete
 
@@ -49,6 +49,8 @@ Tier C planning + tracking:
 - Task board: `docs/e2e/TIER_C_IMPLEMENTATION_TASKS.md`
 - Progress dashboard: `docs/e2e/TIER_C_PROGRESS.md`
 - Handover prep: `docs/e2e/TIER_C_HANDOVER_PREP.md`
+- Closure report: `docs/e2e/TIER_C_CLOSURE_REPORT.md`
+- Maintainer handover: `docs/e2e/TIER_C_HANDOVER.md`
 
 Active Tier C issues:
 - C0-01: [#123](https://github.com/your-org/your-repo/issues/123) — Created, assigned to `@ai-vibeqodez`

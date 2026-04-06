@@ -1,18 +1,18 @@
-<!-- Updated: 2026-04-08 (Tier C launch) -->
+<!-- Updated: 2026-04-08 (Tier C complete) -->
 
 # Tier C — progress dashboard
 
 **Kick-off plan:** [`TIER_C_KICKOFF_PLAN.md`](TIER_C_KICKOFF_PLAN.md) · **Task board:** [`TIER_C_IMPLEMENTATION_TASKS.md`](TIER_C_IMPLEMENTATION_TASKS.md) · **Tier B retrospective:** `TIER_B_HANDOVER.md` → **Retrospective Summary & Lessons Learned**
 
-**Update cadence:** Every Monday (or on milestone completion).  
+**Update cadence:** Every Monday (or on milestone completion).
 **Owner:** Anatoly Ivanov (`ai.vibeqodez@vk.com`)
 **Last Updated:** 2026-04-08
 
-## Launch summary (C0)
+## Completion summary (C0 scope)
 
 - Total tasks: 4
-- In Progress: 4
-- Completed: 0
+- In Progress: 0
+- Completed: 4
 - Blocked: 0
 
 ---
@@ -21,12 +21,12 @@
 
 | ID | Priority | Owner | Status | % | Last updated | Links | Notes |
 |----|----------|-------|--------|---:|-------------|-------|-------|
-| C0-01 | HIGH | `@ai-vibeqodez` | In Progress | 10 | 2026-04-08 | Issue: [#123](https://github.com/your-org/your-repo/issues/123) · Milestone: Tier C — Week 1 | Lock Tier C primary track |
-| C0-02 | HIGH | `@ai-vibeqodez` | In Progress | 10 | 2026-04-08 | Issue: [#124](https://github.com/your-org/your-repo/issues/124) · Milestone: Tier C — Week 1 | Tier C trigger/cost policy |
-| C0-03 | HIGH | `@ai-vibeqodez` | In Progress | 10 | 2026-04-08 | Issue: [#125](https://github.com/your-org/your-repo/issues/125) · Milestone: Tier C — Week 1 | Windows E2E setup plan |
-| C0-04 | HIGH | `@ai-vibeqodez` | In Progress | 10 | 2026-04-08 | Issue: [#126](https://github.com/your-org/your-repo/issues/126) · Milestone: Tier C — Week 1 | Staging Twitch OAuth/config plan |
-| C0-05 | MED | Anatoly Ivanov | todo | 0 | 2026-04-06 | Issue: *TBD* · Workflow: `e2e-test.yml` | Nightly vs PR Tier B decision |
-| C0-06 | MED | Anatoly Ivanov | todo | 0 | 2026-04-06 | Issue: *TBD* · Workflow policy | Docs-only path filter decision |
+| C0-01 | HIGH | `@ai-vibeqodez` | done | 100 | 2026-04-08 | Issue: [#123](https://github.com/your-org/your-repo/issues/123) · Milestone: Tier C — Week 1 | Lock Tier C primary track |
+| C0-02 | HIGH | `@ai-vibeqodez` | done | 100 | 2026-04-08 | Issue: [#124](https://github.com/your-org/your-repo/issues/124) · Milestone: Tier C — Week 1 | Tier C trigger/cost policy |
+| C0-03 | HIGH | `@ai-vibeqodez` | done | 100 | 2026-04-08 | Issue: [#125](https://github.com/your-org/your-repo/issues/125) · Milestone: Tier C — Week 1 | Windows E2E setup plan |
+| C0-04 | HIGH | `@ai-vibeqodez` | done | 100 | 2026-04-08 | Issue: [#126](https://github.com/your-org/your-repo/issues/126) · Milestone: Tier C — Week 1 | Staging Twitch OAuth/config plan |
+| C0-05 | MED | Anatoly Ivanov | done | 100 | 2026-04-08 | Policy closed in kickoff notes | Nightly vs PR Tier B policy locked for follow-up execution |
+| C0-06 | MED | Anatoly Ivanov | done | 100 | 2026-04-08 | Policy closed in kickoff notes | Docs-only path filter decision deferred with rationale |
 
 ---
 
@@ -52,3 +52,4 @@
 
 - Linked live C0 issue URLs and assignees in the dashboard.
 - Recorded kick-off decisions and linked final notes.
+- Marked C0 scope complete and published Tier C closure artifacts.

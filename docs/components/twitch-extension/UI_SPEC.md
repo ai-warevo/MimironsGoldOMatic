@@ -6,6 +6,7 @@
 **Implementation:** `src/MimironsGoldOMatic.TwitchExtension` — MVP-5 **viewer** panel (**UI-101–106**) with Zustand + EBS polling. **Post-MVP reference:** broadcaster **UI-201–204** (no EBS routes in MVP). See [`IMPLEMENTATION_READINESS.md`](../../reference/IMPLEMENTATION_READINESS.md).
 
 **Product copy (normative):** [`MVP_PRODUCT_SUMMARY.md`](../../overview/MVP_PRODUCT_SUMMARY.md), [`SPEC.md`](../../overview/SPEC.md).
+**Scope note:** this file defines Twitch-facing UI behavior and copy shape, while backend lifecycle authority remains in `docs/overview/SPEC.md`.
 
 > **DECISION (locked):** Implement **viewer UI-101–106** only in MVP-5; **UI-201–204** stay post-MVP ([`ROADMAP.md`](../../overview/ROADMAP.md)).
 
@@ -16,13 +17,13 @@
 | Main UI hub + tokens | [`UI_SPEC.md`](../../reference/UI_SPEC.md) |
 | WPF Desktop UI | [`MimironsGoldOMatic.Desktop/UI_SPEC.md`](../desktop/UI_SPEC.md) |
 | WoW addon UI | [`MimironsGoldOMatic.WoWAddon/UI_SPEC.md`](../wow-addon/UI_SPEC.md) |
-| Component engineering | [`ReadME.md`](ReadME.md) |
+| Component engineering | [`Twitch Extension component guide`](ReadME.md) |
 
 ---
 
 ## 1. Twitch Extension — Viewer-facing panel
 
-**Constraints:** Twitch **panel** iframe is typically **~318px** max width, variable height. Extension runs in **sandboxed** iframe; only Twitch-provided extension helper + EBS calls.
+**Constraints:** Twitch panel iframe is typically **~318px** wide (variable height). The extension runs in a sandboxed iframe and may call only Twitch helper APIs plus EBS HTTP endpoints.
 
 > ⚠️ **DECISION:** Inner ASCII blocks use **~40 character** content width as a monospace stand-in for 318px CSS (`font-size` ~11–13px).
 
@@ -30,9 +31,9 @@
 
 ## UI-101: Viewer Panel — Loading / Unauthenticated / Restricted
 
-**Component:** Frontend (Twitch Extension)  
-**Actor:** Viewer (or System)  
-**Trigger:** Extension mounted; JWT not ready; viewer denied; or status unavailable.  
+**Component:** Frontend (Twitch Extension)
+**Actor:** Viewer (or System)
+**Trigger:** Extension mounted; JWT/context not ready; viewer unauthorized; or panel state unavailable.
 **MVP Stage:** MVP-5
 
 ### Element Inventory
@@ -46,10 +47,10 @@
 
 ### States
 
-- **Default (loading):** Twitch helper loading; spinner or gnomish gears metaphor.
-- **Unauthenticated:** Viewer has not granted required identity — show EL-101-02 explaining log in to Twitch / open in live channel.
-- **Error (Extension / EBS):** EL-101-02 shows friendly failure; EL-101-03 enabled.
-- **Authenticated:** EL-101-04 visible; transition to UI-102 (instructions + live status).
+- **Default (loading):** Twitch helper and auth context loading; show spinner/animated placeholder.
+- **Unauthenticated:** Viewer identity unavailable; show guidance to sign in or open a live channel context.
+- **Error (Extension/EBS):** Friendly failure text with `Retry` action enabled.
+- **Authenticated:** Instruction hint appears and panel transitions to UI-102.
 
 ### ASCII Visualization
 
@@ -101,9 +102,9 @@
 
 ## UI-102: Viewer Panel — How to join / Pool status (chat enrollment)
 
-**Component:** Frontend  
-**Actor:** Viewer  
-**Trigger:** Authenticated; panel shows **instructions** and **polls** Backend for pool/spin state (enrollment happens in **Twitch chat**, not here).  
+**Component:** Frontend
+**Actor:** Viewer
+**Trigger:** Authenticated state; panel shows join instructions and polls backend pool/spin state (enrollment is in Twitch chat, not panel controls).
 **MVP Stage:** MVP-5
 
 ### Element Inventory
@@ -121,9 +122,9 @@
 
 ### States
 
-- **Default:** Instructions visible; EL-102-05 from **`GET`** pool/me if implemented.
+- **Default:** Join instructions visible; EL-102-05 reflects `GET /api/pool/me` and roulette summary data when available.
 - **In pool:** EL-102-05 shows membership; roulette region active (UI-106 + animation area).
-- **API error:** UI-105 variant.
+- **API error:** Transition to UI-105 variant with mapped copy.
 
 ### ASCII Visualization
 
@@ -140,8 +141,8 @@
 
 ### Transitions
 
-- Authenticated → In pool: Backend reports membership → show EL-102-05 + roulette.
-- Pool → Error: API error body → UI-105 variant.
+- Authenticated → In pool when backend membership is reported; show EL-102-05 and activate roulette/countdown widgets.
+- Pool → Error when backend request fails; present UI-105 copy and recovery action.
 
 ### Constraints & Notes
 
@@ -152,9 +153,9 @@
 
 ## UI-103: Viewer Panel — Awaiting / Spinning / Verifying
 
-**Component:** Frontend  
-**Actor:** System + Viewer  
-**Trigger:** Enrolled; spin started; or `/who` verification in progress.  
+**Component:** Frontend
+**Actor:** System + Viewer
+**Trigger:** Viewer is enrolled and roulette cycle enters spinning or verification phase.
 **MVP Stage:** MVP-5
 
 ### Element Inventory
@@ -167,8 +168,8 @@
 
 ### States
 
-- **Spinning:** EL-103-01 animates; suspense ~ UX-defined duration synced to Backend.
-- **Verifying:** EL-103-02 visible when **`spinPhase`** is **`verification`** (`docs/overview/SPEC.md` §5.1, §11).
+- **Spinning:** EL-103-01 animates with backend-synchronized phase timing.
+- **Verifying:** EL-103-02 appears when `spinPhase=verification` (`docs/overview/SPEC.md` §5.1, §11).
 - **Idle between spins:** EL-103-01 static; countdown in UI-106.
 
 ### ASCII Visualization
@@ -187,7 +188,7 @@
 
 ### Transitions
 
-- Spinning → Verifying: **`GET /api/roulette/state`** exposes **`spinPhase`** (`verification`, etc.; `docs/overview/SPEC.md` §5.1).
+- Spinning → Verifying when `GET /api/roulette/state` reports `spinPhase=verification` (`docs/overview/SPEC.md` §5.1).
 - Verifying → Winner / No-op: re-draw if offline per spec → return to idle + toast (DECISION: inline message "Redraw—winner offline").
 
 ### Constraints & Notes
@@ -198,9 +199,9 @@
 
 ## UI-104: Viewer Panel — You won / Payout progressing / Sent
 
-**Component:** Frontend  
-**Actor:** Viewer  
-**Trigger:** Backend marks viewer as winner; `GET /api/payouts/my-last` returns payout row.  
+**Component:** Frontend
+**Actor:** Viewer
+**Trigger:** Backend identifies current viewer as winner and `GET /api/payouts/my-last` returns a payout row.
 **MVP Stage:** MVP-5
 
 ### Element Inventory
@@ -250,8 +251,8 @@
 
 ### Transitions
 
-- Won → In progress: poll `my-last` status from Backend.
-- In progress → Sent: poll shows `Sent`.
+- Won → In progress when polled payout status changes from backend.
+- In progress → Sent when backend status is `Sent`.
 - Sent → (stay): show success summary; **winner removed from pool** per `docs/overview/SPEC.md` — rejoin with **`!twgold <CharacterName>`** in chat if they want another draw.
 
 ### Constraints & Notes
@@ -262,9 +263,9 @@
 
 ## UI-105: Viewer Panel — Error States
 
-**Component:** Frontend  
-**Actor:** Viewer  
-**Trigger:** API errors; rate limit; cap; active payout.  
+**Component:** Frontend
+**Actor:** Viewer
+**Trigger:** API errors, throttling, cap enforcement, or active payout conflicts.
 **MVP Stage:** MVP-5
 
 ### Element Inventory
@@ -299,7 +300,7 @@
 
 ### Transitions
 
-- Any screen → UI-105: failed API → show mapped variant.
+- Any screen → UI-105 when API call fails and error is mapped.
 - UI-105 → UI-102: Dismiss + valid state.
 
 ### Constraints & Notes
@@ -310,9 +311,9 @@
 
 ## UI-106: Viewer Panel — Next spin countdown widget
 
-**Component:** Frontend  
-**Actor:** Viewer  
-**Trigger:** Enrolled; between spins.  
+**Component:** Frontend
+**Actor:** Viewer
+**Trigger:** Enrolled viewer state between active spins.
 **MVP Stage:** MVP-5
 
 ### Element Inventory
@@ -336,7 +337,7 @@
 
 ### Transitions
 
-- Countdown → 00:00: trigger spin UX (UI-103).
+- Countdown → 00:00 transitions to spin UX (UI-103), subject to backend phase updates.
 
 ### Constraints & Notes
 
@@ -352,9 +353,9 @@
 
 ## UI-201: Broadcaster — Initial setup / connection overview
 
-**Component:** Frontend (Extension **config** or **live config** view)  
-**Actor:** Streamer  
-**Trigger:** First open of extension configuration in Creator Dashboard.  
+**Component:** Frontend (Extension **config** or **live config** view)
+**Actor:** Streamer
+**Trigger:** First open of extension configuration in Creator Dashboard.
 **MVP Stage:** MVP-5+ (requires product decision)
 
 ### Element Inventory
@@ -398,9 +399,9 @@
 
 ## UI-202: Broadcaster — Session dashboard (queue / activity)
 
-**Component:** Frontend  
-**Actor:** Streamer  
-**Trigger:** Broadcaster opens live config or dedicated dashboard route.  
+**Component:** Frontend
+**Actor:** Streamer
+**Trigger:** Broadcaster opens live config or dedicated dashboard route.
 **MVP Stage:** MVP-5+ (needs broadcaster API)
 
 ### Element Inventory
@@ -433,9 +434,9 @@
 
 ## UI-203: Broadcaster — Settings
 
-**Component:** Frontend  
-**Actor:** Streamer  
-**Trigger:** Settings tab.  
+**Component:** Frontend
+**Actor:** Streamer
+**Trigger:** Settings tab.
 **MVP Stage:** MVP-5+
 
 ### Element Inventory
@@ -463,9 +464,9 @@
 
 ## UI-204: Broadcaster — Manual override
 
-**Component:** Frontend  
-**Actor:** Streamer  
-**Trigger:** Operator needs cancel / nudge.  
+**Component:** Frontend
+**Actor:** Streamer
+**Trigger:** Operator needs cancel / nudge.
 **MVP Stage:** MVP-5+
 
 ### Element Inventory

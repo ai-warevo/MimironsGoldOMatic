@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Tier C launch) -->
+<!-- Updated: 2026-04-08 (Tier C complete) -->
 
 # AI Agent Operational Protocol (AGENTS.md)
 
@@ -136,4 +136,11 @@ Responsibilities:
   - `docs/prompts/history/2026-04-06/15-tier-c-launch/`
   - `docs/e2e/TIER_C_PROGRESS.md`
   - `docs/prompts/history/2026-04-06/15-tier-c-launch/kickoff-notes.md`
+
+### 2026-04-08 — Tier C completion closure
+
+- Closure report: `docs/e2e/TIER_C_CLOSURE_REPORT.md`
+- Maintainer handover: `docs/e2e/TIER_C_HANDOVER.md`
+- Risk log: `docs/risks/tier-c-risk-log.md`
+- Audit trail: `docs/prompts/history/2026-04-06/16-tier-c-completion/`
 

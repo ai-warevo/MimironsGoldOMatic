@@ -2,18 +2,19 @@
 
 # MVP product summary (at a glance)
 
-**Normative source:** [`docs/overview/SPEC.md`](SPEC.md) (APIs, transitions, persistence, log formats). This page is a **consolidated digest** for README-style overviews; it does **not** override the spec.
+**Normative source:** [`docs/overview/SPEC.md`](SPEC.md) (APIs, transitions, persistence, log formats). This page is a compact digest for quick orientation and does not override the spec.
 
 ## Pool and chat
 
-- **Subscribe** then enroll with **`!twgold <CharacterName>`** in **broadcast** Twitch chat (**prefix case-insensitive**). **EBS** ingests via **EventSub**; subscriber eligibility from the **chat payload** only (see SPEC). **`CharacterName`** **unique** in the active pool (same viewer may **replace** their name). Channel Points **not** used.
-- Chat dedupe: Twitch **`message_id`**. Optional Extension **`POST /api/payouts/claim`**: **`EnrollmentRequestId`** idempotency; **`Mgm:DevSkipSubscriberCheck`** for local Dev Rig — see SPEC §5.
+- Viewers subscribe and enroll using **`!twgold <CharacterName>`** in broadcast Twitch chat (case-insensitive command prefix). The EBS ingests this through EventSub and uses subscriber information from the chat payload only (see SPEC).
+- `CharacterName` stays unique within the active pool; the same viewer can replace their current name with a new enrollment message.
+- Chat deduplication uses Twitch **`message_id`**. Optional Extension **`POST /api/payouts/claim`** remains a dev/rig path with **`EnrollmentRequestId`** idempotency and **`Mgm:DevSkipSubscriberCheck`**.
 
 ## Roulette
 
-- **Visual roulette**; **fixed 5-minute** cadence; **no** early spin. **`nextSpinAt` / `serverNow`** from **`GET /api/roulette/state`** are **authoritative** for countdown UI.
-- **Minimum participants:** **1**. **Non-winners** stay in the pool. **Winners** removed when payout is **`Sent`**; may re-enroll via chat.
-- **Online check:** **`/who <Winner_InGame_Nickname>`** before **`Pending`** payout; addon **`[MGM_WHO]`** + JSON in **`WoWChatLog.txt`** → Desktop **`verify-candidate`**. Offline candidate → **no winner** this cycle (**no** re-draw same cycle).
+- Visual roulette runs on a fixed **5-minute cadence** with no early spin. Countdown UI must use authoritative `nextSpinAt` / `serverNow` from **`GET /api/roulette/state`**.
+- Minimum participants: **1**. Non-winners stay in the pool; winners are removed only after payout reaches **`Sent`**, and can re-enroll later.
+- Before creating **`Pending`**, the flow requires **`/who <Winner_InGame_Nickname>`** verification: addon emits **`[MGM_WHO]`** JSON into **`WoWChatLog.txt`**, Desktop forwards to **`verify-candidate`**, and offline candidates resolve to **no winner** for that cycle (no same-cycle redraw).
 
 ## Gold and limits
 
@@ -21,14 +22,14 @@
 
 ## Winner path
 
-- **Extension:** “You won” + instruct **WoW whisper reply `!twgold`** after the **notification whisper** (SPEC §9).
-- **Addon:** sends **`/whisper …`** (§9 Russian text); on **`!twgold`** match → **`[MGM_ACCEPT:UUID]`**.
-- **Desktop:** tail log → **`confirm-acceptance`** (not **`Sent`**).
-- **Mail:** MGM-armed send → **`[MGM_CONFIRM:UUID]`** + completion whisper → Desktop → **`PATCH` `Sent`**. **Helix** §11 broadcast line after **`Sent`** (best-effort). Manual **Mark as Sent** = operator override.
+- **Extension:** shows “You won” and instructs the winner to reply **`!twgold`** in WoW after receiving the streamer whisper (SPEC §9).
+- **Addon:** sends the §9 whisper text and emits **`[MGM_ACCEPT:UUID]`** when it receives a matching **`!twgold`** whisper response.
+- **Desktop:** tails the chat log and calls **`confirm-acceptance`** on `[MGM_ACCEPT]` (this records consent, not `Sent`).
+- **Mail confirmation:** for MGM-armed sends, addon emits **`[MGM_CONFIRM:UUID]`**; Desktop then updates payout to **`Sent`**. Helix §11 chat message is attempted after `Sent` on a best-effort basis. Manual **Mark as Sent** remains an operator override.
 
 ## Payout statuses (winner row)
 
-`Pending` → `InProgress` → `Sent` | `Failed` | `Cancelled`; `Expired` after 24h (hourly job). **`InProgress` → `Pending`** escape hatch allowed (SPEC §3).
+`Pending` → `InProgress` → `Sent` | `Failed` | `Cancelled`, with `Expired` applied by hourly job after 24h. **`InProgress` → `Pending`** escape hatch is allowed (SPEC §3).
 
 ## Identity fields
 

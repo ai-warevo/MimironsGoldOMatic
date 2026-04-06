@@ -1,11 +1,11 @@
-<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
+<!-- Updated: 2026-04-08 (Tier C complete) -->
 
 # MimironsGoldOMatic Documentation
 
 ## Navigation
 
 - **Project overview**: [Architecture](overview/ARCHITECTURE.md), [Roadmap](overview/ROADMAP.md), [MVP summary](overview/MVP_PRODUCT_SUMMARY.md), [Interaction scenarios](overview/INTERACTION_SCENARIOS.md), [Specification](overview/SPEC.md)
-- **E2E automation**: [Plan](e2e/E2E_AUTOMATION_PLAN.md), [Tasks](e2e/E2E_AUTOMATION_TASKS.md), [Tier B implementation](e2e/TIER_B_IMPLEMENTATION_TASKS.md), [Tier B closure report](e2e/TIER_B_CLOSURE_REPORT.md), [Tier B transition complete](e2e/TIER_B_TRANSITION_COMPLETE.md), [Tier B handover](e2e/TIER_B_HANDOVER.md), [Tier B maintenance checklist](e2e/TIER_B_MAINTENANCE_CHECKLIST.md), [Knowledge transfer](e2e/TIER_B_KNOWLEDGE_TRANSFER.md), [Pre-launch checklist](e2e/TIER_B_PRELAUNCH_CHECKLIST.md), [Post-launch verification](e2e/TIER_B_POSTLAUNCH_VERIFICATION.md), [Tier C requirements (draft)](e2e/TIER_C_REQUIREMENTS.md), [Tier C implementation tasks](e2e/TIER_C_IMPLEMENTATION_TASKS.md), [Tier C kick-off plan](e2e/TIER_C_KICKOFF_PLAN.md), [Tier C progress dashboard](e2e/TIER_C_PROGRESS.md), [Tier C handover prep](e2e/TIER_C_HANDOVER_PREP.md), [Team announcement template](e2e/TIER_B_TEAM_ANNOUNCEMENT.md)
+- **E2E automation**: [Plan](e2e/E2E_AUTOMATION_PLAN.md), [Tasks](e2e/E2E_AUTOMATION_TASKS.md), [Tier B implementation](e2e/TIER_B_IMPLEMENTATION_TASKS.md), [Tier B closure report](e2e/TIER_B_CLOSURE_REPORT.md), [Tier B transition complete](e2e/TIER_B_TRANSITION_COMPLETE.md), [Tier B handover](e2e/TIER_B_HANDOVER.md), [Tier B maintenance checklist](e2e/TIER_B_MAINTENANCE_CHECKLIST.md), [Knowledge transfer](e2e/TIER_B_KNOWLEDGE_TRANSFER.md), [Pre-launch checklist](e2e/TIER_B_PRELAUNCH_CHECKLIST.md), [Post-launch verification](e2e/TIER_B_POSTLAUNCH_VERIFICATION.md), [Tier C requirements (draft)](e2e/TIER_C_REQUIREMENTS.md), [Tier C implementation tasks](e2e/TIER_C_IMPLEMENTATION_TASKS.md), [Tier C kick-off plan](e2e/TIER_C_KICKOFF_PLAN.md), [Tier C progress dashboard](e2e/TIER_C_PROGRESS.md), [Tier C handover prep](e2e/TIER_C_HANDOVER_PREP.md), [Tier C closure report](e2e/TIER_C_CLOSURE_REPORT.md), [Tier C handover](e2e/TIER_C_HANDOVER.md), [Team announcement template](e2e/TIER_B_TEAM_ANNOUNCEMENT.md)
 - **Components**:
   - [Backend](components/backend/ReadME.md)
   - [Desktop app](components/desktop/ReadME.md), [Desktop UI spec](components/desktop/UI_SPEC.md)

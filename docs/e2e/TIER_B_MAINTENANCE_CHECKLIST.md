@@ -37,7 +37,7 @@ These checks validate that **monitoring** and **alerting** remain functional aft
 - The workflow link points at `e2e-test.yml` runs.
 
 **Record**
-- **Latest manual run URL**: *TBD (paste Actions run URL)*  
+- **Latest manual run URL**: *TBD (paste Actions run URL)*
 - **Observed counts**: *TBD*
 
 ### B) Consecutive-failure alert (deduplicated issue)

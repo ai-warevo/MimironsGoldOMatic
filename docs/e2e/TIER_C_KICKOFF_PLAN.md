@@ -32,7 +32,7 @@ Infrastructure prerequisites (as decisions):
 
 ## 3. Timeline (Week 1–4)
 
-**Planned start date:** 2026-04-13 (Mon)  
+**Planned start date:** 2026-04-13 (Mon)
 **Planned end date:** 2026-05-08 (Fri)
 
 Owners: see **Resource requirements** (Section 2).

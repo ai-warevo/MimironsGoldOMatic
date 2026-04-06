@@ -2,7 +2,7 @@
 
 # Mimiron's Gold-o-Matic — UI/UX specification (hub)
 
-This **hub** document holds **cross-cutting** UI guidance, **design tokens**, and **end-to-end navigation** for the MVP. **Per-screen inventories, ASCII layouts, and platform constraints** live in the **component UI specs** linked at the end. This is **not** source code.
+This **hub** document holds **cross-cutting** UI guidance, **design tokens**, and **end-to-end navigation** for the MVP. **Per-screen inventories, ASCII layouts, and platform constraints** live in the component UI specs linked at the end. This is not source code.
 
 **Implementation snapshot:** **MVP-5** Twitch Extension viewer panel (**UI-101–106**) in `src/MimironsGoldOMatic.TwitchExtension`; **MVP-4** Desktop (**UI-301–308**); **MVP-3** WoW addon (**UI-401–405**). Broadcaster Extension **UI-201–204** remain **post-MVP**. Compare [`IMPLEMENTATION_READINESS.md`](IMPLEMENTATION_READINESS.md).
 
@@ -12,23 +12,23 @@ Paths below are relative to this file (`docs/reference/UI_SPEC.md`):
 
 | Area | Markdown |
 |------|----------|
-| Project overview | [README.md](../../README.md) |
+| Project overview | [Repository README](../../README.md) |
 | Architecture summary | [CONTEXT.md](../../CONTEXT.md) · [ARCHITECTURE.md](../overview/ARCHITECTURE.md) |
 | Product rules (digest) | [MVP_PRODUCT_SUMMARY.md](../overview/MVP_PRODUCT_SUMMARY.md) |
 | Agent workflow & roles | [AGENTS.md](../../AGENTS.md) |
-| Docs index | [ReadME.md](../ReadME.md) |
+| Docs index | [Documentation index](../ReadME.md) |
 | **Canonical MVP contracts** | [SPEC.md](../overview/SPEC.md) |
 | MVP prompts & sequencing | [ROADMAP.md](../overview/ROADMAP.md) |
 | Interaction scenarios & TCs | [INTERACTION_SCENARIOS.md](../overview/INTERACTION_SCENARIOS.md) |
-| Shared contracts | [MimironsGoldOMatic.Shared/ReadME.md](../components/shared/ReadME.md) |
-| Backend API | [MimironsGoldOMatic.Backend/ReadME.md](../components/backend/ReadME.md) |
+| Shared contracts | [Shared component guide](../components/shared/ReadME.md) |
+| Backend API | [Backend component guide](../components/backend/ReadME.md) |
 | **Twitch Extension UI (screens)** | [MimironsGoldOMatic.TwitchExtension/UI_SPEC.md](../components/twitch-extension/UI_SPEC.md) |
 | **WPF Desktop UI (screens)** | [MimironsGoldOMatic.Desktop/UI_SPEC.md](../components/desktop/UI_SPEC.md) |
 | **WoW addon UI (screens)** | [MimironsGoldOMatic.WoWAddon/UI_SPEC.md](../components/wow-addon/UI_SPEC.md) |
-| Component engineering | [MimironsGoldOMatic.Desktop/ReadME.md](../components/desktop/ReadME.md) · [TwitchExtension/ReadME.md](../components/twitch-extension/ReadME.md) · [WoWAddon/ReadME.md](../components/wow-addon/ReadME.md) |
+| Component engineering | [Desktop guide](../components/desktop/ReadME.md) · [Twitch Extension guide](../components/twitch-extension/ReadME.md) · [WoW Addon guide](../components/wow-addon/ReadME.md) |
 | Implementation readiness | [IMPLEMENTATION_READINESS.md](IMPLEMENTATION_READINESS.md) |
 
-**Global product rules (UI copy):** use **[MVP_PRODUCT_SUMMARY.md](../overview/MVP_PRODUCT_SUMMARY.md)** and **[SPEC.md](../overview/SPEC.md)** for pool, roulette, consent, and §11 copy constraints.
+**Global product rules (UI copy):** use **[MVP_PRODUCT_SUMMARY.md](../overview/MVP_PRODUCT_SUMMARY.md)** and **[SPEC.md](../overview/SPEC.md)** for pool, roulette, consent, and §11 copy constraints. Backend lifecycle authority remains in `SPEC.md`.
 
 ---
 
@@ -71,7 +71,7 @@ Semantic colors used across products (see **Design tokens** for full table):
 - **Extension:** Decorative roulette / status icons; align with Twitch panel density (small footprint).
 - **WoW addon:** Blizzard texture paths or bundled textures; minimap button **EL-401-01** per addon UI spec.
 
-<!-- MANUAL UPDATE_REQUIRED: Central icon inventory (paths, sizes, license). -->
+<!-- MANUAL UPDATE REQUIRED: Central icon inventory (paths, sizes, license). -->
 
 ---
 
@@ -104,11 +104,11 @@ Semantic colors used across products (see **Design tokens** for full table):
 | Color: success | `#43A047` | UI-104 Sent chip, UI-403 |
 | Panel max width | `318px` | Twitch panel (UI-101–106); config views may be wider |
 | Countdown format | `MM:SS` | UI-106 (next spin) |
-| Max character name length | `12` | WoW default; align **`CharacterName` validation** in Shared (DECISION if realm allows longer) |
+| Max character name length | `12` | Align with Shared `CharacterName` validation and SPEC constraints |
 | Gold amount display | `1,000g` | UI-104, UI-203, UI-304 |
 | Whisper command | `!twgold` (exact) | UI-104, instructional copy |
 | Confirm tag pattern | `[MGM_CONFIRM:<uuid>]` | UI-308 log lines, internal |
-| Debounce join | `2–3 s` | UI-102 (`src/MimironsGoldOMatic.TwitchExtension`) |
+| Join action source | Twitch chat command | Enrollment is chat-driven: `!twgold <CharacterName>` (panel is instructional/status only) |
 | API poll default | `15 s` (DECISION) | UI-306 |
 | Font / theme | Twitch vs WPF vs WoW | Use Twitch purple only in Extension; **do not** assume WoW fonts match web |
 
