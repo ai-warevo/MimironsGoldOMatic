@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
+<!-- Updated: 2026-04-06 (Tier C launch) -->
 
 # AI Agent Operational Protocol (AGENTS.md)
 
@@ -128,4 +128,12 @@ Responsibilities:
 
 - Transition report: `docs/e2e/TIER_B_TRANSITION_COMPLETE.md`
 - Audit trail: `docs/prompts/history/2026-04-06/13-transition-complete-tier-c-launch/`
+
+### 2026-04-06 — Tier C launch execution (C0 initialized)
+
+- Action: Tier C launch — C0 issue package prepared, kick-off artifacts scheduled, reporting cadence documented.
+- Links:
+  - `docs/prompts/history/2026-04-06/15-tier-c-launch/`
+  - `docs/e2e/TIER_C_PROGRESS.md`
+  - `docs/prompts/history/2026-04-06/15-tier-c-launch/kickoff-notes.md`
 

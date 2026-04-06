@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
+<!-- Updated: 2026-04-06 (Tier C launch) -->
 
 # Tier B → Tier C — transition complete
 
@@ -50,11 +50,13 @@ Tier C planning + tracking:
 - Progress dashboard: `docs/e2e/TIER_C_PROGRESS.md`
 - Handover prep: `docs/e2e/TIER_C_HANDOVER_PREP.md`
 
-Active Tier C issues (create and link):
-- C0-01: *TBD*
-- C0-02: *TBD*
-- C0-03: *TBD*
-- C0-04: *TBD*
+Active Tier C issues:
+- C0-01: [`tmp/tier-c-launch/issues/C0-01.md`](../../tmp/tier-c-launch/issues/C0-01.md) — Created (draft), owner: Anatoly Ivanov, assignee username: `TBD`
+- C0-02: [`tmp/tier-c-launch/issues/C0-02.md`](../../tmp/tier-c-launch/issues/C0-02.md) — Created (draft), owner: Anatoly Ivanov, assignee username: `TBD`
+- C0-03: [`tmp/tier-c-launch/issues/C0-03.md`](../../tmp/tier-c-launch/issues/C0-03.md) — Created (draft), owner: Anatoly Ivanov, assignee username: `TBD`
+- C0-04: [`tmp/tier-c-launch/issues/C0-04.md`](../../tmp/tier-c-launch/issues/C0-04.md) — Created (draft), owner: Anatoly Ivanov, assignee username: `TBD`
+
+Last Updated: 2026-04-06
 
 ---
 
@@ -71,3 +73,4 @@ Active Tier C issues (create and link):
 - `docs/prompts/history/2026-04-06/11-post-tier-b-closure-next-steps/`
 - `docs/prompts/history/2026-04-06/12-final-review-tier-c-prep/`
 - `docs/prompts/history/2026-04-06/13-transition-complete-tier-c-launch/`
+- `docs/prompts/history/2026-04-06/15-tier-c-launch/`

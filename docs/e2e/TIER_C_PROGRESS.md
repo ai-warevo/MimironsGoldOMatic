@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Transition complete & Tier C launch) -->
+<!-- Updated: 2026-04-06 (Tier C launch) -->
 
 # Tier C — progress dashboard
 
@@ -6,6 +6,14 @@
 
 **Update cadence:** Every Monday (or on milestone completion).  
 **Owner:** Anatoly Ivanov (`ai.vibeqodez@vk.com`)
+**Last Updated:** 2026-04-06
+
+## Launch summary (C0)
+
+- Total tasks: 4
+- In Progress: 4
+- Completed: 0
+- Blocked: 0
 
 ---
 
@@ -13,10 +21,10 @@
 
 | ID | Priority | Owner | Status | % | Last updated | Links | Notes |
 |----|----------|-------|--------|---:|-------------|-------|-------|
-| C0-01 | HIGH | Anatoly Ivanov | todo | 0 | 2026-04-06 | Issue: *TBD* · Docs: `TIER_C_REQUIREMENTS.md` | Lock Tier C primary track |
-| C0-02 | HIGH | Anatoly Ivanov | todo | 0 | 2026-04-06 | Issue: *TBD* · Docs: `WORKFLOWS.md` | Define Tier C trigger/cost policy |
-| C0-03 | HIGH | Anatoly Ivanov | todo | 0 | 2026-04-06 | Issue: *TBD* · Docs: `SETUP-for-developer.md` | Windows E2E setup plan |
-| C0-04 | HIGH | Anatoly Ivanov | todo | 0 | 2026-04-06 | Issue: *TBD* · Docs: Environments | Staging Twitch OAuth/config plan |
+| C0-01 | HIGH | `@TBD` (Anatoly Ivanov) | In Progress | 10 | 2026-04-06 | Issue draft: [`tmp/tier-c-launch/issues/C0-01.md`](../../tmp/tier-c-launch/issues/C0-01.md) · Milestone: Week 1 | Lock Tier C primary track |
+| C0-02 | HIGH | `@TBD` (Anatoly Ivanov) | In Progress | 10 | 2026-04-06 | Issue draft: [`tmp/tier-c-launch/issues/C0-02.md`](../../tmp/tier-c-launch/issues/C0-02.md) · Milestone: Week 1 | Tier C trigger/cost policy |
+| C0-03 | HIGH | `@TBD` (Anatoly Ivanov) | In Progress | 10 | 2026-04-06 | Issue draft: [`tmp/tier-c-launch/issues/C0-03.md`](../../tmp/tier-c-launch/issues/C0-03.md) · Milestone: Week 1 | Windows E2E setup plan |
+| C0-04 | HIGH | `@TBD` (Anatoly Ivanov) | In Progress | 10 | 2026-04-06 | Issue draft: [`tmp/tier-c-launch/issues/C0-04.md`](../../tmp/tier-c-launch/issues/C0-04.md) · Milestone: Week 1 | Staging Twitch OAuth/config plan |
 | C0-05 | MED | Anatoly Ivanov | todo | 0 | 2026-04-06 | Issue: *TBD* · Workflow: `e2e-test.yml` | Nightly vs PR Tier B decision |
 | C0-06 | MED | Anatoly Ivanov | todo | 0 | 2026-04-06 | Issue: *TBD* · Workflow policy | Docs-only path filter decision |
 
@@ -28,3 +36,4 @@
 
 - Initialized Tier C dashboard.
 - Kick-off timeline and owners set in `TIER_C_KICKOFF_PLAN.md`.
+- C0-01..C0-04 launch package prepared in `tmp/tier-c-launch/issues/` because GitHub CLI is unavailable in this environment.
