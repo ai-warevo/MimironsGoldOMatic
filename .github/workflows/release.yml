@@ -52,13 +52,16 @@ jobs:
           set -euo pipefail
           if [ "${REF_TYPE}" = "tag" ]; then
             echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${REF_NAME#v}" >> "$GITHUB_ENV"
             exit 0
           fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${V}" >> "$GITHUB_ENV"
           else
             echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
           fi
 
       - name: Setup .NET
@@ -78,7 +81,18 @@ jobs:
         run: >
           dotnet publish src/MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj
           -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+          -p:Version=${{ env.RELEASE_VERSION_STRIPPED }}
+          -p:AssemblyVersion=${{ env.RELEASE_VERSION_STRIPPED }}.0
+          -p:FileVersion=${{ env.RELEASE_VERSION_STRIPPED }}.0
+          -p:InformationalVersion=${{ env.RELEASE_VERSION_STRIPPED }}
           -o "${{ runner.temp }}/mgm-desktop-publish"
+
+      - name: Verify Desktop version stamp
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Write-Host "Release version (tag): $env:RELEASE_VERSION"
+          Write-Host "Release version (stripped): $env:RELEASE_VERSION_STRIPPED"
 
       - name: Pack desktop ZIP with README.txt
         shell: pwsh
@@ -125,13 +139,16 @@ jobs:
           set -euo pipefail
           if [ "${REF_TYPE}" = "tag" ]; then
             echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${REF_NAME#v}" >> "$GITHUB_ENV"
             exit 0
           fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${V}" >> "$GITHUB_ENV"
           else
             echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
           fi
 
       - name: Pack WoW addon ZIP with README.txt
@@ -147,6 +164,16 @@ jobs:
           cp src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.Core.lua "${ADDON_DIR}/"
           cp src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.lua "${ADDON_DIR}/"
           cp src/MimironsGoldOMatic.WoWAddon/MimironsGoldOMatic.toc "${ADDON_DIR}/"
+          if grep -q '^## Version:' "${ADDON_DIR}/MimironsGoldOMatic.toc"; then
+            sed -i "s/^## Version:.*/## Version: ${RELEASE_VERSION_STRIPPED}/" "${ADDON_DIR}/MimironsGoldOMatic.toc"
+          else
+            TMP_TOC="${ADDON_DIR}/MimironsGoldOMatic.toc.tmp"
+            {
+              printf "## Version: %s\n" "${RELEASE_VERSION_STRIPPED}"
+              cat "${ADDON_DIR}/MimironsGoldOMatic.toc"
+            } > "${TMP_TOC}"
+            mv "${TMP_TOC}" "${ADDON_DIR}/MimironsGoldOMatic.toc"
+          fi
           UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           {
             echo "Mimiron's Gold-o-Matic — WoW addon (3.3.5a)"
@@ -160,6 +187,13 @@ jobs:
           OUT="MimironsGoldOMatic-WoWAddon-${RELEASE_VERSION}.zip"
           rm -f "${OUT}"
           (cd "${STAGE}" && zip -r "${GITHUB_WORKSPACE}/${OUT}" MimironsGoldOMatic README.txt)
+
+      - name: Verify WoW addon version stamp
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE="${RUNNER_TEMP}/wow-addon-stage"
+          grep '^## Version:' "${STAGE}/MimironsGoldOMatic/MimironsGoldOMatic.toc"
 
       - name: Upload WoW addon artifact
         uses: actions/upload-artifact@v4
@@ -186,13 +220,16 @@ jobs:
           set -euo pipefail
           if [ "${REF_TYPE}" = "tag" ]; then
             echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${REF_NAME#v}" >> "$GITHUB_ENV"
             exit 0
           fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${V}" >> "$GITHUB_ENV"
           else
             echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
           fi
 
       - name: Setup Node.js
@@ -204,10 +241,18 @@ jobs:
 
       - name: Install and build Twitch Extension
         working-directory: src/MimironsGoldOMatic.TwitchExtension
+        env:
+          VITE_APP_VERSION: ${{ env.RELEASE_VERSION_STRIPPED }}
         run: |
           set -euo pipefail
           npm ci
           npm run build
+
+      - name: Verify Twitch Extension version stamp
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "VITE_APP_VERSION=${RELEASE_VERSION_STRIPPED}"
 
       - name: Pack Twitch Extension ZIP with README.txt
         shell: bash
@@ -260,13 +305,16 @@ jobs:
           set -euo pipefail
           if [ "${REF_TYPE}" = "tag" ]; then
             echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${REF_NAME#v}" >> "$GITHUB_ENV"
             exit 0
           fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${V}" >> "$GITHUB_ENV"
           else
             echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
           fi
 
       - name: Compute GHCR image name (lowercase)
@@ -321,13 +369,16 @@ jobs:
           set -euo pipefail
           if [ "${REF_TYPE}" = "tag" ]; then
             echo "RELEASE_VERSION=${REF_NAME}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${REF_NAME#v}" >> "$GITHUB_ENV"
             exit 0
           fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_VERSION" ]; then
             V="${INPUT_VERSION#v}"
             echo "RELEASE_VERSION=v${V}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=${V}" >> "$GITHUB_ENV"
           else
             echo "RELEASE_VERSION=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+            echo "RELEASE_VERSION_STRIPPED=0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
           fi
 
       # docker/build-push-action + Buildx register a hidden artifact (e.g. *~*.dockerbuild).
