@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (MVP-6 status sync; E2E cross-refs) -->
+<!-- Updated: 2026-04-06 (Project structure alignment + Tier B finalization) -->
 
 # MVP Implementation Readiness Matrix
 
@@ -53,7 +53,7 @@ Snapshot of `src/` versus `docs/overview/ROADMAP.md` (MVP-0 … MVP-6). Update t
 | MVP-3 | WoW addon | **Implemented (MVP):** globals **`NotifyWinnerWhisper`**, **`ReceiveGold`**, **`MGM_RunWhoForSpin`**; **`[MGM_WHO]`** JSON, **`[MGM_ACCEPT]`** / **`[MGM_CONFIRM]`**; **`MAIL_SHOW`** queue panel + **Prepare Mail** (`SendMail*` + **`MoneyInputFrame_SetCopper`**); minimap + **`/mgm`**. **Optional / later:** UI-405 debug frame, scroll list polish, `MimironsGoldOMatic` singleton table refactor. |
 | MVP-4 | WPF Desktop + WinAPI | **Implemented (MVP):** pending poll, **`NotifyWinnerWhisper`** + **Sync/Inject** (`ReceiveGold` chunking), **`WoWChatLog.txt`** tail (`[MGM_WHO]` / `[MGM_ACCEPT]` / `[MGM_CONFIRM]`), EBS **`PATCH`** overrides + **`InProgress`→`Pending`**, PostMessage→SendInput fallback, settings + DPAPI ApiKey. Manual verification on **WoW 3.3.5a** recommended. |
 | MVP-5 | Twitch Extension UI | **Implemented (MVP):** Code in **`src/MimironsGoldOMatic.TwitchExtension`** (Vite/React/TS). Viewer panel: Twitch `onAuthorized`, EBS polling for roulette/pool/`my-last`, server-skew countdown, `spinPhase` UX per [`docs/components/twitch-extension/UI_SPEC.md`](../components/twitch-extension/UI_SPEC.md) **UI-101–106**; hub UI rules in [`docs/reference/UI_SPEC.md`](UI_SPEC.md). Zustand + backoff on 429/503/network. Configure **`VITE_MGM_EBS_BASE_URL`** (see `src/MimironsGoldOMatic.TwitchExtension/.env.example`); use Dev Rig for real JWTs. |
-| MVP-6 | E2E demo + tests | **Completed (automated slice):** `src/Tests/MimironsGoldOMatic.Backend.UnitTests` — **Unit** (`--filter Category=Unit`, no Docker): roulette time / spin phase / **`!twgold`** parser. **Integration** (`--filter Category=Integration`, Docker): PostgreSQL via **Testcontainers**; claim idempotency, active-payout guard, 10k cap, expiration sweep, single-participant roulette + `verify-candidate`, pool removal on **`Sent`**. See **`docs/components/backend/ReadME.md`** (section **Automated tests (MVP-6)**). **In progress / required:** full **E2E** chat → WoW → Helix flow remains **Manual**; operator validation per [`docs/overview/INTERACTION_SCENARIOS.md`](../overview/INTERACTION_SCENARIOS.md) (and [Automated E2E Scenarios (MVP-6)](../overview/INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)). **Target:** **Automated** full demo in **CI/CD** (not implemented yet). |
+| MVP-6 | E2E demo + tests | **Completed (automated slices):** (1) **`dotnet test`** — `src/Tests/MimironsGoldOMatic.Backend.UnitTests` / **IntegrationTests** as above. (2) **CI Tier A + B** — [`.github/workflows/e2e-test.yml`](../../.github/workflows/e2e-test.yml): **EventSub mock → pool enrollment**, **E2E harness → SyntheticDesktop → MockHelix → `Sent` + pool removal** — [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../e2e/E2E_AUTOMATION_PLAN.md). **Still manual / Tier C:** real **WoW client + WPF Desktop + live Twitch** operator validation per [`INTERACTION_SCENARIOS`](../overview/INTERACTION_SCENARIOS.md) ([Automated E2E Scenarios (MVP-6)](../overview/INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6)); draft scope in [`docs/e2e/TIER_C_REQUIREMENTS.md`](../e2e/TIER_C_REQUIREMENTS.md). |
 
 ## MVP-6 verification status
 
@@ -63,14 +63,15 @@ Snapshot of `src/` versus `docs/overview/ROADMAP.md` (MVP-0 … MVP-6). Update t
 | Pure logic (spin schedule boundaries, `spinPhase`, **`!twgold`** line parsing) | **Automated** | `dotnet test src/MimironsGoldOMatic.slnx --filter Category=Unit` — no Docker. |
 | Live Twitch EventSub → EBS enrollment | **Manual** | Real Twitch/Dev Rig; not covered as live traffic in **CI/CD**. |
 | WoW 3.3.5a addon + `WoWChatLog.txt` tags + Desktop WinAPI inject | **Manual** | SC-001, SC-003, SC-004, etc.; no headless WoW harness in repo. |
-| Helix **Send Chat Message** after **`Sent`** | **Manual** (target: **Automated** / mocked in **CI**) | Inline retries in Backend; **CI** does not assert live Helix today. |
+| Helix **Send Chat Message** after **`Sent`** | **Automated (mocked in CI)** + **Manual (live Twitch)** | **MockHelixApi** + **`Twitch:HelixApiBaseUrl`** in **Tier B**; live broadcaster token not used in default PR workflow. |
 
 ## E2E Automation Progress
 
 For details on the automation approach, see [E2E Automation Plan](../e2e/E2E_AUTOMATION_PLAN.md). Developer checklist and ownership: [E2E Automation Tasks](../e2e/E2E_AUTOMATION_TASKS.md).
 
-- **Status:** Plan and tasks documented; **CI/CD** Tier A (**mock Helix**, **SyntheticDesktop**, optional signed **EventSub** posts) not implemented yet.
-- **Baseline:** [`docs/overview/INTERACTION_SCENARIOS.md`](../overview/INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6) (manual vs target **Automated**).
+- **Status:** **Tier A + Tier B** implemented in **CI** ([`e2e-test.yml`](../../.github/workflows/e2e-test.yml)); **Tier B** final validation: [Tier B Final Validation & Success Report](../e2e/E2E_AUTOMATION_PLAN.md#tier-b-final-validation--success-report).
+- **Next:** [Tier C requirements (draft)](../e2e/TIER_C_REQUIREMENTS.md) (real Desktop/WoW, optional staging Twitch).
+- **Baseline:** [`docs/overview/INTERACTION_SCENARIOS.md`](../overview/INTERACTION_SCENARIOS.md#automated-e2e-scenarios-mvp-6) (manual vs **Automated** targets).
 
 ## Residual implementation risks (not contradictions)
 

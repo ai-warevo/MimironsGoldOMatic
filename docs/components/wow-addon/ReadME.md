@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-05 (Deduplication pass) -->
+<!-- Updated: 2026-04-06 (Project structure alignment + Tier B finalization) -->
 
 ## MimironsGoldOMatic.WoWAddon (Lua | Bridge between WPF Desktop App & game)
 
@@ -46,3 +46,7 @@ Only accepts commands via global functions; no external network access (WoW limi
 ## Technical Details
 
 - **Feedback loop:** **`!twgold`** → **`[MGM_ACCEPT:UUID]`** → Desktop → Backend. **`[MGM_CONFIRM:UUID]`** → Desktop → Backend **`Sent`**.
+
+## E2E testing note
+
+- **CI Tier A+B** ([`.github/workflows/e2e-test.yml`](../../../.github/workflows/e2e-test.yml)) does **not** start the WoW client. It validates **EBS** behavior with **synthetic EventSub**, **MockHelixApi**, and **SyntheticDesktop** (HTTP-only). **In-game** tags (**`[MGM_WHO]`**, **`[MGM_ACCEPT]`**, **`[MGM_CONFIRM]`**) are covered by manual scenarios and any addon/Lua test harnesses added under **`src/Tests/`**; full **client + addon + log** automation is **Tier C** — [`docs/e2e/TIER_C_REQUIREMENTS.md`](../../e2e/TIER_C_REQUIREMENTS.md), [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md).
