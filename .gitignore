@@ -60,3 +60,6 @@ Interface/AddOns/*/Cache/
 .pytest_cache/
 .mypy_cache/
 __pycache__/
+
+# --- Local temp docs / scratch ---
+tmp/
