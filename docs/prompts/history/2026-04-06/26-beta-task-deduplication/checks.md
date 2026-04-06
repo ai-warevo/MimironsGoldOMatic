@@ -1,0 +1,5 @@
+- [x] Review overlapping task files.
+- [x] Refactor Task 06 and Task 08 to remove duplicated scope/output.
+- [x] Update `docs/beta/BETA_TASKS_INDEX.md` with clarification notes.
+- [x] Validate docs lint.
+- [x] Write completion report.

@@ -1,0 +1,5 @@
+- [x] Review existing beta task prompt format.
+- [x] Add missing/partial standalone beta task prompts for 12-item list.
+- [x] Update `docs/beta/BETA_TASKS_INDEX.md` ordering and coverage mapping.
+- [x] Validate complete one-to-one coverage of all 12 requested tasks.
+- [x] Write final report.

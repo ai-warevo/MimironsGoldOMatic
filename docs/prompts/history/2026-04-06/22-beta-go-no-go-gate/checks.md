@@ -1,0 +1,4 @@
+- [x] Draft `docs/beta/BETA_GO_NO_GO.md` structure and criteria.
+- [x] Add concrete pass/fail thresholds and hard blockers.
+- [x] Add sign-off owner matrix and go/no-go workflow.
+- [x] Final consistency pass and task report.
