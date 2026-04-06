@@ -12,7 +12,8 @@ When you propose, compose, or run `git commit` messages here:
 1. **Footer block** — After the subject (and optional body), use **exactly** this layout, including blank lines:
 
    - One blank line after the subject line (and before the body if you include a body).
-   - After the optional body paragraph: one blank line, then **`Made-with: Cursor`**, then one blank line, then **`Co-authored-by: Cursor Agent <cursoragent@cursor.com>`**.
+   - After the optional body: one blank line, then **optional Conventional footers** (e.g. **`BREAKING CHANGE:`**, **`Closes #123`**, **`Fixes #456`**, **`Refs`**), each as needed.
+   - After any standard footers (or after the body if none): one blank line, then **`Made-with: Cursor`**, then one blank line, then **`Co-authored-by: Cursor Agent <cursoragent@cursor.com>`**.
    - **No** extra lines after the `Co-authored-by` line.
 
 2. **Order** — `Made-with: Cursor` **always** comes **before** `Co-authored-by: Cursor Agent <cursoragent@cursor.com>`.
