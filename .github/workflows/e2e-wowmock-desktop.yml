@@ -1,0 +1,82 @@
+name: E2E WoWMock (Desktop integration)
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: e2e-wowmock-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  PYTHON_VERSION: "3.11"
+  WOWMOCK_PORT: "5001"
+
+jobs:
+  e2e-wowmock:
+    name: WoWMock E2E (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: .github/scripts/e2e/requirements.txt
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build WoWMock
+        run: dotnet build src/Mocks/WoWMock/MimironsGoldOMatic.Mocks.WoWMock.csproj -c Release
+
+      - name: Build Desktop (cross-platform safe)
+        if: matrix.os == 'ubuntu-latest'
+        run: dotnet build src/MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj -c Release -p:EnableWindowsTargeting=true
+
+      - name: Build Desktop (Windows)
+        if: matrix.os == 'windows-latest'
+        run: dotnet build src/MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj -c Release
+
+      - name: Install Python deps
+        run: python -m pip install -r .github/scripts/e2e/requirements.txt
+
+      - name: Run WoWMock E2E suite
+        env:
+          WOWMOCK_E2E_PORT: ${{ env.WOWMOCK_PORT }}
+          WOWMOCK_E2E_CONFIGURATION: Release
+          WOWMOCK_E2E_ARTIFACTS: .e2e-artifacts
+        run: python .github/scripts/e2e/run_e2e.py
+
+      - name: Upload artifacts (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wowmock-e2e-${{ matrix.os }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            .e2e-artifacts/**
+

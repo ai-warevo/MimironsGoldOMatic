@@ -14,6 +14,12 @@ public sealed class MockController : ControllerBase
         _state = state;
     }
 
+    [HttpGet("health")]
+    public IActionResult Health()
+    {
+        return Ok(new { ok = true, logFilePath = _state.ChatLog.LogFilePath });
+    }
+
     [HttpPost("reset")]
     public async Task<IActionResult> Reset(CancellationToken ct)
     {
