@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useEffect } from 'react'
-import { createMimironsGoldOMaticEbsClient } from '../api/mgmEbsClient'
-import { createMimironsGoldOMaticEbsRepository } from '../api/mgmEbsRepository'
+import { createMimironsGoldOMaticApiClient } from '../api/mgmApiClient'
+import type { PayoutDto } from '../api/models'
 import type { MimironsGoldOMaticApiErrorBody } from '../mgmTypes'
 import { useMimironsGoldOMaticPanelStore } from '../state/mgmPanelStore'
 import { getMimironsGoldOMaticExtensionJwt } from './useTwitchExtensionAuth'
@@ -34,8 +34,7 @@ export function useMgmEbsPolling(ebsBaseUrl: string | undefined): void {
       return
     }
 
-    const client = createMimironsGoldOMaticEbsClient(ebsBaseUrl, getMimironsGoldOMaticExtensionJwt)
-    const repo = createMimironsGoldOMaticEbsRepository(client)
+    const client = createMimironsGoldOMaticApiClient(ebsBaseUrl, getMimironsGoldOMaticExtensionJwt)
 
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -51,9 +50,18 @@ export function useMgmEbsPolling(ebsBaseUrl: string | undefined): void {
 
       try {
         const [roulette, poolMe, myLast] = await Promise.all([
-          repo.getRouletteState(),
-          repo.getPoolMe(),
-          repo.getMyLastPayout(),
+          client.getRouletteState(),
+          client.getPoolMe(),
+          (async (): Promise<PayoutDto | null> => {
+            try {
+              return await client.getPayoutsMyLast()
+            } catch (e) {
+              if (axios.isAxiosError(e) && e.response?.status === 404) {
+                return null
+              }
+              throw e
+            }
+          })(),
         ])
         if (cancelled) return
         backoffLocal = MIN_BACKOFF_MS

@@ -1,29 +1,20 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, expect, it, beforeEach, jest } from '@jest/globals'
-import { createMimironsGoldOMaticEbsClient } from '../api/mgmEbsClient'
-import {
-  createMimironsGoldOMaticEbsRepository,
-  type MimironsGoldOMaticEbsRepository,
-} from '../api/mgmEbsRepository'
+import { createMimironsGoldOMaticApiClient } from '../api/mgmApiClient'
 import type {
-  MimironsGoldOMaticPoolMe,
-  MimironsGoldOMaticRouletteState,
-} from '../mgmTypes'
+  PoolMeResponse,
+  RouletteStateResponse,
+} from '../api/models'
 import { useMimironsGoldOMaticPanelStore } from '../state/mgmPanelStore'
 import { useMgmEbsPolling } from './useMgmEbsPolling'
 
-jest.mock('../api/mgmEbsClient', () => ({
-  createMimironsGoldOMaticEbsClient: jest.fn(() => ({})),
+jest.mock('../api/mgmApiClient', () => ({
+  createMimironsGoldOMaticApiClient: jest.fn(),
 }))
 
-jest.mock('../api/mgmEbsRepository', () => ({
-  createMimironsGoldOMaticEbsRepository: jest.fn(),
-}))
+const mockCreateClient = jest.mocked(createMimironsGoldOMaticApiClient)
 
-const mockCreateClient = jest.mocked(createMimironsGoldOMaticEbsClient)
-const mockCreateRepo = jest.mocked(createMimironsGoldOMaticEbsRepository)
-
-const roulette: MimironsGoldOMaticRouletteState = {
+const roulette: RouletteStateResponse = {
   nextSpinAt: '2026-01-01T00:05:00.000Z',
   serverNow: '2026-01-01T00:00:00.000Z',
   spinIntervalSeconds: 300,
@@ -32,7 +23,7 @@ const roulette: MimironsGoldOMaticRouletteState = {
   currentSpinCycleId: null,
 }
 
-const poolMe: MimironsGoldOMaticPoolMe = {
+const poolMe: PoolMeResponse = {
   isEnrolled: false,
   characterName: null,
 }
@@ -56,15 +47,18 @@ describe('useMgmEbsPolling', () => {
   beforeEach(() => {
     resetStoreForPolling()
     mockCreateClient.mockClear()
-    mockCreateRepo.mockClear()
-    mockCreateClient.mockReturnValue({} as ReturnType<typeof createMimironsGoldOMaticEbsClient>)
-    const repo: MimironsGoldOMaticEbsRepository = {
-      getRouletteState: async () => roulette,
-      getPoolMe: async () => poolMe,
-      getMyLastPayout: async () => null,
-      postClaim: async () => undefined,
-    }
-    mockCreateRepo.mockReturnValue(repo)
+    mockCreateClient.mockReturnValue(
+      {
+        getRouletteState: async () => roulette,
+        getPoolMe: async () => poolMe,
+        getPayoutsMyLast: async () => {
+          throw Object.assign(new Error('not found'), {
+            isAxiosError: true,
+            response: { status: 404 },
+          })
+        },
+      } as unknown as ReturnType<typeof createMimironsGoldOMaticApiClient>,
+    )
   })
 
   it('does not poll when auth is not ready', async () => {
@@ -73,7 +67,7 @@ describe('useMgmEbsPolling', () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
-    expect(mockCreateRepo).not.toHaveBeenCalled()
+    expect(mockCreateClient).not.toHaveBeenCalled()
   })
 
   it('does not poll without EBS base URL', async () => {
@@ -81,7 +75,7 @@ describe('useMgmEbsPolling', () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
-    expect(mockCreateRepo).not.toHaveBeenCalled()
+    expect(mockCreateClient).not.toHaveBeenCalled()
   })
 
   it('after initial delay, merges roulette/pool/payout into the panel store', async () => {

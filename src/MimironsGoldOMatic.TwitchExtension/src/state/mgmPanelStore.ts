@@ -1,10 +1,8 @@
 import { create } from 'zustand'
 import type {
   MimironsGoldOMaticApiErrorBody,
-  MimironsGoldOMaticPoolMe,
-  MimironsGoldOMaticPayoutDto,
-  MimironsGoldOMaticRouletteState,
 } from '../mgmTypes'
+import type { PayoutDto, PoolMeResponse, RouletteStateResponse } from '../api/models'
 
 export type MimironsGoldOMaticAuthView =
   | 'loading'
@@ -19,18 +17,18 @@ export interface MimironsGoldOMaticPanelStore {
   authView: MimironsGoldOMaticAuthView
   setAuthView: (v: MimironsGoldOMaticAuthView) => void
 
-  roulette: MimironsGoldOMaticRouletteState | null
-  poolMe: MimironsGoldOMaticPoolMe | null
-  myLast: MimironsGoldOMaticPayoutDto | null
+  roulette: RouletteStateResponse | null
+  poolMe: PoolMeResponse | null
+  myLast: PayoutDto | null
 
   pollBackoffMs: number
   pollError: { kind: PollErrorKind; status?: number; body?: MimironsGoldOMaticApiErrorBody } | null
   lastPollWallClockMs: number | null
 
   setPollSuccess: (payload: {
-    roulette: MimironsGoldOMaticRouletteState
-    poolMe: MimironsGoldOMaticPoolMe
-    myLast: MimironsGoldOMaticPayoutDto | null
+    roulette: RouletteStateResponse
+    poolMe: PoolMeResponse
+    myLast: PayoutDto | null
   }) => void
   setPollFailure: (e: {
     kind: PollErrorKind
