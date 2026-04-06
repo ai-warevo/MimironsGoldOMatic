@@ -88,3 +88,12 @@ function TestAddonIntegration:test_show_queue_panel_after_receive_gold()
   end
   lu.assertTrue(found)
 end
+
+function TestAddonIntegration:test_slash_update_emits_update_tag_and_messages()
+  loadFreshAddon()
+  SlashCmdList["MGM"]("update")
+  lu.assertEquals(#DEFAULT_CHAT_FRAME.messages, 3)
+  lu.assertStrContains(DEFAULT_CHAT_FRAME.messages[1], "проверка обновлений")
+  lu.assertStrContains(DEFAULT_CHAT_FRAME.messages[2], "Desktop")
+  lu.assertEquals(DEFAULT_CHAT_FRAME.messages[3], "[MGM_UPDATE_CHECK]")
+end
