@@ -1,4 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { fetchMimironsGoldOMaticVersionInfo } from '../api/mgmVersionApi'
+import { MIMIRONS_GOLD_O_MATIC_EXTENSION_VERSION } from '../config/mgmClientVersion'
 import { createMimironsGoldOMaticEbsClient } from '../api/mgmEbsClient'
 import { createMimironsGoldOMaticEbsRepository } from '../api/mgmEbsRepository'
 import { useMgmEbsPolling } from '../hooks/useMgmEbsPolling'
@@ -6,8 +8,13 @@ import { useMgmSpinCountdown } from '../hooks/useMgmSpinCountdown'
 import { getMimironsGoldOMaticExtensionJwt, useTwitchExtensionAuth } from '../hooks/useTwitchExtensionAuth'
 import { rewardSentChatAnnouncement } from '../rewardSentAnnouncement'
 import { useMimironsGoldOMaticPanelStore } from '../state/mgmPanelStore'
+import type { MimironsGoldOMaticVersionInfoDto } from '../mgmTypes'
+import { isMimironsGoldOMaticNewerVersion } from '../utils/mgmVersion'
+import { MimironsGoldOMaticUpdateBanner } from './MgmUpdateBanner'
 import { mapMimironsGoldOMaticApiErrorToUi } from './mapMgmApiErrorToUi'
 import { MimironsGoldOMaticRouletteVisual } from './RouletteVisual'
+
+const VERSION_CHECK_INTERVAL_MS = 60 * 60 * 1000
 
 function payoutStatusLabel(status: string): string {
   switch (status) {
@@ -52,7 +59,46 @@ export function MimironsGoldOMaticViewerPanel() {
 
   const [rulesOpen, setRulesOpen] = useState(false)
   const [devName, setDevName] = useState('')
+  const [remoteVersionInfo, setRemoteVersionInfo] = useState<MimironsGoldOMaticVersionInfoDto | null>(null)
   const showDevClaim = import.meta.env.DEV
+
+  useEffect(() => {
+    if (!ebsBaseUrl) return
+
+    let cancelled = false
+
+    const runVersionCheck = async () => {
+      try {
+        const versionInfo = await fetchMimironsGoldOMaticVersionInfo(ebsBaseUrl)
+        const remoteVersion = versionInfo.version?.trim()
+        if (!remoteVersion) {
+          console.error('MGM update-check: missing version in /api/version payload.')
+          return
+        }
+
+        const shouldShowBanner = isMimironsGoldOMaticNewerVersion(
+          remoteVersion,
+          MIMIRONS_GOLD_O_MATIC_EXTENSION_VERSION,
+        )
+        if (!cancelled) {
+          setRemoteVersionInfo(shouldShowBanner ? versionInfo : null)
+        }
+      } catch (error) {
+        // Silent failure by design: extension core UI must not be blocked by update checks.
+        console.error('MGM update-check: failed to fetch /api/version.', error)
+      }
+    }
+
+    void runVersionCheck()
+    const intervalId = setInterval(() => {
+      void runVersionCheck()
+    }, VERSION_CHECK_INTERVAL_MS)
+
+    return () => {
+      cancelled = true
+      clearInterval(intervalId)
+    }
+  }, [ebsBaseUrl])
 
   const onRetryAuth = useCallback(() => {
     window.location.reload()
@@ -61,6 +107,10 @@ export function MimironsGoldOMaticViewerPanel() {
   const onRetryPoll = useCallback(() => {
     bumpPoll()
   }, [bumpPoll])
+
+  const onReloadRequested = useCallback(() => {
+    window.location.reload()
+  }, [])
 
   const onDevClaim = useCallback(async () => {
     if (!ebsBaseUrl) return
@@ -175,6 +225,15 @@ export function MimironsGoldOMaticViewerPanel() {
   return (
     <div className="mgm-panel">
       <h1 className="mgm-title">Gold pool (viewer)</h1>
+
+      {remoteVersionInfo ? (
+        <MimironsGoldOMaticUpdateBanner
+          currentVersion={MIMIRONS_GOLD_O_MATIC_EXTENSION_VERSION}
+          latestVersion={remoteVersionInfo.version}
+          releaseNotesUrl={remoteVersionInfo.releaseNotesUrl}
+          onReloadRequested={onReloadRequested}
+        />
+      ) : null}
 
       {pollErrUi ? (
         <div className="mgm-alert mgm-alert--warn" role="alert">

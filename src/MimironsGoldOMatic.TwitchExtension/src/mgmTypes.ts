@@ -46,3 +46,11 @@ export interface MimironsGoldOMaticApiErrorBody {
   message: string
   details: unknown
 }
+
+export interface MimironsGoldOMaticVersionInfoDto {
+  version: string
+  releaseNotesUrl?: string
+  minimumDesktopVersion?: string
+  minimumAddonVersion?: string
+  minimumExtensionVersion?: string
+}

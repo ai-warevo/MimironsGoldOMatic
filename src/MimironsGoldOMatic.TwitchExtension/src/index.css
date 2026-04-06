@@ -183,6 +183,33 @@ body {
   color: var(--mgm-warn);
 }
 
+.mgm-update-banner {
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--mgm-accent-dim);
+  background: #2d250f;
+  font-size: 11px;
+}
+
+.mgm-update-banner__text {
+  margin: 0 0 6px;
+  color: var(--mgm-text);
+}
+
+.mgm-update-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mgm-update-banner__link {
+  color: var(--mgm-accent);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
 .mgm-roulette {
   margin: 10px 0;
   padding: 8px;
