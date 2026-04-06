@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <TypeScriptApiGeneratorProject>$(MSBuildProjectDirectory)\..\tools\MimironsGoldOMatic.ApiTsGen\MimironsGoldOMatic.ApiTsGen.csproj</TypeScriptApiGeneratorProject>
+    <TypeScriptApiOutputDir>$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.TwitchExtension\src\api</TypeScriptApiOutputDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,5 +20,17 @@
   <ItemGroup>
     <ProjectReference Include="..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\**\*.cs" />
+    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Shared\**\*.cs" />
+  </ItemGroup>
+
+  <Target Name="GenerateTypeScriptApiClient"
+          BeforeTargets="BeforeBuild"
+          Inputs="@(TypeScriptApiGenerationInput)"
+          Outputs="$(TypeScriptApiOutputDir)\models.ts;$(TypeScriptApiOutputDir)\client.ts">
+    <Exec Command="dotnet run --project &quot;$(TypeScriptApiGeneratorProject)&quot; --configuration $(Configuration) -- &quot;$(MSBuildProjectDirectory)&quot; &quot;$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Shared&quot; &quot;$(TypeScriptApiOutputDir)&quot;" />
+  </Target>
 
 </Project>
