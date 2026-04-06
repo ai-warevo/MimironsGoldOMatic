@@ -1,10 +1,10 @@
-<!-- Updated: 2026-04-06 (Tier B closure + Tier C kick-off) -->
+<!-- Updated: 2026-04-06 (Post‑Tier B execution) -->
 
 # Tier C — implementation tasks
 
 **Requirements:** [`TIER_C_REQUIREMENTS.md`](TIER_C_REQUIREMENTS.md) · **E2E plan (Tier C scope):** [`E2E_AUTOMATION_PLAN.md` — Tier C](E2E_AUTOMATION_PLAN.md#tier-c-future-scope--requirements) · **Issue:** [#16](https://github.com/ai-warevo/MimironsGoldOMatic/issues/16)
 
-**Legend:** **Owner** = role placeholder; **Est** = engineering days (rough); **Status:** `todo` | `progress` | `done` | `blocked`
+**Legend:** **Priority**: `HIGH` | `MED` | `LOW` · **Est** = engineering days (rough) · **Status:** `todo` | `progress` | `done` | `blocked`
 
 ---
 
@@ -21,19 +21,23 @@
 
 ## Task table
 
-| ID | Task | Owner | Est | Depends on | Status | Acceptance criteria |
-|----|------|-------|-----|------------|--------|---------------------|
-| **C0-01** | Prioritize Tier C track (self-hosted Windows vs staging Twitch vs addon tests) | EM + Tech lead | 0.5 | — | todo | Decision recorded in [`TIER_C_REQUIREMENTS.md`](TIER_C_REQUIREMENTS.md) section 1 + meeting notes linked. |
-| **C0-02** | Cost/concurrency policy (PR vs nightly Tier C, Actions minutes) | EM | 0.5 | C0-01 | todo | Written policy in [`E2E_AUTOMATION_PLAN.md`](E2E_AUTOMATION_PLAN.md) or `WORKFLOWS.md`. |
-| **C1-01** | Self-hosted Windows runner spec (WoW path, log path, secrets layout) | DevOps + Desktop | 3 | C0-01 | todo | Runbook section: prerequisites, cleanup, artifact upload **without** token leakage. |
-| **C1-02** | GitHub **Environment** definition for staging Twitch (Helix / EventSub secrets) | Backend + EM | 2 | C0-01 | todo | Environment name(s) documented; fork/PR rules noted. |
-| **C2-01** | Extract or share HTTP choreography library (**SyntheticDesktop** + tests + optional Desktop) | Backend + Desktop | 5 | C0-01 | todo | Single module consumed by mock + tests; README explains boundaries. |
-| **C2-02** | Desktop vs **SyntheticDesktop** parity test plan | Desktop + QA | 3 | C2-01 | todo | Matrix of endpoints, headers, error handling; automated or scripted checklist. |
-| **C2-03** | Addon `[MGM_*]` contract tests expansion | Addon | 3 | — | todo | Tests in `src/Tests/MimironsGoldOMatic.WoWAddon.Tests/` cover tag formats per [`SPEC.md`](../overview/SPEC.md). |
-| **C2-04** | Optional staging job: real Helix send to test channel | Backend | 5 | C1-02 | todo | Gated `workflow_dispatch`; never on forked PRs; redacts tokens in logs. |
-| **C2-05** | Optional staging job: EventSub delivery to dev rig | Backend + Extension | 5 | C1-02 | todo | Documented failure modes; aligns with MVP broadcaster scope. |
-| **C3-01** | Flake budget + retry policy for Tier C jobs | DevOps | 2 | C1-01 | todo | Document max retries; Tier B remains deterministic PR gate. |
-| **C3-02** | Observability: structured harness logs (correlation ids) | Backend + CI | 3 | C2-01 | todo | Log fields documented; works locally and on runner. |
+| ID | Priority | Task | Owner | Est | Depends on | Status | Acceptance criteria |
+|----|----------|------|-------|-----|------------|--------|---------------------|
+| **C0-01** | **HIGH** | Lock Tier C track (self-hosted Windows vs staging Twitch vs addon tests) | **Anatoly Ivanov** | 0.5 | — | todo | A written decision is added to `TIER_C_REQUIREMENTS.md` §1 and linked from `TIER_C_KICKOFF_PLAN.md`. |
+| **C0-02** | **HIGH** | Define CI cost/concurrency policy (PR vs nightly Tier C, Actions minutes) | **Anatoly Ivanov** | 0.5 | C0-01 | todo | Policy documented in `docs/reference/WORKFLOWS.md` or `E2E_AUTOMATION_PLAN.md`, including when Tier C runs and who can dispatch it. |
+| **C0-03** | **HIGH** | Windows E2E setup plan (self-hosted runner prerequisites + WoW/Desktop constraints) | **Anatoly Ivanov** | 2 | C0-01 | todo | Runbook drafted: runner setup, WoW install path policy, log locations, cleanup, artifact upload plan; explicitly **no secrets** in logs. |
+| **C0-04** | **HIGH** | Staging Twitch OAuth/config plan (Helix secrets + Environment gating) | **Anatoly Ivanov** | 1.5 | C0-01 | todo | GitHub **Environment** approach defined (names, required reviewers), plus a secrets checklist and “never on fork PRs” rule. |
+| **C0-05** | **MED** | Nightly Tier B vs PR Tier B decision (policy) | **Anatoly Ivanov** | 0.5 | C0-02 | todo | Decision recorded + reflected in workflow triggers; rollback instructions documented. |
+| **C0-06** | **MED** | `docs/`-only path filter decision for E2E workflows | **Anatoly Ivanov** | 0.5 | C0-02 | todo | Either: (a) path filters implemented and documented, or (b) explicit decision recorded explaining why not. |
+| **C1-01** | **HIGH** | Self-hosted Windows runner spec (WoW path, log path, secrets layout) | **Anatoly Ivanov** | 3 | C0-03 | todo | A runnable spec exists with prerequisites, cleanup, and artifact retention; includes a minimal “smoke” workflow that proves the runner can execute a no-secrets job. |
+| **C1-02** | **HIGH** | GitHub **Environment** definition for staging Twitch (Helix / EventSub secrets) | **Anatoly Ivanov** | 2 | C0-04 | todo | Environment(s) documented; fork/PR rules noted; secrets set checklist produced (without values). |
+| **C2-01** | **MED** | Extract/share HTTP choreography library (**SyntheticDesktop** + tests + optional Desktop) | **Anatoly Ivanov** | 5 | C0-01 | todo | A shared module is consumed by SyntheticDesktop and at least one test; boundaries documented. |
+| **C2-02** | **MED** | Desktop vs **SyntheticDesktop** parity test plan | **Anatoly Ivanov** | 3 | C2-01 | todo | A matrix covers endpoints/headers/bodies/order/error-handling; automated or scripted checklist exists. |
+| **C2-03** | **MED** | Addon `[MGM_*]` contract tests expansion | **Anatoly Ivanov** | 3 | — | todo | Tests cover tag formats and gating logic per `docs/overview/SPEC.md`; runs in `unit-integration-tests.yml`. |
+| **C2-04** | **HIGH** | Optional staging job: real Helix send to test channel | **Anatoly Ivanov** | 5 | C1-02 | todo | Gated `workflow_dispatch`; never on fork PRs; tokens redacted; verifies a real Helix send and stores only non-sensitive evidence. |
+| **C2-05** | **MED** | Optional staging job: EventSub delivery to dev rig | **Anatoly Ivanov** | 5 | C1-02 | todo | Gated job validates real EventSub ingest; failures link to runbook; no secrets leaked in artifacts. |
+| **C3-01** | **MED** | Flake budget + retry policy for Tier C jobs | **Anatoly Ivanov** | 2 | C1-01 | todo | Max retries documented; Tier B remains deterministic PR gate; escalation path defined. |
+| **C3-02** | **MED** | Observability: structured harness logs (correlation ids) | **Anatoly Ivanov** | 3 | C2-01 | todo | Correlation id conventions documented; logs usable in CI artifacts and local runs. |
 
 ---
 
