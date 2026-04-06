@@ -45,6 +45,7 @@ export function MimironsGoldOMaticViewerPanel() {
   const poolMe = useMimironsGoldOMaticPanelStore((s) => s.poolMe)
   const myLast = useMimironsGoldOMaticPanelStore((s) => s.myLast)
   const pollError = useMimironsGoldOMaticPanelStore((s) => s.pollError)
+  const myGift = useMimironsGoldOMaticPanelStore((s) => s.myGift)
   const lastPollWallClockMs = useMimironsGoldOMaticPanelStore((s) => s.lastPollWallClockMs)
   const uiError = useMimironsGoldOMaticPanelStore((s) => s.uiError)
   const setUiError = useMimironsGoldOMaticPanelStore((s) => s.setUiError)
@@ -360,6 +361,38 @@ export function MimironsGoldOMaticViewerPanel() {
           )}
         </section>
       ) : null}
+
+      {myGift ? (
+        <section className="mgm-winner" aria-label="Your gift request">
+          <div className="mgm-winner__banner mgm-winner__banner--calm">Gift queue</div>
+          <p className="mgm-status-row">
+            Status:{' '}
+            <span className={`mgm-chip mgm-chip--${myGift.state.toLowerCase()}`}>{myGift.state}</span>
+          </p>
+          {myGift.state === 'Pending' ? (
+            <p className="mgm-muted">
+              You are #{myGift.queuePosition} in queue. Estimated wait: {myGift.estimatedWaitSeconds}s.
+            </p>
+          ) : myGift.state === 'SelectingItem' ? (
+            <p className="mgm-muted">Gift selection in progress…</p>
+          ) : myGift.state === 'WaitingConfirmation' ? (
+            <p className="mgm-muted">
+              Waiting for your in-game whisper reply <kbd className="mgm-kbd">!twgift</kbd>.
+            </p>
+          ) : myGift.state === 'Completed' ? (
+            <p className="mgm-muted">Gift sent successfully.</p>
+          ) : (
+            <p className="mgm-muted">Gift request failed: {myGift.failureReason ?? 'unknown reason'}.</p>
+          )}
+        </section>
+      ) : (
+        <section className="mgm-section" aria-label="Gift command">
+          <h2 className="mgm-h2">Gift command</h2>
+          <p className="mgm-muted">
+            Subscribers can request one gift with <kbd className="mgm-kbd">!twgift YourCharacterName</kbd>.
+          </p>
+        </section>
+      )}
 
       {showDevClaim ? (
         <section className="mgm-dev" aria-label="Developer test enrollment">

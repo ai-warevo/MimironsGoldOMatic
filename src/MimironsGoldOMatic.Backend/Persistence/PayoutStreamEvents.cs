@@ -19,3 +19,27 @@ public record PayoutStatusChanged(
 public record WinnerAcceptanceRecorded(DateTime Utc);
 
 public record HelixRewardSentAnnouncementSucceeded(DateTime Utc);
+
+public record GiftRequestInitiated(
+    Guid Id,
+    string StreamerId,
+    string ViewerId,
+    string ViewerDisplayName,
+    string CharacterName,
+    DateTime CreatedAtUtc);
+
+public record GiftRequestStateChanged(
+    GiftRequestState From,
+    GiftRequestState To,
+    DateTime Utc,
+    string? Reason = null);
+
+public record GiftItemSelected(
+    string Name,
+    int Id,
+    int Count,
+    string Link,
+    string Texture,
+    int BagId,
+    int SlotId,
+    DateTime Utc);

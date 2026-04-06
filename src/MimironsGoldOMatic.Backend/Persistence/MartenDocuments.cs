@@ -65,3 +65,48 @@ public sealed class EnrollmentIdempotencyDocument
     public string CharacterName { get; set; } = "";
     public DateTime EnrolledAtUtc { get; set; }
 }
+
+public enum GiftRequestState
+{
+    Pending,
+    SelectingItem,
+    ItemSelected,
+    WaitingConfirmation,
+    Completed,
+    Failed,
+}
+
+public sealed class GiftSelectedItemDocument
+{
+    public string Name { get; set; } = "";
+    public int Id { get; set; }
+    public int Count { get; set; }
+    public string Link { get; set; } = "";
+    public string Texture { get; set; } = "";
+    public int BagId { get; set; }
+    public int SlotId { get; set; }
+}
+
+public sealed class GiftRequestReadDocument
+{
+    public Guid Id { get; set; }
+    public string StreamerId { get; set; } = "";
+    public string ViewerId { get; set; } = "";
+    public string ViewerDisplayName { get; set; } = "";
+    public string CharacterName { get; set; } = "";
+    public GiftRequestState State { get; set; } = GiftRequestState.Pending;
+    public GiftSelectedItemDocument? SelectedItem { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public DateTime? TimeoutAt { get; set; }
+    public string? FailureReason { get; set; }
+}
+
+public sealed class GiftCommandUsageDocument
+{
+    public string Id { get; set; } = "";
+    public string StreamerId { get; set; } = "";
+    public string ViewerId { get; set; } = "";
+    public DateTime CompletedAtUtc { get; set; }
+    public Guid GiftRequestId { get; set; }
+}

@@ -41,6 +41,8 @@ describe('useMimironsGoldOMaticPanelStore', () => {
       roulette,
       poolMe,
       myLast: null,
+      giftQueue: [],
+      myGift: null,
     })
 
     const s = useMimironsGoldOMaticPanelStore.getState()

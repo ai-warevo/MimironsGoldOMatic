@@ -15,6 +15,17 @@ public static class WoWRunCommands
         return $"/run DEFAULT_CHAT_FRAME:AddMessage(\"{escaped}\")";
     }
 
+    public static string RequestAllInventoryItems(Guid giftRequestId)
+    {
+        return $"/run MGM_RequestGiftItems(\"{giftRequestId:D}\")";
+    }
+
+    public static string RequestGiftConfirmation(Guid giftRequestId, string characterName)
+    {
+        var n = EscapeLuaString(characterName);
+        return $"/run MGM_RequestGiftConfirmation(\"{giftRequestId:D}\",\"{n}\")";
+    }
+
     private static string EscapeLuaString(string value) =>
         value.Replace("\\", "\\\\", StringComparison.Ordinal)
             .Replace("\"", "\\\"", StringComparison.Ordinal);

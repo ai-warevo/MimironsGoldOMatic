@@ -2,9 +2,13 @@ import axios from 'axios'
 import { useEffect } from 'react'
 import { createMimironsGoldOMaticApiClient } from '../api/mgmApiClient'
 import type { PayoutDto } from '../api/models'
-import type { MimironsGoldOMaticApiErrorBody } from '../mgmTypes'
+import type { MimironsGoldOMaticApiErrorBody, MimironsGoldOMaticGiftQueueEntry } from '../mgmTypes'
 import { useMimironsGoldOMaticPanelStore } from '../state/mgmPanelStore'
-import { getMimironsGoldOMaticExtensionJwt } from './useTwitchExtensionAuth'
+import {
+  getMimironsGoldOMaticChannelId,
+  getMimironsGoldOMaticExtensionJwt,
+  getMimironsGoldOMaticUserId,
+} from './useTwitchExtensionAuth'
 
 const MIN_BACKOFF_MS = 3000
 const MAX_BACKOFF_MS = 60_000
@@ -63,10 +67,23 @@ export function useMgmEbsPolling(ebsBaseUrl: string | undefined): void {
             }
           })(),
         ])
+        const channelId = getMimironsGoldOMaticChannelId()
+        const viewerId = getMimironsGoldOMaticUserId()
+        let giftQueue: MimironsGoldOMaticGiftQueueEntry[] = []
+        let myGift: MimironsGoldOMaticGiftQueueEntry | null = null
+        if (channelId) {
+          const token = getMimironsGoldOMaticExtensionJwt()
+          const { data } = await axios.get<MimironsGoldOMaticGiftQueueEntry[]>(
+            `${ebsBaseUrl.replace(/\/$/, '')}/api/streamers/${encodeURIComponent(channelId)}/gift-queue`,
+            token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+          )
+          giftQueue = data
+          myGift = viewerId ? data.find((x) => x.viewerId === viewerId) ?? null : null
+        }
         if (cancelled) return
         backoffLocal = MIN_BACKOFF_MS
         resetBackoff()
-        setPollSuccess({ roulette, poolMe, myLast })
+        setPollSuccess({ roulette, poolMe, myLast, giftQueue, myGift })
 
         const active =
           roulette.spinPhase === 'spinning' ||

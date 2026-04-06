@@ -91,6 +91,49 @@ public sealed class EbsDesktopClient : IEbsDesktopClient
         throw new HttpRequestException($"verify-candidate failed {(int)resp.StatusCode}: {body}");
     }
 
+    public async Task<IReadOnlyList<GiftRequestDto>> GetGiftQueueAsync(CancellationToken ct)
+    {
+        using var c = CreateClient();
+        using var resp = await c.GetAsync("api/gift-requests", ct).ConfigureAwait(false);
+        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!resp.IsSuccessStatusCode)
+            throw new HttpRequestException($"GET gift queue failed {(int)resp.StatusCode}: {body}");
+        return JsonSerializer.Deserialize<List<GiftRequestDto>>(body, JsonOptions) ?? [];
+    }
+
+    public async Task PatchGiftRequestStateAsync(Guid id, GiftRequestState state, string? reason, CancellationToken ct)
+    {
+        using var c = CreateClient();
+        var json = JsonSerializer.Serialize(new PatchGiftRequestBody(state, reason), JsonOptions);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var resp = await c.PatchAsync($"api/gift-requests/{id:D}", content, ct).ConfigureAwait(false);
+        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!resp.IsSuccessStatusCode)
+            throw new HttpRequestException($"PATCH gift state failed {(int)resp.StatusCode}: {body}");
+    }
+
+    public async Task SelectGiftItemAsync(Guid id, GiftSelectedItemDto item, CancellationToken ct)
+    {
+        using var c = CreateClient();
+        var json = JsonSerializer.Serialize(new SelectGiftItemBody(item), JsonOptions);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var resp = await c.PostAsync($"api/gift-requests/{id:D}/select-item", content, ct).ConfigureAwait(false);
+        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!resp.IsSuccessStatusCode)
+            throw new HttpRequestException($"select-item failed {(int)resp.StatusCode}: {body}");
+    }
+
+    public async Task ConfirmGiftAsync(Guid id, bool confirmed, CancellationToken ct)
+    {
+        using var c = CreateClient();
+        var json = JsonSerializer.Serialize(new ConfirmGiftBody(confirmed), JsonOptions);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var resp = await c.PostAsync($"api/gift-requests/{id:D}/confirm", content, ct).ConfigureAwait(false);
+        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!resp.IsSuccessStatusCode)
+            throw new HttpRequestException($"gift confirm failed {(int)resp.StatusCode}: {body}");
+    }
+
     public async Task<VersionInfoDto> GetVersionInfoAsync(CancellationToken ct)
     {
         using var c = CreateClient();

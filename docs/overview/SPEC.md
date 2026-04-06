@@ -1,3 +1,38 @@
+## 12) Gift Queue (`!twgift`) — streamer-scoped serialized flow
+
+The `!twgift <CharacterName>` flow is a separate queue from payout roulette and is persisted in Marten/PostgreSQL.
+
+- Access is subscriber-only and validated server-side against Helix for the broadcaster/viewer pair.
+- One-time usage per viewer per streamer is enforced with a persisted completion marker (`streamerId + viewerId`).
+- Queue key is `StreamerId`; only one active request can be in `SelectingItem`/`WaitingConfirmation` at a time.
+- New requests start in `Pending`; backend auto-promotes oldest pending request when no active request exists.
+- Queue ETA is `max(0, queuePosition - 1) * 65` seconds.
+
+### Gift request states
+
+`Pending -> SelectingItem -> WaitingConfirmation -> Completed`
+
+- `Failed` is reachable from any non-terminal state (timeout, no items, explicit failure).
+
+### Timeouts
+
+- `SelectingItem`: 60 seconds.
+- `WaitingConfirmation`: 5 minutes.
+- Timeout worker runs periodically and transitions stale active requests to `Failed`, then promotes next pending request.
+
+### API endpoints
+
+- `GET /api/streamers/{streamerId}/gift-queue` (viewer JWT): queue snapshot and current position.
+- `POST /api/gift-requests` (viewer JWT): create gift request.
+- `PATCH /api/gift-requests/{id}` (Desktop API key): state update.
+- `POST /api/gift-requests/{id}/select-item` (Desktop API key): report selected inventory item.
+- `POST /api/gift-requests/{id}/confirm` (Desktop API key): finalize confirmed send/decline.
+
+### Addon/Desktop contract additions
+
+- Addon exposes `MGM_RequestGiftItems(giftRequestId)` and logs item payload marker `[MGM_ITEMS:<uuid>]...`.
+- Addon emits `[MGM_GIFT_ACCEPT:<uuid>]` when recipient confirms with whisper `!twgift`.
+- Desktop tails these markers and calls gift APIs to select item / confirm completion.
 <!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # Mimiron's Gold-o-Matic — Technical Specification (MVP)

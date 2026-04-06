@@ -19,11 +19,15 @@ local MGM_WINNER_WHISPER_BODY =
 local MGM_MAIL_COMPLETION_WHISPER_RU =
   "Награда отправлена тебе на почту, проверяй ящик!"
 
+local MGM_GIFT_CONFIRM_WHISPER_BODY =
+  "Тебе выбран подарок! Для подтверждения ответь одной фразой: !twgift"
+
 --- Queue: { payoutId, characterName, copper, state = "READY"|"PROCESSING" }
 local mgmQueue = {}
 
 --- After NotifyWinnerWhisper: expect CHAT_MSG_WHISPER !twgold from this character.
 local mgmPendingAcceptance = nil -- { payoutId, characterName }
+local mgmPendingGiftConfirmation = nil -- { giftRequestId, characterName }
 
 --- Armed right before SendMail on MGM-prepared mail.
 local mgmArmedPayout = nil
@@ -96,6 +100,76 @@ function NotifyWinnerWhisper(payoutId, characterName)
   end
   SendChatMessage(MGM_WINNER_WHISPER_BODY, "WHISPER", nil, characterName)
   mgmPendingAcceptance = { payoutId = payoutId, characterName = characterName }
+end
+
+local function GetAllItems()
+  local items = {}
+  local NUM_BAG_SLOTS = 4
+  for bagID = 0, NUM_BAG_SLOTS do
+    local numSlots = GetContainerNumSlots(bagID)
+    if numSlots and numSlots > 0 then
+      for slotID = 1, numSlots do
+        local itemLink = GetContainerItemLink(bagID, slotID)
+        if itemLink then
+          local itemName, itemID, _, _, _, _, _, _, _, itemTexture = GetItemInfo(itemLink)
+          local _, itemCount = GetContainerItemInfo(bagID, slotID)
+          if itemName and itemID then
+            table.insert(items, {
+              bagID = bagID,
+              slotID = slotID,
+              name = itemName,
+              id = itemID,
+              count = itemCount or 1,
+              link = itemLink,
+              texture = itemTexture or "",
+            })
+          end
+        end
+      end
+    end
+  end
+  return items
+end
+
+local function mgmJsonEscape(value)
+  local s = tostring(value or "")
+  s = string.gsub(s, "\\", "\\\\")
+  s = string.gsub(s, '"', '\\"')
+  return s
+end
+
+local function mgmEncodeItemsJson(items)
+  local rows = {}
+  for i, item in ipairs(items) do
+    rows[i] = string.format(
+      '{"name":"%s","id":%d,"count":%d,"link":"%s","texture":"%s","bagId":%d,"slotId":%d}',
+      mgmJsonEscape(item.name),
+      tonumber(item.id) or 0,
+      tonumber(item.count) or 1,
+      mgmJsonEscape(item.link),
+      mgmJsonEscape(item.texture),
+      tonumber(item.bagID) or 0,
+      tonumber(item.slotID) or 0
+    )
+  end
+  return "[" .. table.concat(rows, ",") .. "]"
+end
+
+function MGM_RequestGiftItems(giftRequestId)
+  if not giftRequestId or giftRequestId == "" then
+    return
+  end
+  local items = GetAllItems() or {}
+  local payload = mgmEncodeItemsJson(items)
+  DEFAULT_CHAT_FRAME:AddMessage("[MGM_ITEMS:" .. giftRequestId .. "]" .. payload)
+end
+
+function MGM_RequestGiftConfirmation(giftRequestId, characterName)
+  if not giftRequestId or giftRequestId == "" or not characterName or characterName == "" then
+    return
+  end
+  SendChatMessage(MGM_GIFT_CONFIRM_WHISPER_BODY, "WHISPER", nil, characterName)
+  mgmPendingGiftConfirmation = { giftRequestId = giftRequestId, characterName = characterName }
 end
 
 --- Desktop: /run ReceiveGold("uuid:Name:copper;...")
@@ -334,7 +408,13 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
       return
     end
     local body = mgmTrim(msg or "")
-    if string.lower(body) ~= "!twgold" then
+    local lower = string.lower(body)
+    if mgmPendingGiftConfirmation and lower == "!twgift" and mgmNamesEqual(sender, mgmPendingGiftConfirmation.characterName) then
+      DEFAULT_CHAT_FRAME:AddMessage("[MGM_GIFT_ACCEPT:" .. mgmPendingGiftConfirmation.giftRequestId .. "]")
+      mgmPendingGiftConfirmation = nil
+      return
+    end
+    if lower ~= "!twgold" then
       return
     end
     if not mgmNamesEqual(sender, mgmPendingAcceptance.characterName) then

@@ -46,8 +46,11 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(PostC
 builder.Services.AddSingleton<ChatEnrollmentService>();
 builder.Services.AddSingleton<IChatEnrollmentIngest>(sp => sp.GetRequiredService<ChatEnrollmentService>());
 builder.Services.AddSingleton<HelixChatService>();
+builder.Services.AddSingleton<GiftQueueService>();
+builder.Services.AddSingleton<ITwitchSubscriberVerifier, HelixSubscriberVerifier>();
 builder.Services.AddHostedService<RouletteSynchronizerHostedService>();
 builder.Services.AddHostedService<PayoutExpirationHostedService>();
+builder.Services.AddHostedService<GiftQueueTimeoutHostedService>();
 
 var twitch = builder.Configuration.GetSection(TwitchOptions.SectionName).Get<TwitchOptions>() ?? new TwitchOptions();
 var helixBase = string.IsNullOrWhiteSpace(twitch.HelixApiBaseUrl)

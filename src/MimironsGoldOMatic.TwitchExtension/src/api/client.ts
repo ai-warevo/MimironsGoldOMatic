@@ -3,13 +3,17 @@
 import axios, { type AxiosInstance } from 'axios'
 import type {
   ConfirmAcceptanceRequest,
+  ConfirmGiftRequest,
+  CreateGiftRequest,
   CreatePayoutRequest,
   E2ePreparePendingRequest,
   E2ePreparePendingResponse,
+  PatchGiftRequestState,
   PatchPayoutStatusRequest,
   PayoutDto,
   PoolMeResponse,
   RouletteStateResponse,
+  SelectGiftItemRequest,
   VerifyCandidateRequest,
   VersionInfoDto,
 } from './models'
@@ -38,6 +42,10 @@ export class MimironsGoldOMaticApiClient {
     })
   }
 
+  public async getGiftRequests(signal?: AbortSignal): Promise<void> {
+    await this.client.get('/api/gift-requests', { signal })
+  }
+
   public async getPayoutsMyLast(signal?: AbortSignal): Promise<PayoutDto> {
     const { data } = await this.client.get<PayoutDto>('/api/payouts/my-last', { signal })
     return data
@@ -58,9 +66,17 @@ export class MimironsGoldOMaticApiClient {
     return data
   }
 
+  public async getStreamersStreamerIdGiftQueue(streamerId: string, signal?: AbortSignal): Promise<void> {
+    await this.client.get(`/api/streamers/${streamerId}/gift-queue`, { signal })
+  }
+
   public async getVersion(signal?: AbortSignal): Promise<VersionInfoDto> {
     const { data } = await this.client.get<VersionInfoDto>('/api/version', { signal })
     return data
+  }
+
+  public async patchGiftRequestsIdGuid(id: string, request: PatchGiftRequestState, signal?: AbortSignal): Promise<void> {
+    await this.client.patch(`/api/gift-requests/${id}`, request, { signal })
   }
 
   public async patchPayoutsIdGuidStatus(id: string, request: PatchPayoutStatusRequest, signal?: AbortSignal): Promise<PayoutDto> {
@@ -71,6 +87,18 @@ export class MimironsGoldOMaticApiClient {
   public async postE2ePreparePendingPayout(request: E2ePreparePendingRequest, signal?: AbortSignal): Promise<E2ePreparePendingResponse> {
     const { data } = await this.client.post<E2ePreparePendingResponse>('/api/e2e/prepare-pending-payout', request, { signal })
     return data
+  }
+
+  public async postGiftRequests(request: CreateGiftRequest, signal?: AbortSignal): Promise<void> {
+    await this.client.post('/api/gift-requests', request, { signal })
+  }
+
+  public async postGiftRequestsIdGuidConfirm(id: string, request: ConfirmGiftRequest, signal?: AbortSignal): Promise<void> {
+    await this.client.post(`/api/gift-requests/${id}/confirm`, request, { signal })
+  }
+
+  public async postGiftRequestsIdGuidSelectItem(id: string, request: SelectGiftItemRequest, signal?: AbortSignal): Promise<void> {
+    await this.client.post(`/api/gift-requests/${id}/select-item`, request, { signal })
   }
 
   public async postPayoutsClaim(request: CreatePayoutRequest, signal?: AbortSignal): Promise<PayoutDto> {

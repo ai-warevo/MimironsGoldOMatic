@@ -364,7 +364,8 @@ internal static class Program
         name.EndsWith("Request", StringComparison.Ordinal)
         || name.EndsWith("Response", StringComparison.Ordinal)
         || name.EndsWith("Dto", StringComparison.Ordinal)
-        || name.EndsWith("Status", StringComparison.Ordinal);
+        || name.EndsWith("Status", StringComparison.Ordinal)
+        || name.StartsWith("Patch", StringComparison.Ordinal);
 
     private static string BuildMethodName(string httpMethod, string route)
     {

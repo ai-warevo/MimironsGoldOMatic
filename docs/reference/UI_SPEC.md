@@ -107,7 +107,9 @@ Semantic colors used across products (see **Design tokens** for full table):
 | Max character name length | `12` | Align with Shared `CharacterName` validation and SPEC constraints |
 | Gold amount display | `1,000g` | UI-104, UI-203, UI-304 |
 | Whisper command | `!twgold` (exact) | UI-104, instructional copy |
+| Gift confirmation command | `!twgift` (exact) | Gift queue confirmation copy/status |
 | Confirm tag pattern | `[MGM_CONFIRM:<uuid>]` | UI-308 log lines, internal |
+| Gift accept tag pattern | `[MGM_GIFT_ACCEPT:<uuid>]` | Desktop gift flow log tailing |
 | Join action source | Twitch chat command | Enrollment is chat-driven: `!twgold <CharacterName>` (panel is instructional/status only) |
 | API poll default | `15 s` (DECISION) | UI-306 |
 | Font / theme | Twitch vs WPF vs WoW | Use Twitch purple only in Extension; **do not** assume WoW fonts match web |
@@ -172,6 +174,7 @@ UI-401 (icon/slash) ──→ UI-402 (side panel)
 | 1.2 | 2026-04-03 | Subscribe + **`!twgold <CharacterName>`** chat enroll; **`!twgold`** acceptance |
 | 1.3 | 2026-04-03 | WoW **winner notification whisper** + whisper **`!twgold`** consent (`docs/overview/SPEC.md` §9) |
 | 1.4 | 2026-04-05 | Split: hub (`docs/reference/UI_SPEC.md`) + per-component `UI_SPEC.md` under `docs/components/*/` |
+| 1.5 | 2026-04-06 | Added `!twgift` queue UX tokens, command, and log marker references |
 
 When **`docs/overview/SPEC.md`** adds concrete **pool/spin** and **broadcaster** routes, update **EL-** bindings and **UI-201–204** in the Twitch Extension UI spec without changing IDs where possible.
 

@@ -2,7 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using MimironsGoldOMatic.Backend.Configuration;
+using MimironsGoldOMatic.Backend.Application;
 using MimironsGoldOMatic.Backend.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -15,6 +17,7 @@ namespace MimironsGoldOMatic.Backend.Controllers;
 public sealed class TwitchEventSubController(
     IChatEnrollmentIngest chatEnrollment,
     IOptions<TwitchOptions> twitch,
+    IMediator mediator,
     ILogger<TwitchEventSubController> log)
     : ControllerBase
 {
@@ -50,6 +53,21 @@ public sealed class TwitchEventSubController(
 
         var isSubscriber = HasSubscriberBadge(ev);
         await chatEnrollment.IngestAsync(messageId, chatterId, login, text, isSubscriber, ct);
+
+        if (TwGiftChatParser.TryGetCharacterName(text, out var giftCharacterName))
+        {
+            var streamerId = ev.TryGetProperty("broadcaster_user_id", out var bid)
+                ? bid.GetString() ?? twitch.Value.BroadcasterUserId
+                : twitch.Value.BroadcasterUserId;
+            if (!string.IsNullOrWhiteSpace(streamerId))
+            {
+                var r = await mediator.Send(
+                    new CreateGiftRequestCommand(chatterId, login, new Api.CreateGiftRequest(streamerId, giftCharacterName)),
+                    ct);
+                if (!r.Ok)
+                    log.LogInformation("!twgift rejected for {UserId}: {Code}", chatterId, r.Error?.Code);
+            }
+        }
         return Ok();
     }
 

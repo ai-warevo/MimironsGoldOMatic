@@ -12,6 +12,8 @@ public static class MgmMartenDocumentConfiguration
         opts.RegisterDocumentType<PoolDocument>();
         opts.RegisterDocumentType<SpinStateDocument>();
         opts.RegisterDocumentType<PayoutReadDocument>();
+        opts.RegisterDocumentType<GiftRequestReadDocument>();
+        opts.RegisterDocumentType<GiftCommandUsageDocument>();
         opts.RegisterDocumentType<ChatMessageDedupDocument>();
         opts.RegisterDocumentType<EnrollmentIdempotencyDocument>();
         opts.Events.StreamIdentity = StreamIdentity.AsGuid;
@@ -19,5 +21,8 @@ public static class MgmMartenDocumentConfiguration
         opts.Events.AddEventType(typeof(PayoutStatusChanged));
         opts.Events.AddEventType(typeof(WinnerAcceptanceRecorded));
         opts.Events.AddEventType(typeof(HelixRewardSentAnnouncementSucceeded));
+        opts.Events.AddEventType(typeof(GiftRequestInitiated));
+        opts.Events.AddEventType(typeof(GiftRequestStateChanged));
+        opts.Events.AddEventType(typeof(GiftItemSelected));
     }
 }

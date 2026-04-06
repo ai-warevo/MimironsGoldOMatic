@@ -5,6 +5,15 @@ export interface ConfirmAcceptanceRequest {
   characterName: string
 }
 
+export interface ConfirmGiftRequest {
+  confirmed: boolean
+}
+
+export interface CreateGiftRequest {
+  streamerId: string
+  characterName: string
+}
+
 export interface CreatePayoutRequest {
   characterName: string
   enrollmentRequestId: string
@@ -17,6 +26,29 @@ export interface E2ePreparePendingRequest {
 export interface E2ePreparePendingResponse {
   payoutId: string
   characterName: string
+}
+
+export type GiftRequestStateDto =
+  | 'Pending'
+  | 'SelectingItem'
+  | 'ItemSelected'
+  | 'WaitingConfirmation'
+  | 'Completed'
+  | 'Failed';
+
+export interface GiftSelectedItemDto {
+  name: string
+  id: number
+  count: number
+  link: string
+  texture: string
+  bagId: number
+  slotId: number
+}
+
+export interface PatchGiftRequestState {
+  state: GiftRequestStateDto
+  reason: string | null
 }
 
 export interface PatchPayoutStatusRequest {
@@ -55,6 +87,10 @@ export interface RouletteStateResponse {
   poolParticipantCount: number
   spinPhase: string
   currentSpinCycleId: string | null
+}
+
+export interface SelectGiftItemRequest {
+  item: GiftSelectedItemDto
 }
 
 export interface VerifyCandidateRequest {
