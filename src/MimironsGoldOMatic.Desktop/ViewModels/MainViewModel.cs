@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MimironsGoldOMatic.Desktop.Services;
+using MimironsGoldOMatic.Desktop.Services.Updates;
 using MimironsGoldOMatic.Desktop.Win32;
 using MimironsGoldOMatic.Shared;
 
@@ -18,6 +20,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly NotifiedWhisperStore _whisperStore;
     private readonly DesktopConnectionContext _connection;
     private readonly DesktopSettingsStore _settingsStore;
+    private readonly IUpdateService _updateService;
     private readonly WoWChatLogTailService _tail;
     private readonly DispatcherTimer _pollTimer;
     private readonly DispatcherTimer _wowTimer;
@@ -42,13 +45,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _isBusy;
 
+    [ObservableProperty]
+    private bool _isUpdateAvailable;
+
+    [ObservableProperty]
+    private string _currentVersion = "-";
+
+    [ObservableProperty]
+    private string _latestVersion = "-";
+
+    [ObservableProperty]
+    private string? _releaseNotesUrl;
+
+    [ObservableProperty]
+    private string _updateStatusMessage = "Проверка обновлений не выполнялась.";
+
     public MainViewModel(
         IEbsDesktopClient api,
         WoWInjectionCoordinator inject,
         PayoutSnapshotCache cache,
         NotifiedWhisperStore whisperStore,
         DesktopConnectionContext connection,
-        DesktopSettingsStore settingsStore)
+        DesktopSettingsStore settingsStore,
+        IUpdateService updateService)
     {
         _api = api;
         _inject = inject;
@@ -56,11 +75,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _whisperStore = whisperStore;
         _connection = connection;
         _settingsStore = settingsStore;
+        _updateService = updateService;
         _whisperNotified = whisperStore.Load();
 
         Payouts.CollectionChanged += OnPayoutsCollectionChanged;
 
-        _tail = new WoWChatLogTailService(connection, api, cache, AppendLog);
+        _tail = new WoWChatLogTailService(connection, api, cache, updateService, inject, AppendLog);
         _tail.Start();
 
         _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(connection.GetClampedPollIntervalSeconds()) };
@@ -73,6 +93,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         UpdateWowStatus();
         _ = RefreshAsync();
+        _ = CheckForUpdatesInternalAsync(logFailureToDeliveryLog: false);
     }
 
     private void OnPayoutsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
@@ -91,6 +112,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public DesktopConnectionContext Connection => _connection;
 
     public DesktopSettingsStore SettingsStore => _settingsStore;
+
+    [RelayCommand]
+    private async Task CheckForUpdatesAsync()
+    {
+        await CheckForUpdatesInternalAsync(logFailureToDeliveryLog: true).ConfigureAwait(true);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanOpenUpdatePage))]
+    private void OpenUpdatePage()
+    {
+        if (string.IsNullOrWhiteSpace(ReleaseNotesUrl))
+            return;
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = ReleaseNotesUrl,
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Open update page failed: {ex.Message}");
+        }
+    }
 
     /// <summary>Quick connectivity check (<c>GET /api/payouts/pending</c>) for Settings UI.</summary>
     public async Task<string?> TestApiConnectionAsync()
@@ -343,6 +389,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
         MarkFailedCommand.NotifyCanExecuteChanged();
         MarkCancelledCommand.NotifyCanExecuteChanged();
         UnlockToPendingCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnReleaseNotesUrlChanged(string? value) => OpenUpdatePageCommand.NotifyCanExecuteChanged();
+
+    private bool CanOpenUpdatePage() => !string.IsNullOrWhiteSpace(ReleaseNotesUrl);
+
+    private async Task CheckForUpdatesInternalAsync(bool logFailureToDeliveryLog)
+    {
+        var result = await _updateService.CheckForUpdatesAsync(CancellationToken.None).ConfigureAwait(true);
+        IsUpdateAvailable = result.IsUpdateAvailable;
+        CurrentVersion = result.CurrentVersion;
+        LatestVersion = result.LatestVersion;
+        ReleaseNotesUrl = result.ReleaseNotesUrl;
+        UpdateStatusMessage = result.StatusMessage;
+
+        if (!result.IsSuccess && logFailureToDeliveryLog)
+            AppendLog("Update check failed.");
     }
 
     public void Dispose()

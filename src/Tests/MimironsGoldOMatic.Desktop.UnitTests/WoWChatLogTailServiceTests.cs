@@ -1,5 +1,6 @@
 using MimironsGoldOMatic.Desktop.Api;
 using MimironsGoldOMatic.Desktop.Services;
+using MimironsGoldOMatic.Desktop.Services.Updates;
 using MimironsGoldOMatic.Desktop.UnitTests.TestSupport;
 using MimironsGoldOMatic.Shared;
 using Moq;
@@ -171,5 +172,28 @@ public sealed class WoWChatLogTailServiceTests
         await tail.ProcessLineAsync($"[MGM_WHO] {json}", CancellationToken.None);
 
         Assert.Contains(logs, l => l.Contains("verify-candidate failed", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ProcessLineAsync_MGM_UPDATE_CHECK_logs_up_to_date_message_when_injector_missing()
+    {
+        var mockApi = new Mock<IEbsDesktopClient>(MockBehavior.Strict);
+        var update = new Mock<IUpdateService>(MockBehavior.Strict);
+        update.Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new VersionCheckResult(true, false, "1.0.0", "1.0.0", null, true, "ok"));
+
+        var logs = new List<string>();
+
+        using var tail = new WoWChatLogTailService(
+            new DesktopConnectionContext { Settings = new DesktopUserSettings() },
+            mockApi.Object,
+            new PayoutSnapshotCache(),
+            update.Object,
+            null,
+            logs.Add);
+
+        await tail.ProcessLineAsync("[MGM_UPDATE_CHECK]", CancellationToken.None);
+
+        Assert.Contains(logs, l => l.Contains("[MGM_UPDATE_CHECK] Mimiron's Gold-o-Matic: Вы используете актуальную версию", StringComparison.Ordinal));
     }
 }

@@ -4,6 +4,8 @@ using System.Threading;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using MimironsGoldOMatic.Desktop.Api;
+using MimironsGoldOMatic.Desktop.Services.Updates;
+using MimironsGoldOMatic.Desktop.Win32;
 using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Desktop.Services;
@@ -19,6 +21,8 @@ public sealed partial class WoWChatLogTailService : IDisposable
     private readonly DesktopConnectionContext _connection;
     private readonly IEbsDesktopClient _api;
     private readonly PayoutSnapshotCache _payouts;
+    private readonly IUpdateService? _updateService;
+    private readonly WoWInjectionCoordinator? _injector;
     private readonly Action<string> _deliveryLog;
     private readonly System.Timers.Timer _timer = new(750) { AutoReset = true };
     private readonly object _ioLock = new();
@@ -33,10 +37,23 @@ public sealed partial class WoWChatLogTailService : IDisposable
         IEbsDesktopClient api,
         PayoutSnapshotCache payouts,
         Action<string> deliveryLog)
+        : this(connection, api, payouts, null, null, deliveryLog)
+    {
+    }
+
+    public WoWChatLogTailService(
+        DesktopConnectionContext connection,
+        IEbsDesktopClient api,
+        PayoutSnapshotCache payouts,
+        IUpdateService? updateService,
+        WoWInjectionCoordinator? injector,
+        Action<string> deliveryLog)
     {
         _connection = connection;
         _api = api;
         _payouts = payouts;
+        _updateService = updateService;
+        _injector = injector;
         _deliveryLog = deliveryLog;
         _timer.Elapsed += (_, _) => _ = Task.Run(OnTickAsync);
     }
@@ -117,6 +134,15 @@ public sealed partial class WoWChatLogTailService : IDisposable
         if (string.IsNullOrWhiteSpace(line))
             return;
 
+        if (line.Contains("[MGM_UPDATE_CHECK]", StringComparison.Ordinal))
+        {
+            if (!MarkSeen("update:" + line))
+                return;
+
+            await HandleUpdateCheckAsync(ct).ConfigureAwait(false);
+            return;
+        }
+
         if (line.Contains("[MGM_WHO]", StringComparison.Ordinal))
         {
             var json = ExtractWhoJson(line);
@@ -195,6 +221,57 @@ public sealed partial class WoWChatLogTailService : IDisposable
                 _deliveryLog($"[MGM_CONFIRM] failed: {ex.Message}");
             }
         }
+    }
+
+    private async Task HandleUpdateCheckAsync(CancellationToken ct)
+    {
+        if (_updateService is null)
+        {
+            _deliveryLog("[MGM_UPDATE_CHECK] update service is not configured.");
+            return;
+        }
+
+        var result = await _updateService.CheckForUpdatesAsync(ct).ConfigureAwait(false);
+        var message = BuildUpdateChatMessage(result);
+
+        if (_injector is null)
+        {
+            _deliveryLog($"[MGM_UPDATE_CHECK] {message}");
+            return;
+        }
+
+        try
+        {
+            _injector.InjectChatLine(WoWRunCommands.ChatFrameMessage(message), ct);
+            _deliveryLog($"[MGM_UPDATE_CHECK] delivered: {message}");
+        }
+        catch (Exception ex)
+        {
+            _deliveryLog($"[MGM_UPDATE_CHECK] delivery failed: {ex.Message}");
+        }
+    }
+
+    private static string BuildUpdateChatMessage(VersionCheckResult result)
+    {
+        if (!result.IsSuccess)
+        {
+            return "Mimiron's Gold-o-Matic: Не удалось проверить обновления. Убедитесь, что Desktop-приложение подключено к интернету.";
+        }
+
+        if (result.IsUpdateAvailable)
+        {
+            var prefix =
+                $"Mimiron's Gold-o-Matic: Доступна новая версия v{result.LatestVersion} (у вас v{result.CurrentVersion}).";
+            if (string.IsNullOrWhiteSpace(result.ReleaseNotesUrl))
+                return prefix;
+
+            var cappedUrl = result.ReleaseNotesUrl.Length > 80
+                ? result.ReleaseNotesUrl[..77] + "..."
+                : result.ReleaseNotesUrl;
+            return $"{prefix} Подробнее: {cappedUrl}";
+        }
+
+        return $"Mimiron's Gold-o-Matic: Вы используете актуальную версию (v{result.CurrentVersion}).";
     }
 
     private bool MarkSeen(string key)

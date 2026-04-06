@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using MimironsGoldOMatic.Desktop.Services;
+using MimironsGoldOMatic.Desktop.Services.Updates;
 using MimironsGoldOMatic.Desktop.ViewModels;
 using MimironsGoldOMatic.Desktop.Win32;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,8 @@ public partial class App : Application
             sp.GetRequiredService<IHttpClientFactory>(),
             () => sp.GetRequiredService<DesktopConnectionContext>().GetConnection()));
         services.AddSingleton<IEbsDesktopClient>(sp => sp.GetRequiredService<EbsDesktopClient>());
+        services.AddSingleton<IAppVersionProvider, AssemblyAppVersionProvider>();
+        services.AddSingleton<IUpdateService, UpdateService>();
         services.AddSingleton<WoWInjectionCoordinator>();
         services.AddSingleton<MainViewModel>();
 
