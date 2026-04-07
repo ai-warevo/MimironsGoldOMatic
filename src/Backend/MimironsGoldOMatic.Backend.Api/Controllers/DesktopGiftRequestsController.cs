@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MimironsGoldOMatic.Backend.Domain;
+using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Backend.Api.Controllers;
 

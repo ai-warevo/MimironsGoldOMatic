@@ -1,5 +1,5 @@
 using FluentValidation;
-using MimironsGoldOMatic.Backend.Abstract;
+using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Backend.Shared;
 

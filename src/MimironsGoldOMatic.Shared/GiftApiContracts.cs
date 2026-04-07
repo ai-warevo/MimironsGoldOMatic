@@ -1,4 +1,4 @@
-namespace MimironsGoldOMatic.Desktop.Api;
+namespace MimironsGoldOMatic.Shared;
 
 public enum GiftRequestState
 {
@@ -34,6 +34,10 @@ public sealed record GiftRequestDto(
     DateTime? TimeoutAt,
     string? FailureReason);
 
-public sealed record PatchGiftRequestBody(GiftRequestState State, string? Reason);
-public sealed record SelectGiftItemBody(GiftSelectedItemDto Item);
-public sealed record ConfirmGiftBody(bool Confirmed);
+public sealed record CreateGiftRequest(string StreamerId, string CharacterName);
+
+public sealed record PatchGiftRequestState(GiftRequestState State, string? Reason);
+
+public sealed record SelectGiftItemRequest(GiftSelectedItemDto Item);
+
+public sealed record ConfirmGiftRequest(bool Confirmed);

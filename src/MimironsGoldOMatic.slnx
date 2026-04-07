@@ -1,7 +1,7 @@
 <Solution>
   <Project Path="MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj" />
   <Folder Name="/Backend/">
-    <Project Path="Backend/MimironsGoldOMatic.Backend.Abstract/MimironsGoldOMatic.Backend.Abstract.csproj" />
+    <Project Path="Backend/MimironsGoldOMatic.Backend.Configuration/MimironsGoldOMatic.Backend.Configuration.csproj" />
     <Project Path="Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj" />
     <Project Path="Backend/MimironsGoldOMatic.Backend.DataAccess/MimironsGoldOMatic.Backend.DataAccess.csproj" />
     <Project Path="Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj" />

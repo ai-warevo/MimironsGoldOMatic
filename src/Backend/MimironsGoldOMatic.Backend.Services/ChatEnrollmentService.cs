@@ -1,6 +1,6 @@
 using Marten;
 using Microsoft.Extensions.Logging;
-using MimironsGoldOMatic.Backend.Abstract;
+using MimironsGoldOMatic.Shared;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Shared;
 

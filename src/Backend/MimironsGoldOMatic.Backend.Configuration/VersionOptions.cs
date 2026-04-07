@@ -22,4 +22,3 @@ public sealed class VersionOptions
     /// <summary>Optional minimum compatible Twitch Extension version.</summary>
     public string? MinimumExtensionVersion { get; set; }
 }
-

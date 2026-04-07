@@ -1,3 +1,5 @@
+using MimironsGoldOMatic.Shared;
+
 namespace MimironsGoldOMatic.Backend.Persistence;
 
 public record PayoutCreated(
@@ -7,13 +9,13 @@ public record PayoutCreated(
     string CharacterName,
     long GoldAmount,
     string EnrollmentRequestId,
-    MimironsGoldOMatic.Backend.Abstract.PayoutStatus Status,
+    PayoutStatus Status,
     DateTime CreatedAtUtc,
     Guid SpinCycleId);
 
 public record PayoutStatusChanged(
-    MimironsGoldOMatic.Backend.Abstract.PayoutStatus From,
-    MimironsGoldOMatic.Backend.Abstract.PayoutStatus To,
+    PayoutStatus From,
+    PayoutStatus To,
     DateTime Utc);
 
 public record WinnerAcceptanceRecorded(DateTime Utc);

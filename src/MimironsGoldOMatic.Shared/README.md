@@ -1,8 +1,5 @@
 ## MimironsGoldOMatic.Shared
 
-This project has been migrated to backend-scoped assemblies:
+Cross-cutting **API contract** types (DTOs, enums, request/response records) consumed by **Backend** and **Desktop** so JSON and MediatR payloads stay aligned.
 
-- `MimironsGoldOMatic.Backend.Abstract` — POCO contracts (no external deps)
-- `MimironsGoldOMatic.Backend.Shared` — shared helpers + validation (can reference libraries)
-
-The original `MimironsGoldOMatic.Shared` project is kept temporarily for solution compatibility and will be removed once downstream references are updated.
+Server-side **FluentValidation** and character-name rules live in `MimironsGoldOMatic.Backend.Shared`. **Backend** appsettings POCOs are in `MimironsGoldOMatic.Backend.Configuration`.

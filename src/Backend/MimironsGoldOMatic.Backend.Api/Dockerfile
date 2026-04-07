@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj MimironsGoldOMatic.Shared/
-COPY Backend/MimironsGoldOMatic.Backend.Abstract/MimironsGoldOMatic.Backend.Abstract.csproj Backend/MimironsGoldOMatic.Backend.Abstract/
+COPY Backend/MimironsGoldOMatic.Backend.Configuration/MimironsGoldOMatic.Backend.Configuration.csproj Backend/MimironsGoldOMatic.Backend.Configuration/
 COPY Backend/MimironsGoldOMatic.Backend.Shared/MimironsGoldOMatic.Backend.Shared.csproj Backend/MimironsGoldOMatic.Backend.Shared/
 COPY Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj Backend/MimironsGoldOMatic.Backend.Domain/
 COPY Backend/MimironsGoldOMatic.Backend.DataAccess/MimironsGoldOMatic.Backend.DataAccess.csproj Backend/MimironsGoldOMatic.Backend.DataAccess/
@@ -17,7 +17,7 @@ COPY Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.cspro
 RUN dotnet restore Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj
 
 COPY MimironsGoldOMatic.Shared/ MimironsGoldOMatic.Shared/
-COPY Backend/MimironsGoldOMatic.Backend.Abstract/ Backend/MimironsGoldOMatic.Backend.Abstract/
+COPY Backend/MimironsGoldOMatic.Backend.Configuration/ Backend/MimironsGoldOMatic.Backend.Configuration/
 COPY Backend/MimironsGoldOMatic.Backend.Shared/ Backend/MimironsGoldOMatic.Backend.Shared/
 COPY Backend/MimironsGoldOMatic.Backend.Domain/ Backend/MimironsGoldOMatic.Backend.Domain/
 COPY Backend/MimironsGoldOMatic.Backend.DataAccess/ Backend/MimironsGoldOMatic.Backend.DataAccess/

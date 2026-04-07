@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using MimironsGoldOMatic.Backend.Configuration;
 using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Backend.Api.Controllers;
 

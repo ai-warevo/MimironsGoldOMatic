@@ -1,6 +1,6 @@
 using Marten;
 using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Abstract;
+using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Backend.Services;
 

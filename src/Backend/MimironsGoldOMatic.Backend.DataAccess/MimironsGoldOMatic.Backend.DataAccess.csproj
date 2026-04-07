@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj" />
-    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Abstract\MimironsGoldOMatic.Backend.Abstract.csproj" />
     <ProjectReference Include="..\..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
   </ItemGroup>
 

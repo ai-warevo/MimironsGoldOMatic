@@ -28,14 +28,6 @@ export interface E2ePreparePendingResponse {
   characterName: string
 }
 
-export type GiftRequestStateDto =
-  | 'Pending'
-  | 'SelectingItem'
-  | 'ItemSelected'
-  | 'WaitingConfirmation'
-  | 'Completed'
-  | 'Failed';
-
 export interface GiftSelectedItemDto {
   name: string
   id: number
@@ -47,7 +39,7 @@ export interface GiftSelectedItemDto {
 }
 
 export interface PatchGiftRequestState {
-  state: GiftRequestStateDto
+  state: GiftRequestState
   reason: string | null
 }
 

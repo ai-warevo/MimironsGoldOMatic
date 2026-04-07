@@ -1,3 +1,5 @@
+using MimironsGoldOMatic.Shared;
+
 namespace MimironsGoldOMatic.Backend.Persistence;
 
 public sealed class PoolMemberEntry
@@ -43,7 +45,7 @@ public sealed class PayoutReadDocument
     public string CharacterName { get; set; } = "";
     public long GoldAmount { get; set; }
     public string EnrollmentRequestId { get; set; } = "";
-    public MimironsGoldOMatic.Backend.Abstract.PayoutStatus Status { get; set; }
+    public PayoutStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? WinnerAcceptedWillingToReceiveAt { get; set; }
@@ -64,16 +66,6 @@ public sealed class EnrollmentIdempotencyDocument
     public string TwitchDisplayName { get; set; } = "";
     public string CharacterName { get; set; } = "";
     public DateTime EnrolledAtUtc { get; set; }
-}
-
-public enum GiftRequestState
-{
-    Pending,
-    SelectingItem,
-    ItemSelected,
-    WaitingConfirmation,
-    Completed,
-    Failed,
 }
 
 public sealed class GiftSelectedItemDocument

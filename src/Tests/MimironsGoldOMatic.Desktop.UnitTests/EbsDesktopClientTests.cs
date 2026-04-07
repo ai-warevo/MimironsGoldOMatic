@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using MimironsGoldOMatic.Desktop.Api;
 using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.Desktop.UnitTests.TestSupport;
 using MimironsGoldOMatic.Shared;
@@ -157,7 +156,7 @@ public sealed class EbsDesktopClientTests
             },
         };
         var api = new EbsDesktopClient(new TestHttpClientFactory(handler), () => ("https://example/", "key"));
-        var dto = new VerifyCandidateRequestDto(1, Guid.NewGuid(), "X", true, DateTime.UtcNow);
+        var dto = new VerifyCandidateRequest(1, Guid.NewGuid(), "X", true, DateTime.UtcNow);
         await api.VerifyCandidateAsync(dto, CancellationToken.None);
     }
 

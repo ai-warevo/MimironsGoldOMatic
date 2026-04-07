@@ -34,10 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Api\ConfirmAcceptanceBody.cs" Link="DesktopSources\Api\ConfirmAcceptanceBody.cs" />
-    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Api\GiftDtos.cs" Link="DesktopSources\Api\GiftDtos.cs" />
-    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Api\PatchPayoutStatusBody.cs" Link="DesktopSources\Api\PatchPayoutStatusBody.cs" />
-    <Compile Include="..\..\MimironsGoldOMatic.Desktop\Api\VerifyCandidateRequestDto.cs" Link="DesktopSources\Api\VerifyCandidateRequestDto.cs" />
     <Compile Include="..\..\MimironsGoldOMatic.Desktop\Services\EbsDesktopClient.cs" Link="DesktopSources\EbsDesktopClient.cs" />
     <Compile Include="..\..\MimironsGoldOMatic.Desktop\Services\IEbsDesktopClient.cs" Link="DesktopSources\IEbsDesktopClient.cs" />
     <Compile Include="..\..\MimironsGoldOMatic.Desktop\Services\PayoutSnapshotCache.cs" Link="DesktopSources\PayoutSnapshotCache.cs" />

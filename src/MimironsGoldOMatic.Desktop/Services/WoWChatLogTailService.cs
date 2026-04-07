@@ -3,7 +3,6 @@ using System.Text;
 using System.Threading;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using MimironsGoldOMatic.Desktop.Api;
 using MimironsGoldOMatic.Desktop.Services.Updates;
 using MimironsGoldOMatic.Desktop.Win32;
 using MimironsGoldOMatic.Shared;
@@ -157,10 +156,10 @@ public sealed partial class WoWChatLogTailService : IDisposable
             if (!MarkSeen("who:" + json))
                 return;
 
-            VerifyCandidateRequestDto? dto;
+            VerifyCandidateRequest? dto;
             try
             {
-                dto = JsonSerializer.Deserialize<VerifyCandidateRequestDto>(json, JsonOptions);
+                dto = JsonSerializer.Deserialize<VerifyCandidateRequest>(json, JsonOptions);
             }
             catch (Exception ex)
             {

@@ -1,6 +1,5 @@
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Desktop.Api;
 using MimironsGoldOMatic.Desktop.IntegrationTests.Support;
 using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.IntegrationTesting;
@@ -100,7 +99,7 @@ public sealed class DesktopPatchConfirmErrorRecoveryIntegrationTests : HttpApiFi
 
         var ebs = DesktopEbsClientFactory.Create(Host);
         await ebs.VerifyCandidateAsync(
-            new VerifyCandidateRequestDto(1, spinCycleId, "Thrall", true, DateTime.UtcNow),
+            new VerifyCandidateRequest(1, spinCycleId, "Thrall", true, DateTime.UtcNow),
             CancellationToken.None);
 
         var pending = await ebs.GetPendingAsync(CancellationToken.None);

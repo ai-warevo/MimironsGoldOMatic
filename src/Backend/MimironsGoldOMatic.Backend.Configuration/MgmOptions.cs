@@ -15,4 +15,3 @@ public sealed class MgmOptions
     /// </summary>
     public bool EnableE2eHarness { get; set; }
 }
-

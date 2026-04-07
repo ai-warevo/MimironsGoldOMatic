@@ -3,6 +3,7 @@ using MediatR;
 using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Shared;
+using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Backend.Services.Mediatr;
 
@@ -21,7 +22,7 @@ public sealed class GetGiftQueueHandler(IDocumentStore store)
             .ToListAsync(ct);
         var mapped = list.Select((x, i) => GiftMap.ToDto(x, i + 1)).ToList();
         if (!string.IsNullOrEmpty(request.ViewerId))
-            mapped = mapped.Where(x => x.ViewerId == request.ViewerId || x.State == GiftRequestStateDto.SelectingItem).ToList();
+            mapped = mapped.Where(x => x.ViewerId == request.ViewerId || x.State == GiftRequestState.SelectingItem).ToList();
         return new HandlerResult<IReadOnlyList<GiftRequestDto>>(true, mapped, 200, null);
     }
 }
@@ -76,7 +77,7 @@ public sealed class PatchGiftRequestHandler(IDocumentStore store, GiftQueueServi
             return new HandlerResult<GiftRequestDto>(false, null, 404, new ApiErrorDto("not_found", "Gift request not found.", new { }));
 
         var from = row.State;
-        row.State = GiftMap.ToDomainState(request.State);
+        row.State = request.State;
         row.UpdatedAt = DateTime.UtcNow;
         row.FailureReason = row.State == GiftRequestState.Failed ? request.Reason ?? "failed" : null;
         if (row.State == GiftRequestState.SelectingItem)
@@ -193,30 +194,8 @@ internal static class GiftMap
             : new GiftSelectedItemDto(d.SelectedItem.Name, d.SelectedItem.Id, d.SelectedItem.Count, d.SelectedItem.Link, d.SelectedItem.Texture,
                 d.SelectedItem.BagId, d.SelectedItem.SlotId);
         var wait = Math.Max(0, (queuePosition - 1) * 65);
-        return new GiftRequestDto(d.Id, d.StreamerId, d.ViewerId, d.ViewerDisplayName, d.CharacterName, ToDtoState(d.State), item, queuePosition, wait, d.CreatedAt,
+        return new GiftRequestDto(d.Id, d.StreamerId, d.ViewerId, d.ViewerDisplayName, d.CharacterName, d.State, item, queuePosition, wait, d.CreatedAt,
             d.UpdatedAt, d.TimeoutAt, d.FailureReason);
     }
-
-    public static GiftRequestStateDto ToDtoState(GiftRequestState state) => state switch
-    {
-        GiftRequestState.Pending => GiftRequestStateDto.Pending,
-        GiftRequestState.SelectingItem => GiftRequestStateDto.SelectingItem,
-        GiftRequestState.ItemSelected => GiftRequestStateDto.ItemSelected,
-        GiftRequestState.WaitingConfirmation => GiftRequestStateDto.WaitingConfirmation,
-        GiftRequestState.Completed => GiftRequestStateDto.Completed,
-        GiftRequestState.Failed => GiftRequestStateDto.Failed,
-        _ => GiftRequestStateDto.Failed,
-    };
-
-    public static GiftRequestState ToDomainState(GiftRequestStateDto state) => state switch
-    {
-        GiftRequestStateDto.Pending => GiftRequestState.Pending,
-        GiftRequestStateDto.SelectingItem => GiftRequestState.SelectingItem,
-        GiftRequestStateDto.ItemSelected => GiftRequestState.ItemSelected,
-        GiftRequestStateDto.WaitingConfirmation => GiftRequestState.WaitingConfirmation,
-        GiftRequestStateDto.Completed => GiftRequestState.Completed,
-        GiftRequestStateDto.Failed => GiftRequestState.Failed,
-        _ => GiftRequestState.Failed,
-    };
 }
 

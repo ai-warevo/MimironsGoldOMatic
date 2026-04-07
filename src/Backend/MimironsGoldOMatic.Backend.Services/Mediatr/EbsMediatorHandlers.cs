@@ -3,7 +3,7 @@ using Marten;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MimironsGoldOMatic.Backend.Abstract;
+using MimironsGoldOMatic.Shared;
 using MimironsGoldOMatic.Backend.Configuration;
 using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Persistence;

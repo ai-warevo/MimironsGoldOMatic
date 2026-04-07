@@ -27,4 +27,3 @@ public sealed class TwitchOptions
 
     public string BroadcasterUserId { get; set; } = "";
 }
-

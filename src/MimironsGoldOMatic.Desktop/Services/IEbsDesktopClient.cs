@@ -1,4 +1,3 @@
-using MimironsGoldOMatic.Desktop.Api;
 using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Desktop.Services;
@@ -12,7 +11,7 @@ public interface IEbsDesktopClient
 
     Task ConfirmAcceptanceAsync(Guid id, string characterName, CancellationToken ct);
 
-    Task VerifyCandidateAsync(VerifyCandidateRequestDto dto, CancellationToken ct);
+    Task VerifyCandidateAsync(VerifyCandidateRequest dto, CancellationToken ct);
 
     Task<IReadOnlyList<GiftRequestDto>> GetGiftQueueAsync(CancellationToken ct);
 

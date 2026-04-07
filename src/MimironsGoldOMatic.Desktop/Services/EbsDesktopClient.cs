@@ -4,7 +4,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MimironsGoldOMatic.Desktop.Api;
 using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Desktop.Services;
@@ -59,7 +58,7 @@ public sealed class EbsDesktopClient : IEbsDesktopClient
     public async Task PatchPayoutStatusAsync(Guid id, PayoutStatus status, CancellationToken ct)
     {
         using var c = CreateClient();
-        var json = JsonSerializer.Serialize(new PatchPayoutStatusBody(status), JsonOptions);
+        var json = JsonSerializer.Serialize(new PatchPayoutStatusRequest(status), JsonOptions);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var resp = await c.PatchAsync($"api/payouts/{id:D}/status", content, ct).ConfigureAwait(false);
         var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
@@ -70,7 +69,7 @@ public sealed class EbsDesktopClient : IEbsDesktopClient
     public async Task ConfirmAcceptanceAsync(Guid id, string characterName, CancellationToken ct)
     {
         using var c = CreateClient();
-        var json = JsonSerializer.Serialize(new ConfirmAcceptanceBody(characterName), JsonOptions);
+        var json = JsonSerializer.Serialize(new ConfirmAcceptanceRequest(characterName), JsonOptions);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var resp = await c.PostAsync($"api/payouts/{id:D}/confirm-acceptance", content, ct).ConfigureAwait(false);
         var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
@@ -79,7 +78,7 @@ public sealed class EbsDesktopClient : IEbsDesktopClient
         throw new HttpRequestException($"confirm-acceptance failed {(int)resp.StatusCode}: {body}");
     }
 
-    public async Task VerifyCandidateAsync(VerifyCandidateRequestDto dto, CancellationToken ct)
+    public async Task VerifyCandidateAsync(VerifyCandidateRequest dto, CancellationToken ct)
     {
         using var c = CreateClient();
         var json = JsonSerializer.Serialize(dto, JsonOptions);
@@ -104,7 +103,7 @@ public sealed class EbsDesktopClient : IEbsDesktopClient
     public async Task PatchGiftRequestStateAsync(Guid id, GiftRequestState state, string? reason, CancellationToken ct)
     {
         using var c = CreateClient();
-        var json = JsonSerializer.Serialize(new PatchGiftRequestBody(state, reason), JsonOptions);
+        var json = JsonSerializer.Serialize(new PatchGiftRequestState(state, reason), JsonOptions);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var resp = await c.PatchAsync($"api/gift-requests/{id:D}", content, ct).ConfigureAwait(false);
         var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
@@ -115,7 +114,7 @@ public sealed class EbsDesktopClient : IEbsDesktopClient
     public async Task SelectGiftItemAsync(Guid id, GiftSelectedItemDto item, CancellationToken ct)
     {
         using var c = CreateClient();
-        var json = JsonSerializer.Serialize(new SelectGiftItemBody(item), JsonOptions);
+        var json = JsonSerializer.Serialize(new SelectGiftItemRequest(item), JsonOptions);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var resp = await c.PostAsync($"api/gift-requests/{id:D}/select-item", content, ct).ConfigureAwait(false);
         var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
@@ -126,7 +125,7 @@ public sealed class EbsDesktopClient : IEbsDesktopClient
     public async Task ConfirmGiftAsync(Guid id, bool confirmed, CancellationToken ct)
     {
         using var c = CreateClient();
-        var json = JsonSerializer.Serialize(new ConfirmGiftBody(confirmed), JsonOptions);
+        var json = JsonSerializer.Serialize(new ConfirmGiftRequest(confirmed), JsonOptions);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var resp = await c.PostAsync($"api/gift-requests/{id:D}/confirm", content, ct).ConfigureAwait(false);
         var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
