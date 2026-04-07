@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using FluentValidation;
+using JasperFx.Events;
 using Marten;
 using Marten.Events;
 using MimironsGoldOMatic.Backend.Configuration;

@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-    <PackageReference Include="Marten" Version="7.39.5" />
+    <PackageReference Include="Marten" Version="8.29.0" />
     <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
@@ -26,10 +26,7 @@
     <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Shared\**\*.cs" />
   </ItemGroup>
 
-  <Target Name="GenerateTypeScriptApiClient"
-          BeforeTargets="BeforeBuild"
-          Inputs="@(TypeScriptApiGenerationInput)"
-          Outputs="$(TypeScriptApiOutputDir)\models.ts;$(TypeScriptApiOutputDir)\client.ts">
+  <Target Name="GenerateTypeScriptApiClient" BeforeTargets="BeforeBuild" Inputs="@(TypeScriptApiGenerationInput)" Outputs="$(TypeScriptApiOutputDir)\models.ts;$(TypeScriptApiOutputDir)\client.ts">
     <Exec Command="dotnet run --project &quot;$(TypeScriptApiGeneratorProject)&quot; --configuration $(Configuration) -- &quot;$(MSBuildProjectDirectory)&quot; &quot;$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Shared&quot; &quot;$(TypeScriptApiOutputDir)&quot;" />
   </Target>
 

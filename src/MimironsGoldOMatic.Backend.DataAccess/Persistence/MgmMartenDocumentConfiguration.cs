@@ -1,5 +1,6 @@
 using Marten;
 using Marten.Events;
+using JasperFx.Events;
 
 namespace MimironsGoldOMatic.Backend.Persistence;
 
