@@ -1,5 +1,4 @@
-using MimironsGoldOMatic.Shared;
-
+﻿
 namespace MimironsGoldOMatic.Desktop.Services;
 
 /// <summary>Backend EBS calls used by the Desktop app (mock in unit tests).</summary>

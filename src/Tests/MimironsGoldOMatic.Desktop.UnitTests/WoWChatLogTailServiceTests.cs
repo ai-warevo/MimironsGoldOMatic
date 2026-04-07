@@ -1,7 +1,6 @@
-using MimironsGoldOMatic.Desktop.Services;
+﻿using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.Desktop.Services.Updates;
 using MimironsGoldOMatic.Desktop.UnitTests.TestSupport;
-using MimironsGoldOMatic.Shared;
 using Moq;
 using Xunit;
 
@@ -193,6 +192,6 @@ public sealed class WoWChatLogTailServiceTests
 
         await tail.ProcessLineAsync("[MGM_UPDATE_CHECK]", CancellationToken.None);
 
-        Assert.Contains(logs, l => l.Contains("[MGM_UPDATE_CHECK] Mimiron's Gold-o-Matic: Вы используете актуальную версию", StringComparison.Ordinal));
+        Assert.Contains(logs, l => l.Contains("[MGM_UPDATE_CHECK] Mimiron's Gold-o-Matic: Р’С‹ РёСЃРїРѕР»СЊР·СѓРµС‚Рµ Р°РєС‚СѓР°Р»СЊРЅСѓСЋ РІРµСЂСЃРёСЋ", StringComparison.Ordinal));
     }
 }

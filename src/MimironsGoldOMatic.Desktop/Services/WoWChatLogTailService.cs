@@ -1,15 +1,14 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Threading;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using MimironsGoldOMatic.Desktop.Services.Updates;
 using MimironsGoldOMatic.Desktop.Win32;
-using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Desktop.Services;
 
-/// <summary>Single tail of <c>WoWChatLog.txt</c> for <c>[MGM_WHO]</c>, <c>[MGM_ACCEPT]</c>, <c>[MGM_CONFIRM]</c> (<c>docs/overview/SPEC.md</c> §10).</summary>
+/// <summary>Single tail of <c>WoWChatLog.txt</c> for <c>[MGM_WHO]</c>, <c>[MGM_ACCEPT]</c>, <c>[MGM_CONFIRM]</c> (<c>docs/overview/SPEC.md</c> В§10).</summary>
 public sealed partial class WoWChatLogTailService : IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -262,7 +261,7 @@ public sealed partial class WoWChatLogTailService : IDisposable
                 return;
             if (!_payouts.TryGetCharacterName(acceptId, out var characterName))
             {
-                _deliveryLog($"[MGM_ACCEPT] unknown payout {acceptId:D} — refresh pending list");
+                _deliveryLog($"[MGM_ACCEPT] unknown payout {acceptId:D} вЂ” refresh pending list");
                 return;
             }
 
@@ -357,23 +356,23 @@ public sealed partial class WoWChatLogTailService : IDisposable
     {
         if (!result.IsSuccess)
         {
-            return "Mimiron's Gold-o-Matic: Не удалось проверить обновления. Убедитесь, что Desktop-приложение подключено к интернету.";
+            return "Mimiron's Gold-o-Matic: РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕРІРµСЂРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёСЏ. РЈР±РµРґРёС‚РµСЃСЊ, С‡С‚Рѕ Desktop-РїСЂРёР»РѕР¶РµРЅРёРµ РїРѕРґРєР»СЋС‡РµРЅРѕ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ.";
         }
 
         if (result.IsUpdateAvailable)
         {
             var prefix =
-                $"Mimiron's Gold-o-Matic: Доступна новая версия v{result.LatestVersion} (у вас v{result.CurrentVersion}).";
+                $"Mimiron's Gold-o-Matic: Р”РѕСЃС‚СѓРїРЅР° РЅРѕРІР°СЏ РІРµСЂСЃРёСЏ v{result.LatestVersion} (Сѓ РІР°СЃ v{result.CurrentVersion}).";
             if (string.IsNullOrWhiteSpace(result.ReleaseNotesUrl))
                 return prefix;
 
             var cappedUrl = result.ReleaseNotesUrl.Length > 80
                 ? result.ReleaseNotesUrl[..77] + "..."
                 : result.ReleaseNotesUrl;
-            return $"{prefix} Подробнее: {cappedUrl}";
+            return $"{prefix} РџРѕРґСЂРѕР±РЅРµРµ: {cappedUrl}";
         }
 
-        return $"Mimiron's Gold-o-Matic: Вы используете актуальную версию (v{result.CurrentVersion}).";
+        return $"Mimiron's Gold-o-Matic: Р’С‹ РёСЃРїРѕР»СЊР·СѓРµС‚Рµ Р°РєС‚СѓР°Р»СЊРЅСѓСЋ РІРµСЂСЃРёСЋ (v{result.CurrentVersion}).";
     }
 
     private bool MarkSeen(string key)

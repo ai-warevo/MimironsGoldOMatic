@@ -1,5 +1,4 @@
-using MimironsGoldOMatic.Shared;
-using MimironsGoldOMatic.Backend.Api.Controllers;
+﻿using MimironsGoldOMatic.Backend.Api.Controllers;
 using MimironsGoldOMatic.Backend.Domain;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

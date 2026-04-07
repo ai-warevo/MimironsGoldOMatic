@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Windows;
@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.Input;
 using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.Desktop.Services.Updates;
 using MimironsGoldOMatic.Desktop.Win32;
-using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Desktop.ViewModels;
 
@@ -58,7 +57,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string? _releaseNotesUrl;
 
     [ObservableProperty]
-    private string _updateStatusMessage = "Проверка обновлений не выполнялась.";
+    private string _updateStatusMessage = "РџСЂРѕРІРµСЂРєР° РѕР±РЅРѕРІР»РµРЅРёР№ РЅРµ РІС‹РїРѕР»РЅСЏР»Р°СЃСЊ.";
 
     public MainViewModel(
         IEbsDesktopClient api,
@@ -239,7 +238,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 continue;
             if (WoWForegroundLocator.TryGetForegroundWoWWindow() == IntPtr.Zero)
             {
-                AppendLog($"NotifyWinnerWhisper skipped {p.Id:D} — WoW not foreground.");
+                AppendLog($"NotifyWinnerWhisper skipped {p.Id:D} вЂ” WoW not foreground.");
                 continue;
             }
 
@@ -366,7 +365,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             await _api.PatchPayoutStatusAsync(SelectedPayout.Id, PayoutStatus.Pending, CancellationToken.None).ConfigureAwait(true);
-            AppendLog($"Unlocked InProgress → Pending {SelectedPayout.Id:D}");
+            AppendLog($"Unlocked InProgress в†’ Pending {SelectedPayout.Id:D}");
             await RefreshCoreAsync(CancellationToken.None).ConfigureAwait(true);
         }
         catch (Exception ex)

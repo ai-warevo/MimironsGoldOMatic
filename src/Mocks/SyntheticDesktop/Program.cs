@@ -1,10 +1,9 @@
-// <!-- Created: 2026-04-05 (Tier B E2E harness) -->
+﻿// <!-- Created: 2026-04-05 (Tier B E2E harness) -->
 // <!-- Updated: 2026-04-05 (Tier B integration & first run) -->
 // HTTP stand-in for Desktop payout API choreography (no WPF / WinAPI).
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MimironsGoldOMatic.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient();

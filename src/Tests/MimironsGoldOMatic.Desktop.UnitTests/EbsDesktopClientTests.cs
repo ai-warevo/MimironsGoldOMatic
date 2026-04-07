@@ -1,9 +1,8 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
 using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.Desktop.UnitTests.TestSupport;
-using MimironsGoldOMatic.Shared;
 using Xunit;
 
 namespace MimironsGoldOMatic.Desktop.UnitTests;

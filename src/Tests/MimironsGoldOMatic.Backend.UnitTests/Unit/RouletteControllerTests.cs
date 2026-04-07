@@ -1,5 +1,4 @@
-using System.Security.Claims;
-using MimironsGoldOMatic.Shared;
+﻿using System.Security.Claims;
 using MimironsGoldOMatic.Backend.Api.Controllers;
 using MimironsGoldOMatic.Backend.Domain;
 using MediatR;

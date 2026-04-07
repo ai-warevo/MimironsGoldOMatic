@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-07 (C# coding standards for Backend/WPF roles) -->
+<!-- Updated: 2026-04-07 (C# file-structure standard) -->
 
 # AI Agent Operational Protocol (AGENTS.md)
 
@@ -89,6 +89,13 @@ Use these conventions for **[Backend/API Expert]** and **[WPF/WinAPI Expert]** C
 - **Indentation**: 4 spaces, not tabs.
 - **Whitespace**: One space after keywords (`if`, `foreach`), around binary operators, and after commas.
 - **Type member order**: Fields, then constructors, then properties, then methods.
+
+#### File Structure
+
+- **One File, One Type**: Each file must contain only one class, interface, struct, or enum.
+- **File Naming**: The file name must exactly match the name of the type it contains (for example `UserRepository.cs` for `class UserRepository`).
+- **Namespaces**: Match the folder structure to the namespace (for example `Project/Services/AuthService.cs` should be in `namespace Project.Services`). **This repository:** the root namespace must always be `MimironsGoldOMatic.*` per project rules; extend segments from the folder layout under `src/` (see `docs/reference/PROJECT_STRUCTURE.md` when unsure).
+- **File-Scoped Namespaces**: Use file-scoped namespaces to reduce indentation (for example `namespace MimironsGoldOMatic.Backend.Services;` instead of a block).
 
 #### C# best practices
 

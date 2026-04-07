@@ -1,6 +1,5 @@
-using MimironsGoldOMatic.Desktop.Services;
+﻿using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.Desktop.UnitTests.TestSupport;
-using MimironsGoldOMatic.Shared;
 using Xunit;
 
 namespace MimironsGoldOMatic.Desktop.UnitTests;

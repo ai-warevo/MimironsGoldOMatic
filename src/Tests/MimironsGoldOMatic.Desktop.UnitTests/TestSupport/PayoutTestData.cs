@@ -1,5 +1,4 @@
-using MimironsGoldOMatic.Shared;
-
+﻿
 namespace MimironsGoldOMatic.Desktop.UnitTests.TestSupport;
 
 internal static class PayoutTestData

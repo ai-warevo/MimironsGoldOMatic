@@ -1,5 +1,4 @@
-using System.Reflection;
-using MimironsGoldOMatic.Shared;
+﻿using System.Reflection;
 using MimironsGoldOMatic.Backend.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

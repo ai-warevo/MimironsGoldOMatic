@@ -1,5 +1,4 @@
-using FluentValidation;
-using MimironsGoldOMatic.Shared;
+﻿using FluentValidation;
 
 namespace MimironsGoldOMatic.Backend.Shared;
 
@@ -11,7 +10,7 @@ public sealed class CreatePayoutRequestValidator : AbstractValidator<CreatePayou
             .NotEmpty()
             .Must(CharacterNameRules.IsValid)
             .WithMessage(
-                "CharacterName must be 2–12 Unicode letters in Latin or Cyrillic scripts only (docs/overview/SPEC.md §4).");
+                "CharacterName must be 2вЂ“12 Unicode letters in Latin or Cyrillic scripts only (docs/overview/SPEC.md В§4).");
 
         RuleFor(x => x.EnrollmentRequestId)
             .NotEmpty();

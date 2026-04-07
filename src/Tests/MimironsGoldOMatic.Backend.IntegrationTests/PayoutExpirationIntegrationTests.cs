@@ -1,5 +1,4 @@
-using MimironsGoldOMatic.Shared;
-using MimironsGoldOMatic.Backend.Persistence;
+﻿using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
 using MimironsGoldOMatic.Backend.Shared;
 using MimironsGoldOMatic.Backend.IntegrationTests.Support;

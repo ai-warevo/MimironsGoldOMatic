@@ -1,5 +1,4 @@
-using MimironsGoldOMatic.Shared;
-
+﻿
 namespace MimironsGoldOMatic.Backend.Persistence;
 
 public sealed class PoolMemberEntry

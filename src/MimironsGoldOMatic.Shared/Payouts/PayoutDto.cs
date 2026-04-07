@@ -1,4 +1,4 @@
-namespace MimironsGoldOMatic.Shared;
+namespace MimironsGoldOMatic.Shared.Payouts;
 
 public sealed record PayoutDto(
     Guid Id,
@@ -10,4 +10,3 @@ public sealed record PayoutDto(
     PayoutStatus Status,
     DateTime CreatedAt,
     bool IsRewardSentAnnouncedToChat = false);
-

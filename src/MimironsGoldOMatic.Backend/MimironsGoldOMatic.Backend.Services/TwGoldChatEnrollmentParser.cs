@@ -8,7 +8,7 @@ public static partial class TwGoldChatEnrollmentParser
 {
     /// <summary>
     /// When the trimmed message matches <c>!twgold &lt;name&gt;</c> (prefix case-insensitive, single token name),
-    /// returns the raw name token (not validated against <see cref="MimironsGoldOMatic.Shared.CharacterNameRules"/>).
+    /// returns the raw name token (not validated against <see cref="MimironsGoldOMatic.Backend.Shared.CharacterNameRules"/>).
     /// </summary>
     public static bool TryGetCharacterName(string chatText, [NotNullWhen(true)] out string? characterName)
     {

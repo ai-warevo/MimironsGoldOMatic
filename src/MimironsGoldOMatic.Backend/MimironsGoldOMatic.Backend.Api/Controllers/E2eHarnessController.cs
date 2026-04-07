@@ -1,4 +1,4 @@
-using Marten;
+﻿using Marten;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +7,6 @@ using MimironsGoldOMatic.Backend.Configuration;
 using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Backend.Api.Controllers;
 

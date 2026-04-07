@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
     <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Api\MimironsGoldOMatic.Backend.Api.csproj" />
     <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.DataAccess\MimironsGoldOMatic.Backend.DataAccess.csproj" />
     <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj" />

@@ -1,5 +1,4 @@
-using MimironsGoldOMatic.Shared;
-using MimironsGoldOMatic.Backend.Domain;
+﻿using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.IntegrationTests.Support;
 using MimironsGoldOMatic.IntegrationTesting;
 using Marten;

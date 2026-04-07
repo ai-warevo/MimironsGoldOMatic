@@ -1,4 +1,4 @@
-namespace MimironsGoldOMatic.Shared;
+namespace MimironsGoldOMatic.Shared.Payouts;
 
 public enum PayoutStatus
 {
@@ -7,6 +7,5 @@ public enum PayoutStatus
     Sent = 2,
     Failed = 3,
     Cancelled = 4,
-    Expired = 5
+    Expired = 5,
 }
-

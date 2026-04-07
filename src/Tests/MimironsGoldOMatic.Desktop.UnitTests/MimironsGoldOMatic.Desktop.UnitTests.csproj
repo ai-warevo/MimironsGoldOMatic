@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MimironsGoldOMatic.Desktop\MimironsGoldOMatic.Desktop.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
   </ItemGroup>
 
 </Project>

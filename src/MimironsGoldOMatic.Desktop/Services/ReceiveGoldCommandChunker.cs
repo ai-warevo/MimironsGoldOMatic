@@ -1,9 +1,8 @@
-using System.Text;
-using MimironsGoldOMatic.Shared;
+﻿using System.Text;
 
 namespace MimironsGoldOMatic.Desktop.Services;
 
-/// <summary>Builds <c>/run ReceiveGold("…")</c> lines each under 255 characters (<c>docs/overview/SPEC.md</c> §8).</summary>
+/// <summary>Builds <c>/run ReceiveGold("вЂ¦")</c> lines each under 255 characters (<c>docs/overview/SPEC.md</c> В§8).</summary>
 public static class ReceiveGoldCommandChunker
 {
     private const int MaxLineLength = 254;

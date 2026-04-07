@@ -1,5 +1,4 @@
-using MediatR;
-using MimironsGoldOMatic.Shared;
+﻿using MediatR;
 
 namespace MimironsGoldOMatic.Backend.Domain;
 
@@ -48,8 +47,8 @@ public sealed record SelectGiftItemCommand(Guid Id, GiftSelectedItemDto Item) : 
 
 public sealed record ConfirmGiftCommand(Guid Id, bool Confirmed) : IRequest<HandlerResult<GiftRequestDto>>;
 
-/// <summary>CI Tier B only — POST <c>/api/e2e/prepare-pending-payout</c> (Development + <c>Mgm:EnableE2eHarness</c>).</summary>
+/// <summary>CI Tier B only вЂ” POST <c>/api/e2e/prepare-pending-payout</c> (Development + <c>Mgm:EnableE2eHarness</c>).</summary>
 public sealed record E2ePreparePendingRequest(string TwitchUserId);
 
-/// <summary>CI Tier B only — payout created after harness + verify-candidate.</summary>
+/// <summary>CI Tier B only вЂ” payout created after harness + verify-candidate.</summary>
 public sealed record E2ePreparePendingResponse(Guid PayoutId, string CharacterName);

@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using MediatR;
@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using MimironsGoldOMatic.Backend.Configuration;
 using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Shared;
 
 namespace MimironsGoldOMatic.Backend.Api.Controllers;
 

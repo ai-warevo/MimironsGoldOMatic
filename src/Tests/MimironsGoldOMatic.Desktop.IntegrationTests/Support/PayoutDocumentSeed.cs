@@ -1,5 +1,4 @@
-using MimironsGoldOMatic.Shared;
-using MimironsGoldOMatic.Backend.Persistence;
+﻿using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Shared;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;

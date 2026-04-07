@@ -1,6 +1,5 @@
-using MimironsGoldOMatic.Desktop.Services;
+﻿using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.Desktop.Services.Updates;
-using MimironsGoldOMatic.Shared;
 using Moq;
 using Xunit;
 
