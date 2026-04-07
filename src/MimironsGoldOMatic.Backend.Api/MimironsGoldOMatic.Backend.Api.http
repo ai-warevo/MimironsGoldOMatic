@@ -1,6 +1,6 @@
 @MimironsGoldOMatic.Backend.Api_HostAddress = http://localhost:5057
 
-GET {{MimironsGoldOMatic.Backend.Api_HostAddress}}/weatherforecast/
+GET {{MimironsGoldOMatic.Backend.Api_HostAddress}}/api/version
 Accept: application/json
 
 ###
