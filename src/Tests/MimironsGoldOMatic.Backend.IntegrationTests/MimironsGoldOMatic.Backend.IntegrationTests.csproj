@@ -32,11 +32,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Backend\MimironsGoldOMatic.Backend.Api\MimironsGoldOMatic.Backend.Api.csproj" />
-    <ProjectReference Include="..\..\Backend\MimironsGoldOMatic.Backend.DataAccess\MimironsGoldOMatic.Backend.DataAccess.csproj" />
-    <ProjectReference Include="..\..\Backend\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj" />
-    <ProjectReference Include="..\..\Backend\MimironsGoldOMatic.Backend.Services\MimironsGoldOMatic.Backend.Services.csproj" />
-    <ProjectReference Include="..\..\Backend\MimironsGoldOMatic.Backend.Shared\MimironsGoldOMatic.Backend.Shared.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Api\MimironsGoldOMatic.Backend.Api.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.DataAccess\MimironsGoldOMatic.Backend.DataAccess.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Services\MimironsGoldOMatic.Backend.Services.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Shared\MimironsGoldOMatic.Backend.Shared.csproj" />
     <ProjectReference Include="..\MimironsGoldOMatic.IntegrationTesting\MimironsGoldOMatic.IntegrationTesting.csproj" />
   </ItemGroup>
 

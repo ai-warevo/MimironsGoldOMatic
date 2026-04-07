@@ -41,7 +41,7 @@ This document is the **canonical implementation contract** for the MVP.
 `docs/overview/ROADMAP.md` contains step-by-step prompts and links into this spec.
 **User-facing UI:** hub [`docs/reference/UI_SPEC.md`](../reference/UI_SPEC.md) (tokens, navigation); per-surface screens in [`docs/components/twitch-extension/UI_SPEC.md`](../components/twitch-extension/UI_SPEC.md), [`docs/components/desktop/UI_SPEC.md`](../components/desktop/UI_SPEC.md), [`docs/components/wow-addon/UI_SPEC.md`](../components/wow-addon/UI_SPEC.md).
 
-**Code alignment:** MVP slices **MVP-1 … MVP-5** are implemented under `src/` (Shared, **`src/Backend/MimironsGoldOMatic.Backend.Api`** plus sibling **`Backend.*`** projects, Desktop, Twitch Extension, WoW addon). Remaining gaps (automated tests, packaging, production hardening) are summarized in `docs/reference/IMPLEMENTATION_READINESS.md`.
+**Code alignment:** MVP slices **MVP-1 … MVP-5** are implemented under `src/` (Shared, **`src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api`** plus sibling **`Backend.*`** projects, Desktop, Twitch Extension, WoW addon). Remaining gaps (automated tests, packaging, production hardening) are summarized in `docs/reference/IMPLEMENTATION_READINESS.md`.
 
 **Non-normative digests (do not override this file):** [`docs/overview/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), [`docs/reference/GLOSSARY.md`](../reference/GLOSSARY.md), [`docs/reference/WORKFLOWS.md`](../reference/WORKFLOWS.md), [`docs/overview/ARCHITECTURE.md`](ARCHITECTURE.md).
 

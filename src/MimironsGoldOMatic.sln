@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Shared",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Desktop", "MimironsGoldOMatic.Desktop\MimironsGoldOMatic.Desktop.csproj", "{1FDE405C-F07A-463B-B014-4EF8F6CB1BB9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{C2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MimironsGoldOMatic.Backend", "MimironsGoldOMatic.Backend", "{C2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mocks", "Mocks", "{538F2A43-6114-6D32-FD9B-C27BFA77DD39}"
 EndProject
@@ -37,19 +37,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{31A9FF15
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.ApiTsGen", "Tools\MimironsGoldOMatic.ApiTsGen\MimironsGoldOMatic.ApiTsGen.csproj", "{481D72FC-0167-4485-A403-FCA64776C486}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Api", "Backend\MimironsGoldOMatic.Backend.Api\MimironsGoldOMatic.Backend.Api.csproj", "{C0454C33-E3B5-4449-8A3F-37A0A35A518A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Api", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Api\MimironsGoldOMatic.Backend.Api.csproj", "{C0454C33-E3B5-4449-8A3F-37A0A35A518A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Shared", "Backend\MimironsGoldOMatic.Backend.Shared\MimironsGoldOMatic.Backend.Shared.csproj", "{1E9DE24D-4F9A-4391-A6E5-25453CF15BC5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Shared", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Shared\MimironsGoldOMatic.Backend.Shared.csproj", "{1E9DE24D-4F9A-4391-A6E5-25453CF15BC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Domain", "Backend\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj", "{B96639F8-CB4A-48A4-AE44-B103DDAA0EA4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Domain", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj", "{B96639F8-CB4A-48A4-AE44-B103DDAA0EA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.DataAccess", "Backend\MimironsGoldOMatic.Backend.DataAccess\MimironsGoldOMatic.Backend.DataAccess.csproj", "{CC4BE564-696D-414A-BB23-B63A327C1BBF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.DataAccess", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.DataAccess\MimironsGoldOMatic.Backend.DataAccess.csproj", "{CC4BE564-696D-414A-BB23-B63A327C1BBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Services", "Backend\MimironsGoldOMatic.Backend.Services\MimironsGoldOMatic.Backend.Services.csproj", "{120AED12-1FD9-4450-8C17-06F5CDFD6E0C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Services", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Services\MimironsGoldOMatic.Backend.Services.csproj", "{120AED12-1FD9-4450-8C17-06F5CDFD6E0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Infrastructure", "Backend\MimironsGoldOMatic.Backend.Infrastructure\MimironsGoldOMatic.Backend.Infrastructure.csproj", "{FE80F2CE-86C6-4F10-8835-509BF91F089B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Infrastructure", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Infrastructure\MimironsGoldOMatic.Backend.Infrastructure.csproj", "{FE80F2CE-86C6-4F10-8835-509BF91F089B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Configuration", "Backend\MimironsGoldOMatic.Backend.Configuration\MimironsGoldOMatic.Backend.Configuration.csproj", "{3AE78584-9664-4277-880B-C999753367B7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Configuration", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Configuration\MimironsGoldOMatic.Backend.Configuration.csproj", "{3AE78584-9664-4277-880B-C999753367B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

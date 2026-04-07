@@ -1,13 +1,13 @@
 <Solution>
   <Project Path="MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj" />
-  <Folder Name="/Backend/">
-    <Project Path="Backend/MimironsGoldOMatic.Backend.Configuration/MimironsGoldOMatic.Backend.Configuration.csproj" />
-    <Project Path="Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj" />
-    <Project Path="Backend/MimironsGoldOMatic.Backend.DataAccess/MimironsGoldOMatic.Backend.DataAccess.csproj" />
-    <Project Path="Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj" />
-    <Project Path="Backend/MimironsGoldOMatic.Backend.Infrastructure/MimironsGoldOMatic.Backend.Infrastructure.csproj" />
-    <Project Path="Backend/MimironsGoldOMatic.Backend.Services/MimironsGoldOMatic.Backend.Services.csproj" />
-    <Project Path="Backend/MimironsGoldOMatic.Backend.Shared/MimironsGoldOMatic.Backend.Shared.csproj" />
+  <Folder Name="/MimironsGoldOMatic.Backend/">
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/MimironsGoldOMatic.Backend.Configuration.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.DataAccess/MimironsGoldOMatic.Backend.DataAccess.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Infrastructure/MimironsGoldOMatic.Backend.Infrastructure.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/MimironsGoldOMatic.Backend.Services.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Shared/MimironsGoldOMatic.Backend.Shared.csproj" />
   </Folder>
   <Project Path="MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj" />
   <Project Path="Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj" />

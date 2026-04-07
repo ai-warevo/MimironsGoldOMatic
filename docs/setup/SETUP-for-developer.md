@@ -19,7 +19,7 @@ Complete **[SETUP.md](SETUP.md)** (shared prerequisites and first build) before 
 The Backend **requires** a PostgreSQL database. Marten creates/updates schema on startup (`ApplyAllConfiguredChangesToDatabaseAsync` in `Program.cs`).
 
 1. Create a database (example name: `mgm`).
-2. Copy the sample connection string from **`src/Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json`** and adjust host, port, database name, user, and password.
+2. Copy the sample connection string from **`src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json`** and adjust host, port, database name, user, and password.
 3. Point **`ConnectionStrings:PostgreSQL`** at that database (see §4.3).
 
 Example (local):
@@ -32,7 +32,7 @@ Host=localhost;Port=5432;Database=mgm;Username=postgres;Password=yourpassword
 
 ## 4. Backend configuration (`appsettings`)
 
-All paths below refer to **`src/Backend/MimironsGoldOMatic.Backend.Api/`** (the ASP.NET Core host; shared configuration types live under other **`Backend.*`** projects).
+All paths below refer to **`src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/`** (the ASP.NET Core host; shared configuration types live under other **`Backend.*`** projects).
 
 ### 4.1 Files
 
@@ -49,7 +49,7 @@ Override in production with:
 
 ### 4.2 `appsettings.Development.json`: `Mgm` and `Twitch` (lines 5–17)
 
-The repo ships a **development** template so you can run the API locally. The blocks below match **`src/Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json`** (approximately lines 5–17). Fill **Twitch** when you test real Extension JWTs, EventSub webhooks, or Helix chat posts; leave strings **empty** only while you rely on Development-only behavior (see each row).
+The repo ships a **development** template so you can run the API locally. The blocks below match **`src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json`** (approximately lines 5–17). Fill **Twitch** when you test real Extension JWTs, EventSub webhooks, or Helix chat posts; leave strings **empty** only while you rely on Development-only behavior (see each row).
 
 ```json
   "Mgm": {
@@ -167,7 +167,7 @@ These values come from the **[Twitch Developer Console](https://dev.twitch.tv/co
 From the repo root:
 
 ```bash
-cd src/Backend/MimironsGoldOMatic.Backend.Api
+cd src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api
 dotnet run
 ```
 

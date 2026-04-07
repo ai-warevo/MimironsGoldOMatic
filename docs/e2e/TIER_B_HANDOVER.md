@@ -14,7 +14,7 @@ This package summarizes **CI Tier B** (Linux-hosted mocks, no real WoW) so new m
 
 | Role | Project / path | Loopback port (CI) |
 |------|----------------|--------------------|
-| **EBS** (Development + E2E harness) | [`src/Backend/MimironsGoldOMatic.Backend.Api/`](../../src/Backend/MimironsGoldOMatic.Backend.Api/) | **8080** |
+| **EBS** (Development + E2E harness) | [`src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/) | **8080** |
 | **MockEventSubWebhook** | [`src/Mocks/MockEventSubWebhook/`](../../src/Mocks/MockEventSubWebhook/) | **9051** |
 | **MockExtensionJwt** | [`src/Mocks/MockExtensionJwt/`](../../src/Mocks/MockExtensionJwt/) | **9052** |
 | **MockHelixApi** | [`src/Mocks/MockHelixApi/`](../../src/Mocks/MockHelixApi/) | **9053** |
@@ -85,7 +85,7 @@ Detailed walkthrough: [**Tier B First Run Guide** in `E2E_AUTOMATION_PLAN.md`](E
 | **`SyntheticDesktop:BackendBaseUrl`** | SyntheticDesktop | EBS base URL (**`http://127.0.0.1:8080`** in CI). |
 | **Ports** | All mock `ASPNETCORE_URLS` | Fixed **9051–9054**, **8080** — change only with coordinated doc updates. |
 
-Source of truth for options: [`TwitchOptions.cs`](../../src/Backend/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs), Backend [`appsettings.Development.json`](../../src/Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json) (if present), workflow `env` block.
+Source of truth for options: [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs), Backend [`appsettings.Development.json`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json) (if present), workflow `env` block.
 
 ---
 
@@ -109,7 +109,7 @@ Extended tables: [`E2E_AUTOMATION_PLAN.md` — Tier B Troubleshooting Guide](E2E
 | Task | Guidance |
 |------|----------|
 | **Update mocks** | Change [`src/Mocks/`](../../src/Mocks/); keep **`GET /health`** and Tier B contract endpoints stable or version the orchestrator (`run_e2e_tier_b.py`). |
-| **Change HTTP choreography** | Update **SyntheticDesktop** and [`run_e2e_tier_b.py`](../../.github/scripts/run_e2e_tier_b.py) together; align with [`DesktopPayoutsController`](../../src/Backend/MimironsGoldOMatic.Backend.Api/Controllers/DesktopPayoutsController.cs). |
+| **Change HTTP choreography** | Update **SyntheticDesktop** and [`run_e2e_tier_b.py`](../../.github/scripts/run_e2e_tier_b.py) together; align with [`DesktopPayoutsController`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/DesktopPayoutsController.cs). |
 | **Add assertion** | Prefer extending Python orchestrator or Tier B verification scripts under [`.github/scripts/tier_b_verification/`](../../.github/scripts/tier_b_verification/). |
 | **Rotate CI-only secrets** | Today inline `env` in workflow; if moving to GitHub **Secrets**, update **MockEventSub** + **`send_e2e_eventsub.py`** + Backend in one PR. |
 

@@ -18,5 +18,5 @@ No temporary compatibility reference is currently required in this project. Medi
 
 ### Verification handoff
 
-- **Gate (this layer):** `dotnet build src/Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj`
+- **Gate (this layer):** `dotnet build src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj`
 - **Next (orchestrator):** `tmp/prompts/backend-layer-compiles/micro/41-verify-layer-gates.md` — re-run Services, DataAccess, and Domain builds before full solution verification.
