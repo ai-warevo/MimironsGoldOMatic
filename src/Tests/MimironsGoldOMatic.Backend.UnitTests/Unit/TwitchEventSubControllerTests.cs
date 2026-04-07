@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using MimironsGoldOMatic.Backend.Configuration;
 using MimironsGoldOMatic.Backend.Api.Controllers;
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Application.Roulette.Enrollment;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

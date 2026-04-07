@@ -15,19 +15,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MimironsGoldOMatic.Backend.Infrastructure\MimironsGoldOMatic.Backend.Infrastructure.csproj" />
-    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Application\MimironsGoldOMatic.Backend.Application.csproj" />
     <ProjectReference Include="..\..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\**\*.cs" />
-    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Domain\**\*.cs" />
+    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Application\**\*.cs" />
     <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\..\MimironsGoldOMatic.Shared\**\*.cs" />
     <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Common\**\*.cs" />
   </ItemGroup>
 
   <Target Name="GenerateTypeScriptApiClient" BeforeTargets="BeforeBuild" Condition="'$(SkipGenerateTypeScriptApiClient)' != 'true'" Inputs="@(TypeScriptApiGenerationInput)" Outputs="$(TypeScriptApiOutputDir)\models.ts;$(TypeScriptApiOutputDir)\client.ts">
-    <Exec Command="dotnet run --project &quot;$(TypeScriptApiGeneratorProject)&quot; --configuration $(Configuration) -- &quot;$(MSBuildProjectDirectory)&quot; &quot;$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Domain&quot; &quot;$(MSBuildProjectDirectory)\..\..\MimironsGoldOMatic.Shared&quot; &quot;$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Common&quot; &quot;$(TypeScriptApiOutputDir)&quot;" />
+    <Exec Command="dotnet run --project &quot;$(TypeScriptApiGeneratorProject)&quot; --configuration $(Configuration) -- &quot;$(MSBuildProjectDirectory)&quot; &quot;$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Application&quot; &quot;$(MSBuildProjectDirectory)\..\..\MimironsGoldOMatic.Shared&quot; &quot;$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Common&quot; &quot;$(TypeScriptApiOutputDir)&quot;" />
   </Target>
 
 </Project>

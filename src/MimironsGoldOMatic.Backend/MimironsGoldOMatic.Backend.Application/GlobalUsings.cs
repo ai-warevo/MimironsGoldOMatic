@@ -1,0 +1,10 @@
+global using MediatR;
+global using MimironsGoldOMatic.Shared.Gifts;
+global using MimironsGoldOMatic.Shared.Payouts;
+global using MimironsGoldOMatic.Shared.Versioning;
+global using MimironsGoldOMatic.Backend.Application.System.Dtos;
+global using MimironsGoldOMatic.Backend.Application.Gifts.Commands;
+global using MimironsGoldOMatic.Backend.Application.Gifts.Queries;
+global using MimironsGoldOMatic.Backend.Application.Roulette.Commands;
+global using MimironsGoldOMatic.Backend.Application.Roulette.Queries;
+global using MimironsGoldOMatic.Backend.Application.Roulette.Dtos;

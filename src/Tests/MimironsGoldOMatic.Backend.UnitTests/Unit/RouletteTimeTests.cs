@@ -1,4 +1,4 @@
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Application.Roulette;
 using Xunit;
 
 namespace MimironsGoldOMatic.Backend.UnitTests.Unit;

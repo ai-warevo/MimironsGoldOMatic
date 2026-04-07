@@ -15,9 +15,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MimironsGoldOMatic.Backend.Configuration\MimironsGoldOMatic.Backend.Configuration.csproj" />
-    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj" />
-    <ProjectReference Include="..\MimironsGoldOMatic.Backend.DataAccess\MimironsGoldOMatic.Backend.DataAccess.csproj" />
-    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Services\MimironsGoldOMatic.Backend.Services.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Application\MimironsGoldOMatic.Backend.Application.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Infrastructure.Persistence\MimironsGoldOMatic.Backend.Infrastructure.Persistence.csproj" />
     <ProjectReference Include="..\MimironsGoldOMatic.Backend.Common\MimironsGoldOMatic.Backend.Common.csproj" />
   </ItemGroup>
 

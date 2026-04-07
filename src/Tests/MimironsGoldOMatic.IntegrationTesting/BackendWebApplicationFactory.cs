@@ -1,5 +1,7 @@
 using System.Collections.Generic;
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Application;
+using MimironsGoldOMatic.Backend.Application.Gifts;
+using MimironsGoldOMatic.Backend.Application.Roulette;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;

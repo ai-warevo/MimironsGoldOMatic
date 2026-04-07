@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using MediatR;
@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MimironsGoldOMatic.Backend.Configuration;
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Application;
+using MimironsGoldOMatic.Backend.Application.Gifts;
+using MimironsGoldOMatic.Backend.Application.Roulette.Enrollment;
 
 namespace MimironsGoldOMatic.Backend.Api.Controllers;
 

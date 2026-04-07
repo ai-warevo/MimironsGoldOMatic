@@ -1,8 +1,8 @@
 using FluentValidation;
 using MimironsGoldOMatic.Backend.Configuration;
-using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Backend.Services.Mediatr;
+using MimironsGoldOMatic.Backend.Infrastructure.Persistence;
+using MimironsGoldOMatic.Backend.Application.Roulette.Handlers;
+using MimironsGoldOMatic.Backend.Application.Roulette.Enrollment;
 using MimironsGoldOMatic.Backend.Common;
 using Marten;
 using MediatR;

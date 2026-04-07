@@ -1,11 +1,11 @@
-﻿using Marten;
+using Marten;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MimironsGoldOMatic.Backend.Configuration;
-using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Infrastructure.Persistence;
+using MimironsGoldOMatic.Backend.Application.Roulette;
 
 namespace MimironsGoldOMatic.Backend.Api.Controllers;
 

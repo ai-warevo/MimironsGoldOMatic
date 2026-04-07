@@ -3,10 +3,9 @@
   <Folder Name="/MimironsGoldOMatic.Backend/">
     <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/MimironsGoldOMatic.Backend.Configuration.csproj" />
     <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj" />
-    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.DataAccess/MimironsGoldOMatic.Backend.DataAccess.csproj" />
-    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Infrastructure.Persistence/MimironsGoldOMatic.Backend.Infrastructure.Persistence.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/MimironsGoldOMatic.Backend.Application.csproj" />
     <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Infrastructure/MimironsGoldOMatic.Backend.Infrastructure.csproj" />
-    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/MimironsGoldOMatic.Backend.Services.csproj" />
     <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common/MimironsGoldOMatic.Backend.Common.csproj" />
   </Folder>
   <Project Path="MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj" />

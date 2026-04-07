@@ -1,5 +1,5 @@
-﻿using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Infrastructure.Persistence;
+using MimironsGoldOMatic.Backend.Application.Roulette;
 using MimironsGoldOMatic.Desktop.IntegrationTests.Support;
 using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.IntegrationTesting;

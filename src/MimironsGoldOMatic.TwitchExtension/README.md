@@ -29,8 +29,7 @@ npm install
 ```bash
 dotnet run --project src/Tools/MimironsGoldOMatic.ApiTsGen/MimironsGoldOMatic.ApiTsGen.csproj -- \
   src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api \
-  src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain \
-  src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration \
+  src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application \
   src/MimironsGoldOMatic.Shared \
   src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common \
   src/MimironsGoldOMatic.TwitchExtension/src/api

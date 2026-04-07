@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-07 (Backend projects under src/MimironsGoldOMatic.Backend/) -->
+<!-- Updated: 2026-04-07 (layered Backend: Application, Infrastructure.Persistence, etc.) -->
 
 # Repository structure
 
@@ -27,7 +27,7 @@ MimironsGoldOMatic/
 ├── src/
 │   ├── MimironsGoldOMatic.slnx
 │   ├── MimironsGoldOMatic.Shared/
-│   ├── MimironsGoldOMatic.Backend/   # EBS: Backend.Api, Backend.Domain, Backend.Services, …
+│   ├── MimironsGoldOMatic.Backend/   # EBS: Backend.Api, Backend.Application, Backend.Infrastructure, …
 │   │   ├── MimironsGoldOMatic.Backend.Api/
 │   │   └── …
 │   ├── MimironsGoldOMatic.Desktop/
@@ -59,7 +59,7 @@ Use this table when updating bookmarks, scripts, or old chat logs. **Do not** re
 
 | Old / informal path | Current path | Migration notes |
 |---------------------|--------------|-----------------|
-| `MimironsGoldOMatic.WEBAPI.Backend` / legacy monolith `MimironsGoldOMatic.Backend` | `src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/` (+ **`Backend.Domain`**, **`Backend.Services`**, …) | ASP.NET host is **`MimironsGoldOMatic.Backend.Api`**; see [`E2E_AUTOMATION_PLAN.md`](../e2e/E2E_AUTOMATION_PLAN.md) code roots. |
+| `MimironsGoldOMatic.WEBAPI.Backend` / legacy monolith `MimironsGoldOMatic.Backend` | `src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/` (+ **`Backend.Application`**, **`Backend.Infrastructure`**, **`Backend.Infrastructure.Persistence`**, **`Backend.Common`**, **`Backend.Configuration`**) | ASP.NET host is **`MimironsGoldOMatic.Backend.Api`**; see [`E2E_AUTOMATION_PLAN.md`](../e2e/E2E_AUTOMATION_PLAN.md) code roots. |
 | `src/MimironsGoldOMatic.Backend.*` (flat under `src/`, pre–2026-04 layout) | `src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.*` | All **`Backend.*`** MSBuild projects live under **`src/MimironsGoldOMatic.Backend/`**; solution folder **MimironsGoldOMatic.Backend** in **`MimironsGoldOMatic.sln(x)`**. |
 | `src/Backend/` (short folder name, pre–2026-04-08) | `src/MimironsGoldOMatic.Backend/` | Folder rename only; project IDs unchanged. |
 | `src/tests/...` (lowercase) | `src/Tests/...` | Test tree uses **PascalCase** `Tests` on Windows/Linux CI. |

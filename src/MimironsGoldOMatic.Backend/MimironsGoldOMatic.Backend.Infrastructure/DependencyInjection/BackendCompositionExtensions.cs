@@ -6,9 +6,13 @@ using JasperFx.Events;
 using Marten;
 using Marten.Events;
 using MimironsGoldOMatic.Backend.Configuration;
-using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Backend.Services.Mediatr;
+using MimironsGoldOMatic.Backend.Infrastructure.Persistence;
+using MimironsGoldOMatic.Backend.Application;
+using MimironsGoldOMatic.Backend.Application.Gifts;
+using MimironsGoldOMatic.Backend.Application.Gifts.Handlers;
+using MimironsGoldOMatic.Backend.Application.Roulette;
+using MimironsGoldOMatic.Backend.Application.Roulette.Enrollment;
+using MimironsGoldOMatic.Backend.Application.Roulette.Handlers;
 using MimironsGoldOMatic.Backend.Common;
 using MimironsGoldOMatic.Backend.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authentication;
@@ -105,7 +109,7 @@ public static class BackendCompositionExtensions
             opts.Events.StreamIdentity = StreamIdentity.AsGuid;
         });
 
-        // MediatR: contracts in Domain, handlers in Services.
+        // MediatR: CQRS handlers in Application (same assembly as commands/queries).
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<PostClaimHandler>());
 
         // Service registrations required by some middleware/controllers.
@@ -114,8 +118,6 @@ public static class BackendCompositionExtensions
         services.AddSingleton<HelixChatService>();
         services.AddSingleton<GiftQueueService>();
         services.AddSingleton<ITwitchSubscriberVerifier, HelixSubscriberVerifier>();
-        // For API-local parsing logic; kept to ensure no missing DI registrations later.
-        services.AddSingleton<HelixSubscriberVerifier>();
 
         services.AddHostedService<RouletteSynchronizerHostedService>();
         services.AddHostedService<PayoutExpirationHostedService>();
