@@ -1,7 +1,7 @@
-﻿using Marten;
+using Marten;
 using Microsoft.Extensions.Logging;
 using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Shared;
+using MimironsGoldOMatic.Backend.Common;
 
 namespace MimironsGoldOMatic.Backend.Services;
 

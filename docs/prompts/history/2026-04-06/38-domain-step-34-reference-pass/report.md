@@ -2,7 +2,7 @@
 
 ### Modified files
 
-- `src/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj` — removed unused `MimironsGoldOMatic.Backend.Shared` project reference.
+- `src/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj` — removed unused `MimironsGoldOMatic.Backend.Common` project reference.
 
 ### Verification
 
@@ -10,7 +10,7 @@
 
 ### Notes
 
-- Domain sources (`EbsMediator.Contracts.cs` and `Class1.cs`) do not reference `MimironsGoldOMatic.Backend.Shared`; the extra reference was non-essential for compile.
+- Domain sources (`EbsMediator.Contracts.cs` and `Class1.cs`) do not reference `MimironsGoldOMatic.Backend.Common`; the extra reference was non-essential for compile.
 - `MediatR` package reference and `Backend.Abstract` + `MimironsGoldOMatic.Shared` project references remain; dependency direction stays Domain → Abstract + product Shared.
 
 ### Technical debt / follow-up

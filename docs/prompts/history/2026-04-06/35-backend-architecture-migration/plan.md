@@ -13,7 +13,7 @@ Target state (projects)
 
 - `MimironsGoldOMatic.Backend.Api`: ASP.NET Core host + controllers; minimal orchestration.
 - `MimironsGoldOMatic.Backend.Abstract`: POCO-only contracts (no package refs, no project refs).
-- `MimironsGoldOMatic.Backend.Shared`: general helpers + validation helpers (can reference libraries), but should not depend on other backend projects.
+- `MimironsGoldOMatic.Backend.Common`: general helpers + validation helpers (can reference libraries), but should not depend on other backend projects.
 - `MimironsGoldOMatic.Backend.Domain`: business logic, commands/queries/handlers/events; depends on `Abstract` and `Shared`.
 - `MimironsGoldOMatic.Backend.DataAccess`: Marten (ORM/event store) and persistence implementations; depends on `Domain`.
 - `MimironsGoldOMatic.Backend.Services`: third-party integration implementations (Helix/Twitch, HTTP); depends on `Domain` (interfaces) + `Shared`.

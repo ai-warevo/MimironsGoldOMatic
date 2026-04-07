@@ -7,7 +7,7 @@ WORKDIR /src
 
 COPY MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj MimironsGoldOMatic.Shared/
 COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/MimironsGoldOMatic.Backend.Configuration.csproj MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/
-COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Shared/MimironsGoldOMatic.Backend.Shared.csproj MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Shared/
+COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common/MimironsGoldOMatic.Backend.Common.csproj MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common/
 COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/
 COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.DataAccess/MimironsGoldOMatic.Backend.DataAccess.csproj MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.DataAccess/
 COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/MimironsGoldOMatic.Backend.Services.csproj MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/
@@ -18,7 +18,7 @@ RUN dotnet restore MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Mim
 
 COPY MimironsGoldOMatic.Shared/ MimironsGoldOMatic.Shared/
 COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/ MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/
-COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Shared/ MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Shared/
+COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common/ MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common/
 COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/ MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/
 COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.DataAccess/ MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.DataAccess/
 COPY MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/ MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/

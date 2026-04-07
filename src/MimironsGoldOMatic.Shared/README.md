@@ -12,4 +12,4 @@ Types are grouped by bounded context; folder names match namespaces:
 
 Downstream apps often use `GlobalUsings.cs` to import these three namespaces.
 
-Server-side **FluentValidation** and character-name rules live in `MimironsGoldOMatic.Backend.Shared`. **Backend** appsettings POCOs are in `MimironsGoldOMatic.Backend.Configuration`.
+Server-side **FluentValidation** and character-name rules live in `MimironsGoldOMatic.Backend.Common`. **Backend** appsettings POCOs are in `MimironsGoldOMatic.Backend.Configuration`.

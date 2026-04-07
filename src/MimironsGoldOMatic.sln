@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -39,7 +39,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.ApiTsGen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Api", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Api\MimironsGoldOMatic.Backend.Api.csproj", "{C0454C33-E3B5-4449-8A3F-37A0A35A518A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Shared", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Shared\MimironsGoldOMatic.Backend.Shared.csproj", "{1E9DE24D-4F9A-4391-A6E5-25453CF15BC5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Common", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Common\MimironsGoldOMatic.Backend.Common.csproj", "{1E9DE24D-4F9A-4391-A6E5-25453CF15BC5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimironsGoldOMatic.Backend.Domain", "MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj", "{B96639F8-CB4A-48A4-AE44-B103DDAA0EA4}"
 EndProject

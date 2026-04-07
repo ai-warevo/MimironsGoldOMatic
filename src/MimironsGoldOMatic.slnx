@@ -7,7 +7,7 @@
     <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj" />
     <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Infrastructure/MimironsGoldOMatic.Backend.Infrastructure.csproj" />
     <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/MimironsGoldOMatic.Backend.Services.csproj" />
-    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Shared/MimironsGoldOMatic.Backend.Shared.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common/MimironsGoldOMatic.Backend.Common.csproj" />
   </Folder>
   <Project Path="MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj" />
   <Project Path="Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj" />

@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace MimironsGoldOMatic.Backend.Shared;
+namespace MimironsGoldOMatic.Backend.Common;
 
 /// <summary>
 /// Shared rules for <c>CharacterName</c> per <c>docs/overview/SPEC.md</c> §4 (length, Latin/Cyrillic letters only).

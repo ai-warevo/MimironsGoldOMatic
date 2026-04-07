@@ -37,7 +37,7 @@
     <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.DataAccess\MimironsGoldOMatic.Backend.DataAccess.csproj" />
     <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj" />
     <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Services\MimironsGoldOMatic.Backend.Services.csproj" />
-    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Shared\MimironsGoldOMatic.Backend.Shared.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Common\MimironsGoldOMatic.Backend.Common.csproj" />
     <ProjectReference Include="..\MimironsGoldOMatic.IntegrationTesting\MimironsGoldOMatic.IntegrationTesting.csproj" />
   </ItemGroup>
 

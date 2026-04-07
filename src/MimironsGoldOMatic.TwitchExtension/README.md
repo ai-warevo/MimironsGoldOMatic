@@ -32,7 +32,7 @@ dotnet run --project src/Tools/MimironsGoldOMatic.ApiTsGen/MimironsGoldOMatic.Ap
   src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain \
   src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration \
   src/MimironsGoldOMatic.Shared \
-  src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Shared \
+  src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common \
   src/MimironsGoldOMatic.TwitchExtension/src/api
 ```
 

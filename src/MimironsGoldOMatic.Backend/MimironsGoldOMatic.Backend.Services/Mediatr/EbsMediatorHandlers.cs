@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Marten;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 using MimironsGoldOMatic.Backend.Configuration;
 using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Shared;
+using MimironsGoldOMatic.Backend.Common;
 
 namespace MimironsGoldOMatic.Backend.Services.Mediatr;
 

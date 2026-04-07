@@ -1,5 +1,5 @@
-﻿using FluentValidation.TestHelper;
-using MimironsGoldOMatic.Backend.Shared;
+using FluentValidation.TestHelper;
+using MimironsGoldOMatic.Backend.Common;
 using Xunit;
 
 namespace MimironsGoldOMatic.Backend.UnitTests.Unit;

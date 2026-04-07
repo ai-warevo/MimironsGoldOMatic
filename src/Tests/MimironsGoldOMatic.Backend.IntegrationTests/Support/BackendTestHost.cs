@@ -3,7 +3,7 @@ using MimironsGoldOMatic.Backend.Configuration;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
 using MimironsGoldOMatic.Backend.Services.Mediatr;
-using MimironsGoldOMatic.Backend.Shared;
+using MimironsGoldOMatic.Backend.Common;
 using Marten;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;

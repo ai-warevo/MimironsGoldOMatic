@@ -4,7 +4,7 @@ MediatR request/query/command contracts for the backend write side (`EbsMediator
 
 ### Dependency direction (strict)
 
-- **Allowed:** `MimironsGoldOMatic.Backend.Domain` → `MimironsGoldOMatic.Backend.Abstract`, `MimironsGoldOMatic.Backend.Shared`, and `MediatR` only.
+- **Allowed:** `MimironsGoldOMatic.Backend.Domain` → `MimironsGoldOMatic.Backend.Abstract`, `MimironsGoldOMatic.Backend.Common`, and `MediatR` only.
 - **Not referenced:** `Backend.Services`, `Backend.DataAccess`, `Backend.Api`, `Backend.Infrastructure`, `Backend.Cli`, `Backend.IntegrationTests`.
 
 ### Temporary compatibility

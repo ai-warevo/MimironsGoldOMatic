@@ -1,6 +1,6 @@
-﻿using FluentValidation;
+using FluentValidation;
 
-namespace MimironsGoldOMatic.Backend.Shared;
+namespace MimironsGoldOMatic.Backend.Common;
 
 public sealed class PayoutDtoValidator : AbstractValidator<PayoutDto>
 {

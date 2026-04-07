@@ -10,7 +10,7 @@ using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
 using MimironsGoldOMatic.Backend.Services.Mediatr;
-using MimironsGoldOMatic.Backend.Shared;
+using MimironsGoldOMatic.Backend.Common;
 using MimironsGoldOMatic.Backend.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -77,7 +77,7 @@ public static class BackendCompositionExtensions
 
         services.AddAuthorization();
 
-        // Validators: prefer the new Backend.Shared validators where possible.
+        // Validators: prefer the new Backend.Common validators where possible.
         services.AddValidatorsFromAssemblyContaining<CreatePayoutRequestValidator>();
 
         // HttpClient("Helix")

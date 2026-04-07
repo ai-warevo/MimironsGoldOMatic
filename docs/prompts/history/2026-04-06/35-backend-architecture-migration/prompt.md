@@ -8,7 +8,7 @@ User request (2026-04-06)
   - `MimironsGoldOMatic.Backend.Domain`
   - `MimironsGoldOMatic.Backend.Infrastructure`
   - `MimironsGoldOMatic.Backend.IntegrationTests`
-  - `MimironsGoldOMatic.Backend.Shared`
+  - `MimironsGoldOMatic.Backend.Common`
   - `MimironsGoldOMatic.Backend.Services`
 
 Constraints / notes

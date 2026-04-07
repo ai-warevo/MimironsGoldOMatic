@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\MimironsGoldOMatic.Backend.Configuration\MimironsGoldOMatic.Backend.Configuration.csproj" />
     <ProjectReference Include="..\MimironsGoldOMatic.Backend.Domain\MimironsGoldOMatic.Backend.Domain.csproj" />
     <ProjectReference Include="..\MimironsGoldOMatic.Backend.DataAccess\MimironsGoldOMatic.Backend.DataAccess.csproj" />
-    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Shared\MimironsGoldOMatic.Backend.Shared.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Common\MimironsGoldOMatic.Backend.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
