@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-08 (Tier C complete) -->
+<!-- Updated: 2026-04-07 (C# coding standards for Backend/WPF roles) -->
 
 # AI Agent Operational Protocol (AGENTS.md)
 
@@ -70,6 +70,40 @@ You are an expert software engineer agent. Your goal is to execute tasks with hi
 ## 8. AI Specialist Roles
 
 This repository uses multiple AI specialist “roles” for implementation consistency across the Twitch, backend, WPF, and WoW Lua layers.
+
+### C#/.NET Coding Standards (Backend & WPF)
+
+Use these conventions for **[Backend/API Expert]** and **[WPF/WinAPI Expert]** C# work. Align with the official Microsoft Framework Design Guidelines and current .NET practice; project rules (namespaces, `MimironsGoldOMatic.*` prefixes) still override where they conflict.
+
+#### Naming conventions
+
+- **PascalCase**: Classes, structs, enums, interfaces, public members (properties, methods, events), and namespaces.
+- **camelCase**: Local variables and method parameters.
+- **_camelCase**: Private fields (for example `private readonly ILogger _logger;`).
+- **Interfaces**: Always prefix with `I` (for example `IRepository`).
+- **Async**: Suffix asynchronous methods with `Async`.
+
+#### Formatting and layout
+
+- **Braces**: Allman style (opening brace on its own line).
+- **Indentation**: 4 spaces, not tabs.
+- **Whitespace**: One space after keywords (`if`, `foreach`), around binary operators, and after commas.
+- **Type member order**: Fields, then constructors, then properties, then methods.
+
+#### C# best practices
+
+- **Types**: Prefer C# aliases (`int`, `string`, `bool`) over `Int32`, `String`, `Boolean`.
+- **`var`**: Use only when the type is obvious from the right-hand side (for example `var list = new List<string>();`).
+- **Strings**: Prefer string interpolation (`$"{value}"`) over `string.Format` or naive concatenation.
+- **Expression-bodied members**: Use `=>` for simple one-line properties and methods.
+- **Null safety**: Use nullable reference types (`string?`) and null-coalescing / conditional access (`??`, `?.`).
+
+#### Architecture and clean code
+
+- **DI**: Prefer constructor injection.
+- **LINQ**: Prefer method syntax (`.Where().Select()`) over query syntax unless clarity favors the latter.
+- **Async/await**: Prefer `await` over `.Result` or `.Wait()`; use `Task.CompletedTask` for trivial synchronous completions in async-shaped APIs.
+- **Exceptions**: Do not swallow exceptions; catch specific types. Catching `Exception` is reserved for top-level logging or boundary handling when documented.
 
 ### [Backend/API Expert]
 
