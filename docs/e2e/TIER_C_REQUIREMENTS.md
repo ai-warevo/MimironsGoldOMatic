@@ -94,7 +94,7 @@
 |--------|----------------|
 | **Goal** | Validate real **Helix** `POST /helix/chat/messages` and optional **EventSub** delivery using **test channel / dev rig** credentials. |
 | **Trigger** | **GitHub Environments** with required reviewers; **`workflow_dispatch`**; never auto-run on untrusted PRs. |
-| **Integration points** | [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs), [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/TwitchEventSubController.cs), Extension JWT contract. |
+| **Integration points** | [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs), [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/TwitchEventSubController.cs), Extension JWT contract. |
 | **Dependencies** | Broadcaster OAuth refresh strategy; Twitch app Client-Id; compliance with Twitch developer policies. |
 
 ### F3 — Parity tests (SyntheticDesktop vs Desktop)

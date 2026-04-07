@@ -8,7 +8,7 @@ Use this list before merging **CI Tier B** changes into [`.github/workflows/e2e-
 
 ## Implementation
 
-- [x] **A1–A3:** Configurable Helix base URL in Backend ([`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs), [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs), docs/appsettings).
+- [x] **A1–A3:** Configurable Helix base URL in Backend ([`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs), [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/TwitchOptions.cs), docs/appsettings).
 - [x] **MockHelixApi** project created and builds (`src/Mocks/MockHelixApi/`).
 - [x] **SyntheticDesktop** project created and builds (`src/Mocks/SyntheticDesktop/`).
 - [x] **`GET /health`** on **MockHelixApi** returns **`status: healthy`**, **`component: MockHelixApi`**.

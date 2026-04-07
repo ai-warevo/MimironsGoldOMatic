@@ -85,7 +85,7 @@ Detailed walkthrough: [**Tier B First Run Guide** in `E2E_AUTOMATION_PLAN.md`](E
 | **`SyntheticDesktop:BackendBaseUrl`** | SyntheticDesktop | EBS base URL (**`http://127.0.0.1:8080`** in CI). |
 | **Ports** | All mock `ASPNETCORE_URLS` | Fixed **9051–9054**, **8080** — change only with coordinated doc updates. |
 
-Source of truth for options: [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs), Backend [`appsettings.Development.json`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json) (if present), workflow `env` block.
+Source of truth for options: [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/TwitchOptions.cs), Backend [`appsettings.Development.json`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json) (if present), workflow `env` block.
 
 ---
 

@@ -67,7 +67,7 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 | Field | Content |
 |--------|---------|
 | **Action** | Spin cycle selects candidate; **`POST /api/roulette/verify-candidate`** with **`online: true`** creates **`Pending`** payout when rules pass. |
-| **Trigger** | **CI:** existing pattern: seed Marten docs + call [`RouletteCycleTick`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/RouletteCycleTick.cs), then **`POST /api/roulette/verify-candidate`** via [`DesktopRouletteController`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/DesktopRouletteController.cs) with header **`X-MGM-ApiKey`** ([`ApiKeyAuthenticationHandler`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Infrastructure/Auth/ApiKeyAuthenticationHandler.cs)). Extend or compose one **linear E2E test** that chains enrollment → tick → verify (today partially split across [`PostClaimRulesIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PostClaimRulesIntegrationTests.cs), [`RouletteVerifyCandidateIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs)). |
+| **Trigger** | **CI:** existing pattern: seed Marten docs + call [`RouletteCycleTick`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/RouletteCycleTick.cs), then **`POST /api/roulette/verify-candidate`** via [`DesktopRouletteController`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/DesktopRouletteController.cs) with header **`X-MGM-ApiKey`** ([`ApiKeyAuthenticationHandler`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Infrastructure/Auth/ApiKeyAuthenticationHandler.cs)). Extend or compose one **linear E2E test** that chains enrollment → tick → verify (today partially split across [`PostClaimRulesIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PostClaimRulesIntegrationTests.cs), [`RouletteVerifyCandidateIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs)). |
 | **Mock / stub** | **Time:** use injectable **`TimeProvider`** / fixed **`DateTime`** only if introduced; otherwise keep “wall-clock safe” windows like existing roulette tests. **No real Desktop.** |
 | **Verification** | HTTP **`200`** on verify; payout **`Pending`**; **`GET /api/payouts/pending`** returns row; optional **`GET /api/roulette/state`** ([`GetRouletteStateQuery`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/EbsMediator.Contracts.cs)) with JWT. |
 | **Test data** | [`VerifyCandidateRequest`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/EbsMediator.Contracts.cs): `schemaVersion`, `spinCycleId`, `characterName`, `online: true`, `capturedAt` within verification window per **`docs/overview/SPEC.md`**. |
@@ -86,11 +86,11 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 
 | Field | Content |
 |--------|---------|
-| **Action** | On transition to **`Sent`**, Backend calls Helix **`Send Chat Message`** ([`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs)) with Russian copy per **SPEC** §11. |
+| **Action** | On transition to **`Sent`**, Backend calls Helix **`Send Chat Message`** ([`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs)) with Russian copy per **SPEC** §11. |
 | **Trigger** | **CI:** **`PATCH /api/payouts/{id}/status`** with **`Sent`** in Tier A test (see [`PatchPayoutStatusIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PatchPayoutStatusIntegrationTests.cs) for pool removal; extend to assert Helix outbound). |
 | **Mock / stub** | **MockHelixAPI:** `HttpMessageHandler` fake or **WireMock.NET** listening on loopback; inject **`HttpClient`** base address for **`Helix`** named client. **Today** URL is hardcoded to `https://api.twitch.tv/helix/chat/messages` in `HelixChatService` — **requires a small product change**: e.g. optional **`Twitch:HelixApiBaseUrl`** (empty = production URL) so tests can point to **`http://localhost:9xxx`**. |
 | **Verification** | Mock receives **POST** with JSON containing `broadcaster_id`, `sender_id`, `message` matching **`Награда отправлена персонажу {name} на почту, проверяй ящик!`**. |
-| **Test data** | [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs): `BroadcasterUserId`, `BroadcasterAccessToken` set to dummy values; mock returns **`204`** / documented Helix success shape. |
+| **Test data** | [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/TwitchOptions.cs): `BroadcasterUserId`, `BroadcasterAccessToken` set to dummy values; mock returns **`204`** / documented Helix success shape. |
 
 ---
 
@@ -225,7 +225,7 @@ Push to main (or workflow_dispatch)
 
 ### Accounts and identities (Tier B / live)
 
-- **Twitch:** broadcaster test account; **Extension** in **Testing** or **Released**; **Dev Rig** or hosted Extension; **OAuth** token with scopes for **Send Chat Message** (per Twitch docs and [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs) comments).
+- **Twitch:** broadcaster test account; **Extension** in **Testing** or **Released**; **Dev Rig** or hosted Extension; **OAuth** token with scopes for **Send Chat Message** (per Twitch docs and [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/TwitchOptions.cs) comments).
 - **WoW:** 3.3.5a client + test characters (subscriber flow is Twitch-side; in-game only needs whisper + mail).
 
 ### Environment variables / configuration
@@ -591,8 +591,8 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 
 | Step | Task | Details |
 |------|------|---------|
-| **A1** | **Update [`HelixChatService.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs)** | Today the POST URL is a **constant** (`https://api.twitch.tv/helix/chat/messages`). Replace with a **base URI** from `IOptions<TwitchOptions>` plus a fixed relative path **`/helix/chat/messages`** when the named **`HttpClient`** is configured with `BaseAddress`. If **`HelixApiBaseUrl`** is **empty**, register **`Helix`** client with base **`https://api.twitch.tv`** (current behavior). |
-| **A2** | **Configuration validation and defaults** | Add **`HelixApiBaseUrl`** (optional string) to [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs). On startup, if set: **must** be absolute HTTP(S); trim trailing slash. Document interaction with existing **`BroadcasterAccessToken`**, **`BroadcasterUserId`**, **`HelixClientId`** (still required for a real outbound call). |
+| **A1** | **Update [`HelixChatService.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs)** | Today the POST URL is a **constant** (`https://api.twitch.tv/helix/chat/messages`). Replace with a **base URI** from `IOptions<TwitchOptions>` plus a fixed relative path **`/helix/chat/messages`** when the named **`HttpClient`** is configured with `BaseAddress`. If **`HelixApiBaseUrl`** is **empty**, register **`Helix`** client with base **`https://api.twitch.tv`** (current behavior). |
+| **A2** | **Configuration validation and defaults** | Add **`HelixApiBaseUrl`** (optional string) to [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/TwitchOptions.cs). On startup, if set: **must** be absolute HTTP(S); trim trailing slash. Document interaction with existing **`BroadcasterAccessToken`**, **`BroadcasterUserId`**, **`HelixClientId`** (still required for a real outbound call). |
 | **A3** | **`appsettings` schema** | Document in [`appsettings.Development.json`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/appsettings.Development.json) / comments: **`Twitch:HelixApiBaseUrl`** example `http://127.0.0.1:9053` for local MockHelixApi. No secret in this field. |
 
 **Success criteria (A):** With **`HelixApiBaseUrl`** unset, integration/unit tests show **identical** request line to production Twitch. With base `http://localhost:9053`, **`HelixChatService`** POSTs only to the mock; **`HelixChatServiceTests`** updated or extended to cover both paths.
@@ -602,7 +602,7 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | Step | Task | Details |
 |------|------|---------|
 | **B1** | **New project** | **`src/Mocks/MockHelixApi/`** — **.NET 10.0**, ASP.NET Core minimal API, namespace **`MimironsGoldOMatic.Mocks.MockHelixApi`**, added to [`MimironsGoldOMatic.slnx`](../../src/MimironsGoldOMatic.slnx). |
-| **B2** | **`POST /helix/chat/messages`** | Match Twitch Helix shape: accept JSON with **`broadcaster_id`**, **`sender_id`**, **`message`**. Echo **`Authorization: Bearer`** and **`Client-Id`** validation (optional strict mode for CI). Return **`204`** or **`200`** with documented empty/small JSON body (align with [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) success handling). |
+| **B2** | **`POST /helix/chat/messages`** | Match Twitch Helix shape: accept JSON with **`broadcaster_id`**, **`sender_id`**, **`message`**. Echo **`Authorization: Bearer`** and **`Client-Id`** validation (optional strict mode for CI). Return **`204`** or **`200`** with documented empty/small JSON body (align with [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs) success handling). |
 | **B3** | **Response templates** | Implement **success** plus **401** / **500** branches for future retry tests (see [`HelixChatServiceTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/Unit/HelixChatServiceTests.cs)). Store **last request body** in memory for **`GET /last-request`** (JSON) or structured logs for **`curl`** assertions. |
 | **B4** | **`GET /health`** | JSON **`{ "status": "healthy", "component": "MockHelixApi" }`** (Tier B mocks use **`component`** + **`healthy`**; Tier A mocks remain **`status`:** **`ok`** + **`service`**). |
 | **B5** | **E2E workflow** | Start with **`ASPNETCORE_URLS=http://127.0.0.1:9053`** (or next free port); Backend **`Twitch__HelixApiBaseUrl`** points here; see **D** below. |
@@ -657,7 +657,7 @@ Run these checks **before** wiring Tier B into [`.github/workflows/e2e-test.yml`
 | **Health** | `GET http://127.0.0.1:9053/health` | **200** JSON **`{"status":"healthy","component":"MockHelixApi"}`**. |
 | **Base URL alignment** | Backend (after **A1–A2**) uses same host/port as mock root | **`HelixChatService`** POST targets **`{base}/helix/chat/messages`** (leading slash on relative path). |
 | **POST + capture** | [`.github/scripts/tier_b_verification/check_mockhelixapi.py`](../../.github/scripts/tier_b_verification/check_mockhelixapi.py) | Exit **0**; **`GET /last-request`** shows **`captured: true`** and body **`message`** matching probe. |
-| **Response templates** | Mock returns **204** for successful **`POST /helix/chat/messages`** | Matches [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) success handling (**2xx**). |
+| **Response templates** | Mock returns **204** for successful **`POST /helix/chat/messages`** | Matches [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs) success handling (**2xx**). |
 
 Optional strict auth: set **`MockHelix__StrictAuth=true`** on the mock to require **`Authorization: Bearer`** and **`Client-Id`** (mirrors production headers).
 
@@ -711,7 +711,7 @@ End-to-end **first** Tier B rehearsal on a developer machine (mirrors **CI** [`.
    `python3 .github/scripts/run_e2e_tier_b.py --api-key <Mgm:ApiKey>`
    (calls **`POST /api/e2e/prepare-pending-payout`**, **`POST /run-sequence`**, asserts **MockHelix** + **`/last-run`** + **`GET /api/pool/me`**).
 8. **Manual alternative:** `curl -sS -X POST http://127.0.0.1:8080/api/e2e/prepare-pending-payout -H "Content-Type: application/json" -H "X-MGM-ApiKey: <key>" -d "{\"twitchUserId\":\"e2e-viewer-1\"}"` → use returned **`payoutId`** with **`check_syntheticdesktop.py --payout-id …`** or **`curl`** **`/run-sequence`** as in older steps.
-9. **Assert Helix capture:** `curl -sS http://127.0.0.1:9053/last-request` — **`message`** must match Russian §11 template (see [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs)).
+9. **Assert Helix capture:** `curl -sS http://127.0.0.1:9053/last-request` — **`message`** must match Russian §11 template (see [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs)).
 
 **Note:** Natural roulette tick → **`verify-candidate`** without the harness still requires **wall-clock** alignment (see [Tier B Integration Results — issues](#tier-b-integration-results)); **CI** uses the harness by design.
 
@@ -727,7 +727,7 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 |-------|------------|----------|------------|
 | **Wrong base URL** | Backend still posts to **api.twitch.tv** | Mock never receives traffic; **`GET /last-request`** empty | Set **`Twitch__HelixApiBaseUrl`** to mock root (e.g. `http://127.0.0.1:9053`); verify **`Helix`** `HttpClient` **`BaseAddress`** in [`Program.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Program.cs). |
 | **MockHelixApi returns 404** | Wrong mock root (missing port), typo in URL, or POST path not under **`/helix/chat/messages`** | Python **`check_mockhelixapi`** or Backend logs show **404 Not Found**; **`last-request`** never updates | Open **`GET /health`** on the same base URL you configured; compare with [`MockHelixApi/Program.cs`](../../src/Mocks/MockHelixApi/Program.cs). Ensure Backend uses base **without** trailing slash and relative path **`/helix/chat/messages`**. |
-| **Response format** | Mock returns body Helix client does not treat as success | **`HelixChatService`** logs warnings; payout still **`Sent`** (SPEC: no rollback) | Return **2xx** with empty body or documented Helix JSON; match [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) `IsSuccessStatusCode` check. |
+| **Response format** | Mock returns body Helix client does not treat as success | **`HelixChatService`** logs warnings; payout still **`Sent`** (SPEC: no rollback) | Return **2xx** with empty body or documented Helix JSON; match [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs) `IsSuccessStatusCode` check. |
 | **Auth headers** | Strict mock rejects missing **`Client-Id`** / **`Bearer`** | **401** from mock | Align dummy **`Twitch__BroadcasterAccessToken`** and **`Twitch__HelixClientId`** with mock expectations; or leave **`MockHelix__StrictAuth`** unset/false for local smoke tests. |
 
 **Log patterns:** successful mock capture — **`POST /helix/chat/messages`** returns **204**; **`GET /last-request`** JSON **`captured: true`**. Failure — connection refused (mock not started); **404** (wrong URL path).
@@ -856,7 +856,7 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 1. Implement in [`src/Mocks/MockHelixApi/`](../../src/Mocks/MockHelixApi/) or [`src/Mocks/SyntheticDesktop/`](../../src/Mocks/SyntheticDesktop/).
 2. Update [`.github/scripts/run_e2e_tier_b.py`](../../.github/scripts/run_e2e_tier_b.py) and/or [`.github/scripts/tier_b_verification/`](../../.github/scripts/tier_b_verification/) if assertions or ports change.
 3. Run local Tier B sequence (see [Tier B First Run Guide](#tier-b-first-run-guide)) before opening PR.
-4. If **Helix** path or auth expectations change, update [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) **and** mock together.
+4. If **Helix** path or auth expectations change, update [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/Roulette/Enrollment/HelixChatService.cs) **and** mock together.
 
 ### Add new test scenarios (Tier A / Tier B)
 

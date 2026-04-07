@@ -32,6 +32,7 @@ MimironsGoldOMatic/
 │   │   └── …
 │   ├── MimironsGoldOMatic.Desktop/
 │   ├── MimironsGoldOMatic.TwitchExtension/   (Vite + React; not always in every build scope)
+│   ├── Tools/                  # build-time tools (e.g., ApiTsGen for Extension API client/models)
 │   ├── MimironsGoldOMatic.WoWAddon/
 │   ├── Mocks/                  # MockEventSubWebhook, MockExtensionJwt, MockHelixApi, SyntheticDesktop
 │   └── Tests/                  # Backend/Desktop unit+integration, IntegrationTesting, WoWAddon.Tests
