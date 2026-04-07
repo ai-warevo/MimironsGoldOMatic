@@ -11,6 +11,7 @@
 | **Desktop** | WPF app: API key, log tail, WoW injection. | SPEC §8–10; [`MimironsGoldOMatic.Desktop/ReadME.md`](../components/desktop/ReadME.md) |
 | **Addon** | WoW 3.3.5a Lua: mail queue, whispers, MGM log tags. | SPEC §8–10; [`MimironsGoldOMatic.WoWAddon/ReadME.md`](../components/wow-addon/ReadME.md) |
 | **Participant pool** | Subscribers enrolled via **`!twgold <CharacterName>`** (and optional claim); unique **CharacterName** among others. | SPEC §1, §5 |
+| **Gift queue** | Separate streamer-scoped queue via **`!twgift <CharacterName>`** (independent from roulette payouts). | SPEC §12 |
 | **Spin / roulette** | Scheduled **5-minute** selection of one candidate; server schedule is source of truth. | SPEC §1, §5.1 |
 | **Payout** | Record for a **spin winner** (not created at chat enroll). | SPEC §1, §3 |
 | **`[MGM_WHO]`** | Addon line: **`/who`** result JSON for **verify-candidate**. | SPEC §8, §10 |

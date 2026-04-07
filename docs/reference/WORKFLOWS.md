@@ -8,6 +8,8 @@ Operational sequence at product level. **Normative detail:** [`docs/overview/SPE
 
 A **subscriber** types **`!twgold <CharacterName>`** in **broadcast** Twitch chat (**prefix case-insensitive**). The **EBS** ingests via **EventSub** and adds or updates that viewer in the **participant pool** if **`CharacterName`** is valid and **unique** among other viewers. Channel Points are **not** used. Optional Extension **`POST /api/payouts/claim`** mirrors pool rules for Dev Rig — see [`docs/overview/SPEC.md`](../overview/SPEC.md) §5.
 
+`!twgift <CharacterName>` is a separate command and flow for the gift queue (not roulette), see [`docs/overview/SPEC.md`](../overview/SPEC.md) §12.
+
 ## 2. Roulette spin
 
 On each **5-minute** boundary only, the EBS runs a spin: **one** candidate from the pool (**uniform random**), **minimum pool size 1**, **no** early spin. **Non-winners** remain in the pool.

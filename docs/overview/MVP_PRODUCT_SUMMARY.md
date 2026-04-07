@@ -9,6 +9,7 @@
 - Viewers subscribe and enroll using **`!twgold <CharacterName>`** in broadcast Twitch chat (case-insensitive command prefix). The EBS ingests this through EventSub and uses subscriber information from the chat payload only (see SPEC).
 - `CharacterName` stays unique within the active pool; the same viewer can replace their current name with a new enrollment message.
 - Chat deduplication uses Twitch **`message_id`**. Optional Extension **`POST /api/payouts/claim`** remains a dev/rig path with **`EnrollmentRequestId`** idempotency and **`Mgm:DevSkipSubscriberCheck`**.
+- Gift flow is separate from roulette: **`!twgift <CharacterName>`** goes to the gift queue (see SPEC §12), while **`!twgold`** is used for roulette enrollment and winner consent.
 
 ## Roulette
 

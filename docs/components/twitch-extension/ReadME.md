@@ -6,12 +6,12 @@
 
 - **Repository status:** `src/MimironsGoldOMatic.TwitchExtension` is **MVP-5** — Vite + React + TypeScript viewer panel with **`window.Twitch.ext`**, Zustand (`mgmPanelStore`), and generated typed API client files **`src/api/models.ts`** + **`src/api/client.ts`** (produced by **`src/Tools/MimironsGoldOMatic.ApiTsGen`** from Backend + Shared contracts). It calls **`/api/roulette/state`**, **`/api/pool/me`**, **`/api/payouts/my-last`**, renders visual roulette + countdown from **`nextSpinAt`/`serverNow`**, and aligns with **UI-101–106** ([`UI_SPEC.md`](UI_SPEC.md)). See `docs/reference/IMPLEMENTATION_READINESS.md`.
 - **UI spec:** [`UI_SPEC.md`](UI_SPEC.md) in this folder — **MVP:** viewer **UI-101–106** only. Broadcaster **UI-201–204** are **post-MVP** (see `docs/overview/ROADMAP.md` MVP-5). Cross-cutting tokens: [`docs/reference/UI_SPEC.md`](../../reference/UI_SPEC.md).
-- **Role:** Viewer-facing roulette, pool visibility, and winner/payout status. Pool enrollment is chat-driven (`!twgold <CharacterName>` per `docs/overview/SPEC.md`), not form-driven.
+- **Role:** Viewer-facing roulette, pool visibility, and winner/payout status. Chat commands are flow-specific: roulette enrollment via `!twgold <CharacterName>` and gift queue via `!twgift <CharacterName>` (see `docs/overview/SPEC.md`), not form-driven.
 - **Stack:** React 19, Vite 8, TypeScript 5.9, Zustand, axios (no Tailwind in this package — panel styling is component CSS).
 
 ## Key Functions
 
-- **On-panel copy:** Viewers subscribe and type **`!twgold <CharacterName>`** in stream chat to join the pool. After a win, they must watch WoW for the streamer whisper (Russian text, `docs/overview/SPEC.md` §9) and reply `!twgold` in-game before gold mail can be sent.
+- **On-panel copy:** Viewers subscribe and type **`!twgold <CharacterName>`** in stream chat to join roulette. Gift queue uses **`!twgift <CharacterName>`** (`docs/overview/SPEC.md` §12). After a roulette win, they must watch WoW for the streamer whisper (Russian text, `docs/overview/SPEC.md` §9) and reply `!twgold` in-game before gold mail can be sent.
 - **Twitch Integration:** Uses `window.Twitch.ext` for viewer identity and **polls** the **EBS** for pool size, spin state, and winner/payout status.
 - **API Interaction (typical):**
   - **GET** `/api/roulette/state`, **`GET /api/pool/me`**, **`GET /api/payouts/my-last`** — all use **Twitch Extension JWT (Bearer)** only in MVP (`docs/overview/SPEC.md` §5, §5.1). **Dev Rig** uses **real Twitch-issued** tokens; **EBS** validates per Twitch (`docs/overview/SPEC.md` deployment scope).
