@@ -4,8 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TypeScriptApiGeneratorProject>$(MSBuildProjectDirectory)\..\..\Tools\MimironsGoldOMatic.ApiTsGen\MimironsGoldOMatic.ApiTsGen.csproj</TypeScriptApiGeneratorProject>
-    <TypeScriptApiOutputDir>$(MSBuildProjectDirectory)\..\..\MimironsGoldOMatic.TwitchExtension\src\api</TypeScriptApiOutputDir>
+    <TypeScriptApiGeneratorProject>$(MSBuildProjectDirectory)/../../Tools/MimironsGoldOMatic.ApiTsGen/MimironsGoldOMatic.ApiTsGen.csproj</TypeScriptApiGeneratorProject>
+    <TypeScriptApiOutputDir>$(MSBuildProjectDirectory)/../../MimironsGoldOMatic.TwitchExtension/src/api</TypeScriptApiOutputDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,14 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\**\*.cs" />
-    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Application\**\*.cs" />
-    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\..\MimironsGoldOMatic.Shared\**\*.cs" />
-    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Common\**\*.cs" />
+    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)/../**/*.cs" />
+    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)/../../MimironsGoldOMatic.Shared/**/*.cs" />
   </ItemGroup>
 
-  <Target Name="GenerateTypeScriptApiClient" BeforeTargets="BeforeBuild" Condition="'$(SkipGenerateTypeScriptApiClient)' != 'true'" Inputs="@(TypeScriptApiGenerationInput)" Outputs="$(TypeScriptApiOutputDir)\models.ts;$(TypeScriptApiOutputDir)\client.ts">
-    <Exec Command="dotnet run --project &quot;$(TypeScriptApiGeneratorProject)&quot; --configuration $(Configuration) -- &quot;$(MSBuildProjectDirectory)&quot; &quot;$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Application&quot; &quot;$(MSBuildProjectDirectory)\..\..\MimironsGoldOMatic.Shared&quot; &quot;$(MSBuildProjectDirectory)\..\MimironsGoldOMatic.Backend.Common&quot; &quot;$(TypeScriptApiOutputDir)&quot;" />
+  <Target Name="GenerateTypeScriptApiClient" BeforeTargets="BeforeBuild" Condition="'$(SkipGenerateTypeScriptApiClient)' != 'true'" Inputs="@(TypeScriptApiGenerationInput)" Outputs="$(TypeScriptApiOutputDir)/models.ts;$(TypeScriptApiOutputDir)/client.ts">
+    <Exec Command="dotnet run --project &quot;$(TypeScriptApiGeneratorProject)&quot; --configuration $(Configuration) -- &quot;$(MSBuildProjectDirectory)/..&quot; &quot;$(MSBuildProjectDirectory)/../../MimironsGoldOMatic.Shared&quot; &quot;$(TypeScriptApiOutputDir)&quot;" />
   </Target>
 
 </Project>
