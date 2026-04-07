@@ -1,8 +1,8 @@
-using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Infrastructure.Persistence;
+using MimironsGoldOMatic.Backend.Application;
+using MimironsGoldOMatic.Backend.Common;
 using MimironsGoldOMatic.Backend.IntegrationTests.Support;
 using MimironsGoldOMatic.IntegrationTesting;
-using MimironsGoldOMatic.Shared;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

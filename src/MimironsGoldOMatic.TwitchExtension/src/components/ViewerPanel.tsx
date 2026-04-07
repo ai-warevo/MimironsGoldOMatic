@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
+import axios from 'axios'
 import { fetchMimironsGoldOMaticVersionInfo } from '../api/mgmVersionApi'
 import { MIMIRONS_GOLD_O_MATIC_EXTENSION_VERSION } from '../config/mgmClientVersion'
-import { createMimironsGoldOMaticEbsClient } from '../api/mgmEbsClient'
-import { createMimironsGoldOMaticEbsRepository } from '../api/mgmEbsRepository'
+import { createMimironsGoldOMaticApiClient } from '../api/mgmApiClient'
 import { useMgmEbsPolling } from '../hooks/useMgmEbsPolling'
 import { useMgmSpinCountdown } from '../hooks/useMgmSpinCountdown'
 import { getMimironsGoldOMaticExtensionJwt, useTwitchExtensionAuth } from '../hooks/useTwitchExtensionAuth'
 import { rewardSentChatAnnouncement } from '../rewardSentAnnouncement'
 import { useMimironsGoldOMaticPanelStore } from '../state/mgmPanelStore'
-import type { MimironsGoldOMaticVersionInfoDto } from '../mgmTypes'
+import type { MimironsGoldOMaticApiErrorBody, MimironsGoldOMaticVersionInfoDto } from '../mgmTypes'
 import { isMimironsGoldOMaticNewerVersion } from '../utils/mgmVersion'
 import { MimironsGoldOMaticUpdateBanner } from './MgmUpdateBanner'
 import { mapMimironsGoldOMaticApiErrorToUi } from './mapMgmApiErrorToUi'
@@ -45,6 +45,7 @@ export function MimironsGoldOMaticViewerPanel() {
   const poolMe = useMimironsGoldOMaticPanelStore((s) => s.poolMe)
   const myLast = useMimironsGoldOMaticPanelStore((s) => s.myLast)
   const pollError = useMimironsGoldOMaticPanelStore((s) => s.pollError)
+  const myGift = useMimironsGoldOMaticPanelStore((s) => s.myGift)
   const lastPollWallClockMs = useMimironsGoldOMaticPanelStore((s) => s.lastPollWallClockMs)
   const uiError = useMimironsGoldOMaticPanelStore((s) => s.uiError)
   const setUiError = useMimironsGoldOMaticPanelStore((s) => s.setUiError)
@@ -126,18 +127,21 @@ export function MimironsGoldOMaticViewerPanel() {
     setUiError(null)
     setClaimBusy(true)
     try {
-      const client = createMimironsGoldOMaticEbsClient(ebsBaseUrl, getMimironsGoldOMaticExtensionJwt)
-      const repo = createMimironsGoldOMaticEbsRepository(client)
+      const client = createMimironsGoldOMaticApiClient(ebsBaseUrl, getMimironsGoldOMaticExtensionJwt)
       const id =
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
           : `dev-${Date.now()}`
-      await repo.postClaim(name, id)
+      await client.postPayoutsClaim({ characterName: name, enrollmentRequestId: id })
       bumpPoll()
       setDevName('')
     } catch (e) {
-      const api = (e as { api?: { code: string; message: string; details: unknown } }).api
-      if (api) setUiError(api)
+      const api: MimironsGoldOMaticApiErrorBody | null =
+        axios.isAxiosError(e) && e.response?.data && typeof e.response.data === 'object'
+          ? (e.response.data as MimironsGoldOMaticApiErrorBody)
+          : null
+
+      if (api?.code && typeof api.code === 'string') setUiError(api)
       else
         setUiError({
           code: 'network',
@@ -357,6 +361,38 @@ export function MimironsGoldOMaticViewerPanel() {
           )}
         </section>
       ) : null}
+
+      {myGift ? (
+        <section className="mgm-winner" aria-label="Your gift request">
+          <div className="mgm-winner__banner mgm-winner__banner--calm">Gift queue</div>
+          <p className="mgm-status-row">
+            Status:{' '}
+            <span className={`mgm-chip mgm-chip--${myGift.state.toLowerCase()}`}>{myGift.state}</span>
+          </p>
+          {myGift.state === 'Pending' ? (
+            <p className="mgm-muted">
+              You are #{myGift.queuePosition} in queue. Estimated wait: {myGift.estimatedWaitSeconds}s.
+            </p>
+          ) : myGift.state === 'SelectingItem' ? (
+            <p className="mgm-muted">Gift selection in progress…</p>
+          ) : myGift.state === 'WaitingConfirmation' ? (
+            <p className="mgm-muted">
+              Waiting for your in-game whisper reply <kbd className="mgm-kbd">!twgift</kbd>.
+            </p>
+          ) : myGift.state === 'Completed' ? (
+            <p className="mgm-muted">Gift sent successfully.</p>
+          ) : (
+            <p className="mgm-muted">Gift request failed: {myGift.failureReason ?? 'unknown reason'}.</p>
+          )}
+        </section>
+      ) : (
+        <section className="mgm-section" aria-label="Gift command">
+          <h2 className="mgm-h2">Gift command</h2>
+          <p className="mgm-muted">
+            Subscribers can request one gift with <kbd className="mgm-kbd">!twgift YourCharacterName</kbd>.
+          </p>
+        </section>
+      )}
 
       {showDevClaim ? (
         <section className="mgm-dev" aria-label="Developer test enrollment">

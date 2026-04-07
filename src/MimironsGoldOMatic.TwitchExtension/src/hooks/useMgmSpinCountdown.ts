@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { MimironsGoldOMaticRouletteState } from '../mgmTypes'
+import type { RouletteStateResponse } from '../api/models'
 
 export interface MimironsGoldOMaticCountdownTick {
   remainingSeconds: number
@@ -17,7 +17,7 @@ function formatMmSs(totalSeconds: number): string {
  * Countdown to `nextSpinAt` using server skew from the last `roulette` payload (`serverNow`).
  */
 export function useMgmSpinCountdown(
-  roulette: MimironsGoldOMaticRouletteState | null,
+  roulette: RouletteStateResponse | null,
   lastPollWallClockMs: number | null,
 ): MimironsGoldOMaticCountdownTick {
   const [nowMs, setNowMs] = useState(() => Date.now())

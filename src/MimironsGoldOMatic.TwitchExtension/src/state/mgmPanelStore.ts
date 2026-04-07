@@ -1,10 +1,9 @@
 import { create } from 'zustand'
 import type {
   MimironsGoldOMaticApiErrorBody,
-  MimironsGoldOMaticPoolMe,
-  MimironsGoldOMaticPayoutDto,
-  MimironsGoldOMaticRouletteState,
 } from '../mgmTypes'
+import type { PayoutDto, PoolMeResponse, RouletteStateResponse } from '../api/models'
+import type { MimironsGoldOMaticGiftQueueEntry } from '../mgmTypes'
 
 export type MimironsGoldOMaticAuthView =
   | 'loading'
@@ -19,18 +18,22 @@ export interface MimironsGoldOMaticPanelStore {
   authView: MimironsGoldOMaticAuthView
   setAuthView: (v: MimironsGoldOMaticAuthView) => void
 
-  roulette: MimironsGoldOMaticRouletteState | null
-  poolMe: MimironsGoldOMaticPoolMe | null
-  myLast: MimironsGoldOMaticPayoutDto | null
+  roulette: RouletteStateResponse | null
+  poolMe: PoolMeResponse | null
+  myLast: PayoutDto | null
+  giftQueue: MimironsGoldOMaticGiftQueueEntry[]
+  myGift: MimironsGoldOMaticGiftQueueEntry | null
 
   pollBackoffMs: number
   pollError: { kind: PollErrorKind; status?: number; body?: MimironsGoldOMaticApiErrorBody } | null
   lastPollWallClockMs: number | null
 
   setPollSuccess: (payload: {
-    roulette: MimironsGoldOMaticRouletteState
-    poolMe: MimironsGoldOMaticPoolMe
-    myLast: MimironsGoldOMaticPayoutDto | null
+    roulette: RouletteStateResponse
+    poolMe: PoolMeResponse
+    myLast: PayoutDto | null
+    giftQueue: MimironsGoldOMaticGiftQueueEntry[]
+    myGift: MimironsGoldOMaticGiftQueueEntry | null
   }) => void
   setPollFailure: (e: {
     kind: PollErrorKind
@@ -58,16 +61,20 @@ export const useMimironsGoldOMaticPanelStore = create<MimironsGoldOMaticPanelSto
   roulette: null,
   poolMe: null,
   myLast: null,
+  giftQueue: [],
+  myGift: null,
 
   pollBackoffMs: 3000,
   pollError: null,
   lastPollWallClockMs: null,
 
-  setPollSuccess: ({ roulette, poolMe, myLast }) =>
+  setPollSuccess: ({ roulette, poolMe, myLast, giftQueue, myGift }) =>
     set({
       roulette,
       poolMe,
       myLast,
+      giftQueue,
+      myGift,
       pollBackoffMs: 3000,
       pollError: null,
       lastPollWallClockMs: Date.now(),

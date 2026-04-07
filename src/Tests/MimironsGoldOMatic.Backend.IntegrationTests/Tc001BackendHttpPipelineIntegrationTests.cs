@@ -1,12 +1,10 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using MimironsGoldOMatic.Backend.Api;
 using MimironsGoldOMatic.Backend.IntegrationTests.Support;
 using MimironsGoldOMatic.IntegrationTesting;
-using MimironsGoldOMatic.Backend.Persistence;
-using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Shared;
+using MimironsGoldOMatic.Backend.Infrastructure.Persistence;
+using MimironsGoldOMatic.Backend.Application.Roulette;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

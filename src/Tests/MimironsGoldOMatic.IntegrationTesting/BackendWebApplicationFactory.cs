@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using MimironsGoldOMatic.Backend;
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Application;
+using MimironsGoldOMatic.Backend.Application.Gifts;
+using MimironsGoldOMatic.Backend.Application.Roulette;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -42,7 +43,9 @@ public sealed class BackendWebApplicationFactory : WebApplicationFactory<Program
             var remove = services.Where(sd =>
                 sd.ServiceType == typeof(IHostedService) &&
                 sd.ImplementationType is { } t &&
-                (t == typeof(RouletteSynchronizerHostedService) || t == typeof(PayoutExpirationHostedService))).ToList();
+                (t == typeof(RouletteSynchronizerHostedService) ||
+                 t == typeof(PayoutExpirationHostedService) ||
+                 t == typeof(GiftQueueTimeoutHostedService))).ToList();
             foreach (var sd in remove)
                 services.Remove(sd);
         });

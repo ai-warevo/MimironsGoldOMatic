@@ -1,11 +1,8 @@
 import { beforeEach, describe, expect, it } from '@jest/globals'
-import type {
-  MimironsGoldOMaticPoolMe,
-  MimironsGoldOMaticRouletteState,
-} from '../mgmTypes'
+import type { PoolMeResponse, RouletteStateResponse } from '../api/models'
 import { useMimironsGoldOMaticPanelStore } from './mgmPanelStore'
 
-const roulette: MimironsGoldOMaticRouletteState = {
+const roulette: RouletteStateResponse = {
   nextSpinAt: '2026-01-01T00:05:00.000Z',
   serverNow: '2026-01-01T00:00:00.000Z',
   spinIntervalSeconds: 300,
@@ -14,7 +11,7 @@ const roulette: MimironsGoldOMaticRouletteState = {
   currentSpinCycleId: 'cycle-1',
 }
 
-const poolMe: MimironsGoldOMaticPoolMe = {
+const poolMe: PoolMeResponse = {
   isEnrolled: true,
   characterName: 'Norinn',
 }
@@ -44,6 +41,8 @@ describe('useMimironsGoldOMaticPanelStore', () => {
       roulette,
       poolMe,
       myLast: null,
+      giftQueue: [],
+      myGift: null,
     })
 
     const s = useMimironsGoldOMaticPanelStore.getState()

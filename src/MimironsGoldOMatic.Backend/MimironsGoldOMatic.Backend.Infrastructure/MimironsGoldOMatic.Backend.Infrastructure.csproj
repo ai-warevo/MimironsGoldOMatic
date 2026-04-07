@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+    <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Configuration\MimironsGoldOMatic.Backend.Configuration.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Application\MimironsGoldOMatic.Backend.Application.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Infrastructure.Persistence\MimironsGoldOMatic.Backend.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Common\MimironsGoldOMatic.Backend.Common.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { MimironsGoldOMaticSpinPhase } from '../mgmTypes'
 
 const DECO_NAMES = ['Norinn', 'Kael', 'Mimir', 'Gearspan', 'Cogsworth', 'Tinker']
 
 export interface MimironsGoldOMaticRouletteVisualProps {
-  spinPhase: MimironsGoldOMaticSpinPhase
+  spinPhase: string
   poolParticipantCount: number
 }
 

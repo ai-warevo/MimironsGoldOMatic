@@ -29,7 +29,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Api\MimironsGoldOMatic.Backend.Api.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Application\MimironsGoldOMatic.Backend.Application.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Infrastructure.Persistence\MimironsGoldOMatic.Backend.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Backend\MimironsGoldOMatic.Backend.Common\MimironsGoldOMatic.Backend.Common.csproj" />
   </ItemGroup>
 
 </Project>

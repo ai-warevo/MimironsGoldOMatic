@@ -1,6 +1,6 @@
 # MimironsGoldOMatic.Backend.IntegrationTests
 
-End-to-end Backend tests: **Testcontainers PostgreSQL**, real **Marten** persistence, **ASP.NET Core** via `WebApplicationFactory<Program>`, and **MediatR** / services where tests target handlers directly.
+End-to-end Backend tests: **Testcontainers PostgreSQL**, real **Marten** persistence, **ASP.NET Core** via `WebApplicationFactory<Program>` against **`MimironsGoldOMatic.Backend.Api`** (top-level `Program`), and **MediatR** / services where tests target handlers directly.
 
 Shared infrastructure (`BackendWebApplicationFactory`, Postgres fixture, `PostgresMgmTruncate`, `HttpApiFixtureBase`) lives in **`MimironsGoldOMatic.IntegrationTesting`** and is reused by **`MimironsGoldOMatic.Desktop.IntegrationTests`** (Desktop EBS client vs the same host).
 

@@ -1,6 +1,13 @@
 <Solution>
   <Project Path="MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj" />
-  <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj" />
+  <Folder Name="/MimironsGoldOMatic.Backend/">
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Configuration/MimironsGoldOMatic.Backend.Configuration.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Infrastructure.Persistence/MimironsGoldOMatic.Backend.Infrastructure.Persistence.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application/MimironsGoldOMatic.Backend.Application.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Infrastructure/MimironsGoldOMatic.Backend.Infrastructure.csproj" />
+    <Project Path="MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common/MimironsGoldOMatic.Backend.Common.csproj" />
+  </Folder>
   <Project Path="MimironsGoldOMatic.Desktop/MimironsGoldOMatic.Desktop.csproj" />
   <Project Path="Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj" />
   <Project Path="Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj" />

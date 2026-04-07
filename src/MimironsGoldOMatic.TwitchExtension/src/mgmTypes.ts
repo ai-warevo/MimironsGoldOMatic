@@ -54,3 +54,24 @@ export interface MimironsGoldOMaticVersionInfoDto {
   minimumAddonVersion?: string
   minimumExtensionVersion?: string
 }
+
+export type MimironsGoldOMaticGiftRequestState =
+  | 'Pending'
+  | 'SelectingItem'
+  | 'ItemSelected'
+  | 'WaitingConfirmation'
+  | 'Completed'
+  | 'Failed'
+
+export interface MimironsGoldOMaticGiftQueueEntry {
+  id: string
+  streamerId: string
+  viewerId: string
+  viewerDisplayName: string
+  characterName: string
+  state: MimironsGoldOMaticGiftRequestState
+  queuePosition: number
+  estimatedWaitSeconds: number
+  timeoutAt: string | null
+  failureReason: string | null
+}

@@ -1,8 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using MimironsGoldOMatic.Backend.Configuration;
-using MimironsGoldOMatic.Backend.Controllers;
-using MimironsGoldOMatic.Backend.Services;
+using MimironsGoldOMatic.Backend.Api.Controllers;
+using MimironsGoldOMatic.Backend.Application.Roulette.Enrollment;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -116,7 +117,7 @@ public sealed class TwitchEventSubControllerTests
     }
 
     private static TwitchEventSubController CreateSut(IChatEnrollmentIngest ingest, TwitchOptions twitch) =>
-        new(ingest, Options.Create(twitch), NullLogger<TwitchEventSubController>.Instance)
+        new(ingest, Options.Create(twitch), Mock.Of<IMediator>(), NullLogger<TwitchEventSubController>.Instance)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
         };

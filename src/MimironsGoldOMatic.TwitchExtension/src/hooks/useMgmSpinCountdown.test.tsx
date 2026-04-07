@@ -1,9 +1,9 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals'
-import type { MimironsGoldOMaticRouletteState } from '../mgmTypes'
+import type { RouletteStateResponse } from '../api/models'
 import { useMgmSpinCountdown } from './useMgmSpinCountdown'
 
-const roulette: MimironsGoldOMaticRouletteState = {
+const roulette: RouletteStateResponse = {
   nextSpinAt: '2026-01-01T00:05:00.000Z',
   serverNow: '2026-01-01T00:00:00.000Z',
   spinIntervalSeconds: 300,
@@ -47,7 +47,7 @@ describe('useMgmSpinCountdown', () => {
   })
 
   it('treats invalid ISO timestamps as empty countdown', () => {
-    const bad: MimironsGoldOMaticRouletteState = {
+    const bad: RouletteStateResponse = {
       ...roulette,
       serverNow: 'not-a-date',
       nextSpinAt: 'also-bad',

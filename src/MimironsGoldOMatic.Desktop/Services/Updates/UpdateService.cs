@@ -1,5 +1,4 @@
-using MimironsGoldOMatic.Shared;
-
+﻿
 namespace MimironsGoldOMatic.Desktop.Services.Updates;
 
 public sealed class UpdateService(IEbsDesktopClient api, IAppVersionProvider versionProvider) : IUpdateService
@@ -30,12 +29,12 @@ public sealed class UpdateService(IEbsDesktopClient api, IAppVersionProvider ver
         }
 
         var status = isUpdateAvailable
-            ? $"Доступна новая версия: v{latestVersion} (у вас v{currentVersion})."
-            : $"Версия актуальна: v{currentVersion}.";
+            ? $"Р”РѕСЃС‚СѓРїРЅР° РЅРѕРІР°СЏ РІРµСЂСЃРёСЏ: v{latestVersion} (Сѓ РІР°СЃ v{currentVersion})."
+            : $"Р’РµСЂСЃРёСЏ Р°РєС‚СѓР°Р»СЊРЅР°: v{currentVersion}.";
 
         if (!isDesktopCompatible)
         {
-            status = $"Текущая версия v{currentVersion} ниже минимальной поддерживаемой.";
+            status = $"РўРµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ v{currentVersion} РЅРёР¶Рµ РјРёРЅРёРјР°Р»СЊРЅРѕР№ РїРѕРґРґРµСЂР¶РёРІР°РµРјРѕР№.";
         }
 
         return new VersionCheckResult(

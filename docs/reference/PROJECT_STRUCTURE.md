@@ -1,4 +1,4 @@
-<!-- Updated: 2026-04-06 (Project structure alignment + Tier B finalization) -->
+<!-- Updated: 2026-04-07 (layered Backend: Application, Infrastructure.Persistence, etc.) -->
 
 # Repository structure
 
@@ -27,7 +27,9 @@ MimironsGoldOMatic/
 ├── src/
 │   ├── MimironsGoldOMatic.slnx
 │   ├── MimironsGoldOMatic.Shared/
-│   ├── MimironsGoldOMatic.Backend/
+│   ├── MimironsGoldOMatic.Backend/   # EBS: Backend.Api, Backend.Application, Backend.Infrastructure, …
+│   │   ├── MimironsGoldOMatic.Backend.Api/
+│   │   └── …
 │   ├── MimironsGoldOMatic.Desktop/
 │   ├── MimironsGoldOMatic.TwitchExtension/   (Vite + React; not always in every build scope)
 │   ├── MimironsGoldOMatic.WoWAddon/
@@ -57,7 +59,9 @@ Use this table when updating bookmarks, scripts, or old chat logs. **Do not** re
 
 | Old / informal path | Current path | Migration notes |
 |---------------------|--------------|-----------------|
-| `MimironsGoldOMatic.WEBAPI.Backend` / “WEBAPI Backend” | `src/MimironsGoldOMatic.Backend/` | EBS project name is **`MimironsGoldOMatic.Backend`**; see [`E2E_AUTOMATION_PLAN.md`](../e2e/E2E_AUTOMATION_PLAN.md) code roots. |
+| `MimironsGoldOMatic.WEBAPI.Backend` / legacy monolith `MimironsGoldOMatic.Backend` | `src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/` (+ **`Backend.Application`**, **`Backend.Infrastructure`**, **`Backend.Infrastructure.Persistence`**, **`Backend.Common`**, **`Backend.Configuration`**) | ASP.NET host is **`MimironsGoldOMatic.Backend.Api`**; see [`E2E_AUTOMATION_PLAN.md`](../e2e/E2E_AUTOMATION_PLAN.md) code roots. |
+| `src/MimironsGoldOMatic.Backend.*` (flat under `src/`, pre–2026-04 layout) | `src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.*` | All **`Backend.*`** MSBuild projects live under **`src/MimironsGoldOMatic.Backend/`**; solution folder **MimironsGoldOMatic.Backend** in **`MimironsGoldOMatic.sln(x)`**. |
+| `src/Backend/` (short folder name, pre–2026-04-08) | `src/MimironsGoldOMatic.Backend/` | Folder rename only; project IDs unchanged. |
 | `src/tests/...` (lowercase) | `src/Tests/...` | Test tree uses **PascalCase** `Tests` on Windows/Linux CI. |
 | `src/tests/MimironsGoldOMatic.Backend.UnitTests` | `src/Tests/MimironsGoldOMatic.Backend.UnitTests` | Same project names; path casing only. |
 | `src/tests/MimironsGoldOMatic.Backend.IntegrationTests` | `src/Tests/MimironsGoldOMatic.Backend.IntegrationTests` | Docker-backed integration tests. |

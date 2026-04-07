@@ -1,8 +1,6 @@
-using MimironsGoldOMatic.Desktop.Api;
-using MimironsGoldOMatic.Desktop.Services;
+﻿using MimironsGoldOMatic.Desktop.Services;
 using MimironsGoldOMatic.Desktop.Services.Updates;
 using MimironsGoldOMatic.Desktop.UnitTests.TestSupport;
-using MimironsGoldOMatic.Shared;
 using Moq;
 using Xunit;
 
@@ -19,7 +17,7 @@ public sealed class WoWChatLogTailServiceTests
         var line = $"3/4 12:00:00 [MGM_WHO] {json}";
 
         var mock = new Mock<IEbsDesktopClient>(MockBehavior.Strict);
-        mock.Setup(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequestDto>(), It.IsAny<CancellationToken>()))
+        mock.Setup(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequest>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask)
             .Verifiable();
 
@@ -30,7 +28,7 @@ public sealed class WoWChatLogTailServiceTests
         await tail.ProcessLineAsync(line, CancellationToken.None);
 
         mock.Verify(x => x.VerifyCandidateAsync(
-            It.Is<VerifyCandidateRequestDto>(d => d.SpinCycleId == spin && d.CharacterName == "Thrall" && d.Online),
+            It.Is<VerifyCandidateRequest>(d => d.SpinCycleId == spin && d.CharacterName == "Thrall" && d.Online),
             It.IsAny<CancellationToken>()), Times.Once);
         Assert.Contains(logs, l => l.Contains("verify-candidate OK", StringComparison.Ordinal));
     }
@@ -44,7 +42,7 @@ public sealed class WoWChatLogTailServiceTests
         var line = $"[MGM_WHO] {json}";
 
         var mock = new Mock<IEbsDesktopClient>(MockBehavior.Strict);
-        mock.Setup(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequestDto>(), It.IsAny<CancellationToken>()))
+        mock.Setup(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequest>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var connection = new DesktopConnectionContext { Settings = new DesktopUserSettings() };
@@ -53,7 +51,7 @@ public sealed class WoWChatLogTailServiceTests
         await tail.ProcessLineAsync(line, CancellationToken.None);
         await tail.ProcessLineAsync(line, CancellationToken.None);
 
-        mock.Verify(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequestDto>(), It.IsAny<CancellationToken>()), Times.Once);
+        mock.Verify(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -69,7 +67,7 @@ public sealed class WoWChatLogTailServiceTests
 
         await tail.ProcessLineAsync("hello [MGM_WHO] no-braces", CancellationToken.None);
 
-        mock.Verify(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequestDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        mock.Verify(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequest>(), It.IsAny<CancellationToken>()), Times.Never);
         Assert.Contains(logs, l => l.Contains("parse skip", StringComparison.Ordinal));
     }
 
@@ -86,7 +84,7 @@ public sealed class WoWChatLogTailServiceTests
 
         await tail.ProcessLineAsync("[MGM_WHO] { not json }", CancellationToken.None);
 
-        mock.Verify(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequestDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        mock.Verify(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequest>(), It.IsAny<CancellationToken>()), Times.Never);
         Assert.Contains(logs, l => l.Contains("[MGM_WHO] JSON error", StringComparison.Ordinal));
     }
 
@@ -159,7 +157,7 @@ public sealed class WoWChatLogTailServiceTests
             $"{{\"schemaVersion\":1,\"spinCycleId\":\"{spin:D}\",\"characterName\":\"X\",\"online\":true,\"capturedAt\":\"2020-01-01T00:00:00Z\"}}";
 
         var mock = new Mock<IEbsDesktopClient>(MockBehavior.Strict);
-        mock.Setup(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequestDto>(), It.IsAny<CancellationToken>()))
+        mock.Setup(x => x.VerifyCandidateAsync(It.IsAny<VerifyCandidateRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("boom"));
 
         var logs = new List<string>();
@@ -194,6 +192,6 @@ public sealed class WoWChatLogTailServiceTests
 
         await tail.ProcessLineAsync("[MGM_UPDATE_CHECK]", CancellationToken.None);
 
-        Assert.Contains(logs, l => l.Contains("[MGM_UPDATE_CHECK] Mimiron's Gold-o-Matic: Вы используете актуальную версию", StringComparison.Ordinal));
+        Assert.Contains(logs, l => l.Contains("[MGM_UPDATE_CHECK] Mimiron's Gold-o-Matic: Р’С‹ РёСЃРїРѕР»СЊР·СѓРµС‚Рµ Р°РєС‚СѓР°Р»СЊРЅСѓСЋ РІРµСЂСЃРёСЋ", StringComparison.Ordinal));
     }
 }

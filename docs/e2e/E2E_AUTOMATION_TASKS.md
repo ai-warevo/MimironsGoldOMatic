@@ -31,13 +31,13 @@ Use this before relying on **CI Tier A** as a gate or when debugging a red workf
 
 ## 2. Task breakdown by component
 
-The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs)). **Implemented:** standalone relay **`src/Mocks/MockEventSubWebhook`** + **Python** sender in **CI** (see [Tier A implementation](E2E_AUTOMATION_PLAN.md#tier-a-implementation-repository)). **Optional:** duplicate signing logic in **xUnit** (A1–A3).
+The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/TwitchEventSubController.cs)). **Implemented:** standalone relay **`src/Mocks/MockEventSubWebhook`** + **Python** sender in **CI** (see [Tier A implementation](E2E_AUTOMATION_PLAN.md#tier-a-implementation-repository)). **Optional:** duplicate signing logic in **xUnit** (A1–A3).
 
 ### A. MockEventSubWebhook (test harness)
 
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
-| A1 | Add **`EventSubSignatureHelper`** (or equivalent) in **`MimironsGoldOMatic.Backend.UnitTests`** that computes Twitch **`Twitch-Eventsub-Message-Signature`** (`sha256=` HMAC-SHA256 over `message-id + timestamp + body`) matching [`VerifySignature`](../../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs). | Backend Dev | 0.5–1 day | **Optional** — **CI** already signs in **Python**; in-repo helper reduces drift. |
+| A1 | Add **`EventSubSignatureHelper`** (or equivalent) in **`MimironsGoldOMatic.Backend.UnitTests`** that computes Twitch **`Twitch-Eventsub-Message-Signature`** (`sha256=` HMAC-SHA256 over `message-id + timestamp + body`) matching [`VerifySignature`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/TwitchEventSubController.cs). | Backend Dev | 0.5–1 day | **Optional** — **CI** already signs in **Python**; in-repo helper reduces drift. |
 | A2 | Add golden JSON bodies for **`channel.chat.message`** under e.g. `src/Tests/MimironsGoldOMatic.Backend.UnitTests/Fixtures/EventSub/` (`subscription`, `event.message_id`, `chatter_user_id`, `message.text`, subscriber **`badges`**). | Backend Dev | 0.5 day | Align with Twitch EventSub reference; version fixtures when schema changes. |
 | A3 | Integration test: **`HttpClient`** **`POST`** to **`/api/twitch/eventsub`** with headers + body → assert pool enrollment via Marten or follow-up **`GET`** (if test host exposes full pipeline). | Backend Dev | 1 day | Cover both empty secret (dev bypass) and signed path. |
 | A4 | Document fixture maintenance in **`docs/components/backend/ReadME.md`** or link this file. | Backend Dev | 0.25 day | Pairs with risk task R1. |
@@ -46,15 +46,15 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
-| B1 | Implement a small **test JWT builder** (HS256) using the same signing material as [`Program.cs`](../../src/MimironsGoldOMatic.Backend/Program.cs) (**Extension** secret / dev key) with claims **`user_id`**, optional **`display_name`**. | Backend Dev | 0.5 day | **Done** as **`MockExtensionJwt`** **`GET /token`** — keep for parity or retire if service-only approach wins. |
+| B1 | Implement a small **test JWT builder** (HS256) using the same signing material as [`Program.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Program.cs) (**Extension** secret / dev key) with claims **`user_id`**, optional **`display_name`**. | Backend Dev | 0.5 day | **Done** as **`MockExtensionJwt`** **`GET /token`** — keep for parity or retire if service-only approach wins. |
 | B2 | Wire JWT into shared test host factory (same pattern as [`BackendTestHost`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/Support/) / existing integration setup). | Backend Dev | 0.5 day | |
-| B3 | Tests calling **`GET /api/pool/me`**, **`POST /api/payouts/claim`** ([`RouletteController`](../../src/MimironsGoldOMatic.Backend/Controllers/RouletteController.cs)) with **`Authorization: Bearer`**. | Backend Dev | 1 day | Respect **`Mgm:DevSkipSubscriberCheck`** / subscriber rules when exercising **claim**. |
+| B3 | Tests calling **`GET /api/pool/me`**, **`POST /api/payouts/claim`** ([`RouletteController`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/RouletteController.cs)) with **`Authorization: Bearer`**. | Backend Dev | 1 day | Respect **`Mgm:DevSkipSubscriberCheck`** / subscriber rules when exercising **claim**. |
 
 ### C. MockHelixApi
 
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
-| C1 | Refactor [`HelixChatService.cs`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) to use a **configurable Helix API base URI** (e.g. **`Twitch:HelixApiBaseUrl`** in [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend/Configuration/TwitchOptions.cs)); default **`https://api.twitch.tv`** when unset. Register named **`HttpClient`** with that base address in [`Program.cs`](../../src/MimironsGoldOMatic.Backend/Program.cs). | Backend Dev | 1 day | **Product code change** — add regression test that production URL still works when option empty. |
+| C1 | Refactor [`HelixChatService.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) to use a **configurable Helix API base URI** (e.g. **`Twitch:HelixApiBaseUrl`** in [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs)); default **`https://api.twitch.tv`** when unset. Register named **`HttpClient`** with that base address in [`Program.cs`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Program.cs). | Backend Dev | 1 day | **Product code change** — add regression test that production URL still works when option empty. |
 | C2 | In tests, use **`DelegatingHandler`** stub (or **WireMock.NET**) listening on loopback to capture **`POST .../helix/chat/messages`**; return **2xx** with documented Helix response shape. | Backend Dev | 1 day | Assert JSON body includes Russian §11 template from existing service. |
 | C3 | Add templates for **failure** paths (4xx/5xx) to verify **3× retry** logging / behavior without flaking real network. | Backend Dev | 0.5 day | Keep tests deterministic. |
 
@@ -62,7 +62,7 @@ The EBS already exposes **`POST /api/twitch/eventsub`** ([`TwitchEventSubControl
 
 | # | Task | Owner | Est. | Notes |
 |---|------|--------|------|--------|
-| D1 | Define ordered **`HttpClient`** calls mirroring **SC-001** steps 10–15: **`POST /api/payouts/{id}/confirm-acceptance`**, **`PATCH .../status`** **`InProgress`**, **`PATCH .../status`** **`Sent`** ([`DesktopPayoutsController`](../../src/MimironsGoldOMatic.Backend/Controllers/DesktopPayoutsController.cs)); header **`X-MGM-ApiKey`**. | Backend Dev | 1–2 days | Optional: thin **`Mgm.Desktop.E2EHarness`** console — only if tests need a subprocess; prefer in-proc test helper first. |
+| D1 | Define ordered **`HttpClient`** calls mirroring **SC-001** steps 10–15: **`POST /api/payouts/{id}/confirm-acceptance`**, **`PATCH .../status`** **`InProgress`**, **`PATCH .../status`** **`Sent`** ([`DesktopPayoutsController`](../../src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Controllers/DesktopPayoutsController.cs)); header **`X-MGM-ApiKey`**. | Backend Dev | 1–2 days | Optional: thin **`Mgm.Desktop.E2EHarness`** console — only if tests need a subprocess; prefer in-proc test helper first. |
 | D2 | Seed Marten state (pool + spin + **`Pending`**) before synthetic calls, or chain after **verify-candidate** test (reuse [`RouletteVerifyCandidateIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs) patterns). | Backend Dev | 1–2 days | |
 | D3 | Assert final state: payout **`Sent`**, pool row removed, **MockHelix** received exactly one announcement. | Backend Dev | 0.5 day | Success criteria align with [E2E Automation Plan §6](E2E_AUTOMATION_PLAN.md#6-success-criteria). |
 

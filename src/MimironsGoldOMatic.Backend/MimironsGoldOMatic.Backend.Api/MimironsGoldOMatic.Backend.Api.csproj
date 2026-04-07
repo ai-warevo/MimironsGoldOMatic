@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TypeScriptApiGeneratorProject>$(MSBuildProjectDirectory)/../../Tools/MimironsGoldOMatic.ApiTsGen/MimironsGoldOMatic.ApiTsGen.csproj</TypeScriptApiGeneratorProject>
+    <TypeScriptApiOutputDir>$(MSBuildProjectDirectory)/../../MimironsGoldOMatic.TwitchExtension/src/api</TypeScriptApiOutputDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Marten" Version="8.29.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Infrastructure\MimironsGoldOMatic.Backend.Infrastructure.csproj" />
+    <ProjectReference Include="..\MimironsGoldOMatic.Backend.Application\MimironsGoldOMatic.Backend.Application.csproj" />
+    <ProjectReference Include="..\..\MimironsGoldOMatic.Shared\MimironsGoldOMatic.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)/../**/*.cs" />
+    <TypeScriptApiGenerationInput Include="$(MSBuildProjectDirectory)/../../MimironsGoldOMatic.Shared/**/*.cs" />
+  </ItemGroup>
+
+  <Target Name="GenerateTypeScriptApiClient" BeforeTargets="BeforeBuild" Condition="'$(SkipGenerateTypeScriptApiClient)' != 'true'" Inputs="@(TypeScriptApiGenerationInput)" Outputs="$(TypeScriptApiOutputDir)/models.ts;$(TypeScriptApiOutputDir)/client.ts">
+    <Exec Command="dotnet run --project &quot;$(TypeScriptApiGeneratorProject)&quot; --configuration $(Configuration) -- &quot;$(MSBuildProjectDirectory)/..&quot; &quot;$(MSBuildProjectDirectory)/../../MimironsGoldOMatic.Shared&quot; &quot;$(TypeScriptApiOutputDir)&quot;" />
+  </Target>
+
+</Project>

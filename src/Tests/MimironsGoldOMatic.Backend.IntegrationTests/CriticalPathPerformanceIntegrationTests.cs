@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using MimironsGoldOMatic.Backend.Api;
 using MimironsGoldOMatic.Backend.IntegrationTests.Support;
 using MimironsGoldOMatic.IntegrationTesting;
 using Xunit;

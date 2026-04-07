@@ -1,3 +1,38 @@
+## 12) Gift Queue (`!twgift`) — streamer-scoped serialized flow
+
+The `!twgift <CharacterName>` flow is a separate queue from payout roulette and is persisted in Marten/PostgreSQL.
+
+- Access is subscriber-only and validated server-side against Helix for the broadcaster/viewer pair.
+- One-time usage per viewer per streamer is enforced with a persisted completion marker (`streamerId + viewerId`).
+- Queue key is `StreamerId`; only one active request can be in `SelectingItem`/`WaitingConfirmation` at a time.
+- New requests start in `Pending`; backend auto-promotes oldest pending request when no active request exists.
+- Queue ETA is `max(0, queuePosition - 1) * 65` seconds.
+
+### Gift request states
+
+`Pending -> SelectingItem -> WaitingConfirmation -> Completed`
+
+- `Failed` is reachable from any non-terminal state (timeout, no items, explicit failure).
+
+### Timeouts
+
+- `SelectingItem`: 60 seconds.
+- `WaitingConfirmation`: 5 minutes.
+- Timeout worker runs periodically and transitions stale active requests to `Failed`, then promotes next pending request.
+
+### API endpoints
+
+- `GET /api/streamers/{streamerId}/gift-queue` (viewer JWT): queue snapshot and current position.
+- `POST /api/gift-requests` (viewer JWT): create gift request.
+- `PATCH /api/gift-requests/{id}` (Desktop API key): state update.
+- `POST /api/gift-requests/{id}/select-item` (Desktop API key): report selected inventory item.
+- `POST /api/gift-requests/{id}/confirm` (Desktop API key): finalize confirmed send/decline.
+
+### Addon/Desktop contract additions
+
+- Addon exposes `MGM_RequestGiftItems(giftRequestId)` and logs item payload marker `[MGM_ITEMS:<uuid>]...`.
+- Addon emits `[MGM_GIFT_ACCEPT:<uuid>]` when recipient confirms with whisper `!twgift`.
+- Desktop tails these markers and calls gift APIs to select item / confirm completion.
 <!-- Updated: 2026-04-05 (Deduplication pass) -->
 
 # Mimiron's Gold-o-Matic — Technical Specification (MVP)
@@ -6,13 +41,13 @@ This document is the **canonical implementation contract** for the MVP.
 `docs/overview/ROADMAP.md` contains step-by-step prompts and links into this spec.
 **User-facing UI:** hub [`docs/reference/UI_SPEC.md`](../reference/UI_SPEC.md) (tokens, navigation); per-surface screens in [`docs/components/twitch-extension/UI_SPEC.md`](../components/twitch-extension/UI_SPEC.md), [`docs/components/desktop/UI_SPEC.md`](../components/desktop/UI_SPEC.md), [`docs/components/wow-addon/UI_SPEC.md`](../components/wow-addon/UI_SPEC.md).
 
-**Code alignment:** MVP slices **MVP-1 … MVP-5** are implemented under `src/` (Shared, Backend, Desktop, Twitch Extension, WoW addon). Remaining gaps (automated tests, packaging, production hardening) are summarized in `docs/reference/IMPLEMENTATION_READINESS.md`.
+**Code alignment:** MVP slices **MVP-1 … MVP-5** are implemented under `src/` (Shared, **`src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api`** plus sibling **`Backend.*`** projects, Desktop, Twitch Extension, WoW addon). Remaining gaps (automated tests, packaging, production hardening) are summarized in `docs/reference/IMPLEMENTATION_READINESS.md`.
 
 **Non-normative digests (do not override this file):** [`docs/overview/MVP_PRODUCT_SUMMARY.md`](MVP_PRODUCT_SUMMARY.md), [`docs/reference/GLOSSARY.md`](../reference/GLOSSARY.md), [`docs/reference/WORKFLOWS.md`](../reference/WORKFLOWS.md), [`docs/overview/ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ### EBS — Extension Backend Service (normative, MVP)
 
-- **Definition:** **`MimironsGoldOMatic.Backend`** is the **EBS** — the server that implements Extension-facing APIs, **Twitch Extension JWT** validation (**§5.1**, Bearer), and integrations that require broadcaster/Twitch credentials.
+- **Definition:** The **EBS** is implemented by **`MimironsGoldOMatic.Backend.Api`** (ASP.NET Core host) and **`Backend.*`** projects — the server surface that implements Extension-facing APIs, **Twitch Extension JWT** validation (**§5.1**, Bearer), and integrations that require broadcaster/Twitch credentials. *(The legacy monolith folder **`MimironsGoldOMatic.Backend`** was removed; **`Backend.Api`** is the runtime host.)*
 - **Helix:** The EBS **owns** Twitch **Helix** API credentials (client id/secret, broadcaster user access where required) used for **`Send Chat Message`** (§11 reward-sent line) and other Helix calls tied to this product.
 - **EventSub:** The EBS **hosts** the **Twitch EventSub** subscription lifecycle and **consumes** **`channel.chat.message`** events for **`!twgold <CharacterName>`** enrollment (**§1** glossary, **§5**). Chat messages do not POST directly to the EBS HTTP surface; **EventSub** is the **transport** from Twitch to the EBS.
 - **Enrollment — subscriber flag (MVP, locked):** For **`!twgold`** pool enrollment, the EBS **must** trust the **subscriber / badges** data supplied on the **`channel.chat.message`** EventSub notification only. **Do not** perform secondary **Helix** lookups to verify subscription during enrollment (saves API quota; Twitch is authoritative for the event payload).

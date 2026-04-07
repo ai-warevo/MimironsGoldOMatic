@@ -333,7 +333,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: src
-          file: src/MimironsGoldOMatic.Backend/Dockerfile
+          file: src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/Dockerfile
           push: false
           tags: mimirons-goldomatic-backend:${{ env.RELEASE_VERSION }}
           load: true

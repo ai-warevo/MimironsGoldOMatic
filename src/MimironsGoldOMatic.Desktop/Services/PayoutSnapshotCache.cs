@@ -1,8 +1,7 @@
-using MimironsGoldOMatic.Shared;
-
+﻿
 namespace MimironsGoldOMatic.Desktop.Services;
 
-/// <summary>In-memory map for <c>[MGM_ACCEPT:UUID]</c> → <c>characterName</c> for <c>confirm-acceptance</c>.</summary>
+/// <summary>In-memory map for <c>[MGM_ACCEPT:UUID]</c> в†’ <c>characterName</c> for <c>confirm-acceptance</c>.</summary>
 public sealed class PayoutSnapshotCache
 {
     private readonly object _lock = new();

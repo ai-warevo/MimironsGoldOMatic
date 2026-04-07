@@ -8,6 +8,47 @@ MVP **viewer** panel: **Vite + React + TypeScript** (Zustand, axios, EBS polling
 
 **Scripts:** `npm run dev`, `npm run build`, `npm run lint` — see **`package.json`**.
 
+## API code generation (C# -> TypeScript Axios)
+
+TypeScript API artifacts are generated from backend C# contracts during backend build.
+
+- Trigger: `dotnet build src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj`
+- Generator project: `src/Tools/MimironsGoldOMatic.ApiTsGen`
+- Generated files:
+  - `src/MimironsGoldOMatic.TwitchExtension/src/api/models.ts`
+  - `src/MimironsGoldOMatic.TwitchExtension/src/api/client.ts`
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Manual generator run (debugging)
+
+```bash
+dotnet run --project src/Tools/MimironsGoldOMatic.ApiTsGen/MimironsGoldOMatic.ApiTsGen.csproj -- \
+  src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Api \
+  src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Application \
+  src/MimironsGoldOMatic.Shared \
+  src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Common \
+  src/MimironsGoldOMatic.TwitchExtension/src/api
+```
+
+### Usage example
+
+```typescript
+import { MimironsGoldOMaticApiClient } from './api/client'
+
+const api = new MimironsGoldOMaticApiClient(
+  import.meta.env.VITE_MGM_EBS_BASE_URL,
+  () => window.localStorage.getItem('mgm.jwt'),
+)
+
+const state = await api.getRouletteState()
+console.log(state.spinPhase, state.nextSpinAt)
+```
+
 **Automated tests (Jest, in this package — not under repo `src/Tests/` .NET projects):**
 
 - **`npm test`** — ESLint, **`jest`** (unit + integration), then production **`tsc` + `vite build`** (same as CI).

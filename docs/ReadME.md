@@ -32,7 +32,7 @@ Normative architecture and API behavior live in **`docs/overview/SPEC.md`** and 
 - **Role:** DTOs, enums, and validation consumed by **EBS** and **Desktop** (not MediatR handlers).
 - **FluentValidation:** `PayoutDto` / `CreatePayoutRequest` validators; **`CharacterNameRules`** aligned with [`SPEC.md`](overview/SPEC.md) §4.
 - **Records / primary constructors:** DTOs such as **`PayoutDto`**, **`CreatePayoutRequest`** live in this assembly.
-- **EBS application layer:** **`HandlerResult<T>`** + **`ApiErrorDto`** in **`MimironsGoldOMatic.Backend`** only.
+- **EBS application layer:** **`HandlerResult<T>`** + **`ApiErrorDto`** in **`MimironsGoldOMatic.Backend.Domain`** (mediator contracts), not in **`Shared`**.
 
 <!-- Content moved to WORKFLOWS.md. See: docs/reference/WORKFLOWS.md -->
 
