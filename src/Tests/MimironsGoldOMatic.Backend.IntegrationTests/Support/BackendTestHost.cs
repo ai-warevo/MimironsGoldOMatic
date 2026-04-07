@@ -1,9 +1,9 @@
 using FluentValidation;
-using MimironsGoldOMatic.Backend.Application;
 using MimironsGoldOMatic.Backend.Configuration;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
-using MimironsGoldOMatic.Shared;
+using MimironsGoldOMatic.Backend.Services.Mediatr;
+using MimironsGoldOMatic.Backend.Shared;
 using Marten;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
