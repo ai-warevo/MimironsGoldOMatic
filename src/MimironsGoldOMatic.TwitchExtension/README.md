@@ -12,8 +12,8 @@ MVP **viewer** panel: **Vite + React + TypeScript** (Zustand, axios, EBS polling
 
 TypeScript API artifacts are generated from backend C# contracts during backend build.
 
-- Trigger: `dotnet build src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj`
-- Generator project: `src/tools/MimironsGoldOMatic.ApiTsGen`
+- Trigger: `dotnet build src/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj`
+- Generator project: `src/Tools/MimironsGoldOMatic.ApiTsGen`
 - Generated files:
   - `src/MimironsGoldOMatic.TwitchExtension/src/api/models.ts`
   - `src/MimironsGoldOMatic.TwitchExtension/src/api/client.ts`
@@ -27,9 +27,12 @@ npm install
 ### Manual generator run (debugging)
 
 ```bash
-dotnet run --project src/tools/MimironsGoldOMatic.ApiTsGen/MimironsGoldOMatic.ApiTsGen.csproj -- \
-  src/MimironsGoldOMatic.Backend \
+dotnet run --project src/Tools/MimironsGoldOMatic.ApiTsGen/MimironsGoldOMatic.ApiTsGen.csproj -- \
+  src/MimironsGoldOMatic.Backend.Api \
+  src/MimironsGoldOMatic.Backend.Domain \
+  src/MimironsGoldOMatic.Backend.Abstract \
   src/MimironsGoldOMatic.Shared \
+  src/MimironsGoldOMatic.Backend.Shared \
   src/MimironsGoldOMatic.TwitchExtension/src/api
 ```
 

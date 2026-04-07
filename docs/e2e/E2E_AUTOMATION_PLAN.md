@@ -9,7 +9,7 @@ This document proposes how to automate the **full operator workflow** currently 
 
 **Code roots (actual repository layout):**
 
-- Backend (EBS): `src/MimironsGoldOMatic.Backend/` — **not** `MimironsGoldOMatic.WEBAPI.Backend`.
+- Backend (EBS): `src/MimironsGoldOMatic.Backend.Api/` (plus **`Backend.*` libraries**) — **not** `MimironsGoldOMatic.WEBAPI.Backend`.
 - WoW addon: `src/MimironsGoldOMatic.WoWAddon/`.
 - Desktop: `src/MimironsGoldOMatic.Desktop/`.
 - CI: `.github/workflows/e2e-test.yml` — **Tier A + Tier B** (Backend + Postgres + Tier A mocks + **MockHelixApi** + **SyntheticDesktop** + synthetic EventSub + Tier B orchestrator) on **PRs to `main`** (scoped build; no Desktop / addon / Extension). **Unit/integration (parallel):** `.github/workflows/unit-integration-tests.yml` (Backend, Desktop, WoW addon validation, Twitch Extension `npm test`) on the **same** PR trigger. CD: `.github/workflows/release.yml` — **full multi-component build + GitHub Release + GHCR** on **`main`** merges (and optional manual dispatch).
@@ -57,8 +57,8 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 | Field | Content |
 |--------|---------|
 | **Action** | Subscriber sends `!twgold <CharacterName>`; Backend records pool row (dedupe by `message_id` or idempotent claim). |
-| **Trigger** | **CI:** test code sends HTTP request. Either **`POST /api/twitch/eventsub`** with a JSON body matching **`channel.chat.message`** (see [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs)) or **`POST /api/payouts/claim`** with Extension JWT ([`RouletteController`](../../src/MimironsGoldOMatic.Backend/Controllers/RouletteController.cs)). |
-| **Mock / stub** | **Mock Twitch:** no IRC; use **synthetic EventSub payload** (and HMAC when `Twitch:EventSubSecret` is set — mirror [`VerifySignature`](../../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs)). **Stub:** Helix subscriber check if enabled (`Mgm:DevSkipSubscriberCheck` / product flags per Backend README). |
+| **Trigger** | **CI:** test code sends HTTP request. Either **`POST /api/twitch/eventsub`** with a JSON body matching **`channel.chat.message`** (see [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend.Api/Controllers/TwitchEventSubController.cs)) or **`POST /api/payouts/claim`** with Extension JWT ([`RouletteController`](../../src/MimironsGoldOMatic.Backend.Api/Controllers/RouletteController.cs)). |
+| **Mock / stub** | **Mock Twitch:** no IRC; use **synthetic EventSub payload** (and HMAC when `Twitch:EventSubSecret` is set — mirror [`VerifySignature`](../../src/MimironsGoldOMatic.Backend.Api/Controllers/TwitchEventSubController.cs)). **Stub:** Helix subscriber check if enabled (`Mgm:DevSkipSubscriberCheck` / product flags per Backend README). |
 | **Verification** | **GET** pool read-model or **`GET /api/pool/me`** (JWT) / assert Marten **`PoolDocument`** after enrollment path used in test. |
 | **Test data** | `message_id`: unique string; `chatter_user_id`: `"123456789"`; `message.text`: `"!twgold Testhero"`; badges include subscriber `set_id` (see `HasSubscriberBadge` in `TwitchEventSubController`). |
 
@@ -67,10 +67,10 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 | Field | Content |
 |--------|---------|
 | **Action** | Spin cycle selects candidate; **`POST /api/roulette/verify-candidate`** with **`online: true`** creates **`Pending`** payout when rules pass. |
-| **Trigger** | **CI:** existing pattern: seed Marten docs + call [`RouletteCycleTick`](../../src/MimironsGoldOMatic.Backend/Services/RouletteCycleTick.cs), then **`POST /api/roulette/verify-candidate`** via [`DesktopRouletteController`](../../src/MimironsGoldOMatic.Backend/Controllers/DesktopRouletteController.cs) with header **`X-MGM-ApiKey`** ([`ApiKeyAuthenticationHandler`](../../src/MimironsGoldOMatic.Backend/Auth/ApiKeyAuthenticationHandler.cs)). Extend or compose one **linear E2E test** that chains enrollment → tick → verify (today partially split across [`PostClaimRulesIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PostClaimRulesIntegrationTests.cs), [`RouletteVerifyCandidateIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs)). |
+| **Trigger** | **CI:** existing pattern: seed Marten docs + call [`RouletteCycleTick`](../../src/MimironsGoldOMatic.Backend.Services/RouletteCycleTick.cs), then **`POST /api/roulette/verify-candidate`** via [`DesktopRouletteController`](../../src/MimironsGoldOMatic.Backend.Api/Controllers/DesktopRouletteController.cs) with header **`X-MGM-ApiKey`** ([`ApiKeyAuthenticationHandler`](../../src/MimironsGoldOMatic.Backend.Infrastructure/Auth/ApiKeyAuthenticationHandler.cs)). Extend or compose one **linear E2E test** that chains enrollment → tick → verify (today partially split across [`PostClaimRulesIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PostClaimRulesIntegrationTests.cs), [`RouletteVerifyCandidateIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs)). |
 | **Mock / stub** | **Time:** use injectable **`TimeProvider`** / fixed **`DateTime`** only if introduced; otherwise keep “wall-clock safe” windows like existing roulette tests. **No real Desktop.** |
-| **Verification** | HTTP **`200`** on verify; payout **`Pending`**; **`GET /api/payouts/pending`** returns row; optional **`GET /api/roulette/state`** ([`GetRouletteStateQuery`](../../src/MimironsGoldOMatic.Backend/Application/EbsMediator.cs)) with JWT. |
-| **Test data** | [`VerifyCandidateRequest`](../../src/MimironsGoldOMatic.Backend/Api/ApiContracts.cs): `schemaVersion`, `spinCycleId`, `characterName`, `online: true`, `capturedAt` within verification window per **`docs/overview/SPEC.md`**. |
+| **Verification** | HTTP **`200`** on verify; payout **`Pending`**; **`GET /api/payouts/pending`** returns row; optional **`GET /api/roulette/state`** ([`GetRouletteStateQuery`](../../src/MimironsGoldOMatic.Backend.Domain/EbsMediator.Contracts.cs)) with JWT. |
+| **Test data** | [`VerifyCandidateRequest`](../../src/MimironsGoldOMatic.Backend.Domain/EbsMediator.Contracts.cs): `schemaVersion`, `spinCycleId`, `characterName`, `online: true`, `capturedAt` within verification window per **`docs/overview/SPEC.md`**. |
 
 ### Step 3 — WoW addon / `WoWChatLog.txt` / Desktop WinAPI
 
@@ -78,7 +78,7 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 |--------|---------|
 | **Action** | Addon emits **`[MGM_WHO]`**, **`[MGM_ACCEPT:UUID]`**, **`[MGM_CONFIRM:UUID]`**; Desktop tails log and calls **`confirm-acceptance`**, **`PATCH` status**, inject **`/run`**. |
 | **Trigger** | **Tier A (CI):** **do not** launch WoW. Use a **synthetic bridge**: same HTTP sequence Desktop would perform, driven from test code (or a thin **`Mgm.Desktop.E2EHarness`** console). **Tier B:** run real **`MimironsGoldOMatic.Desktop`** against **`WoW.exe`** + addon under a self-hosted agent. |
-| **Mock / stub** | **MockWoWClient:** not a process — **omit** and replace with **direct API calls** that Desktop would make: [`DesktopPayoutsController`](../../src/MimironsGoldOMatic.Backend/Controllers/DesktopPayoutsController.cs) **`POST .../confirm-acceptance`**, **`PATCH .../status`**. **Optional:** temp file appending lines and a **shared log-parser** library extracted from Desktop (future refactor) to prove tag regexes match addon output. |
+| **Mock / stub** | **MockWoWClient:** not a process — **omit** and replace with **direct API calls** that Desktop would make: [`DesktopPayoutsController`](../../src/MimironsGoldOMatic.Backend.Api/Controllers/DesktopPayoutsController.cs) **`POST .../confirm-acceptance`**, **`PATCH .../status`**. **Optional:** temp file appending lines and a **shared log-parser** library extracted from Desktop (future refactor) to prove tag regexes match addon output. |
 | **Verification** | After **`confirm-acceptance`**: domain state matches SPEC; after **`PATCH` `Sent`**: pool removal (existing tests). **Tier B:** assert lines in real `WoWChatLog.txt`. |
 | **Test data** | `characterName` consistent with enrollment; payout `id` GUID from **`GET /api/payouts/pending`** response. |
 
@@ -86,11 +86,11 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 
 | Field | Content |
 |--------|---------|
-| **Action** | On transition to **`Sent`**, Backend calls Helix **`Send Chat Message`** ([`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs)) with Russian copy per **SPEC** §11. |
+| **Action** | On transition to **`Sent`**, Backend calls Helix **`Send Chat Message`** ([`HelixChatService`](../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs)) with Russian copy per **SPEC** §11. |
 | **Trigger** | **CI:** **`PATCH /api/payouts/{id}/status`** with **`Sent`** in Tier A test (see [`PatchPayoutStatusIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PatchPayoutStatusIntegrationTests.cs) for pool removal; extend to assert Helix outbound). |
 | **Mock / stub** | **MockHelixAPI:** `HttpMessageHandler` fake or **WireMock.NET** listening on loopback; inject **`HttpClient`** base address for **`Helix`** named client. **Today** URL is hardcoded to `https://api.twitch.tv/helix/chat/messages` in `HelixChatService` — **requires a small product change**: e.g. optional **`Twitch:HelixApiBaseUrl`** (empty = production URL) so tests can point to **`http://localhost:9xxx`**. |
 | **Verification** | Mock receives **POST** with JSON containing `broadcaster_id`, `sender_id`, `message` matching **`Награда отправлена персонажу {name} на почту, проверяй ящик!`**. |
-| **Test data** | [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/Configuration/TwitchOptions.cs): `BroadcasterUserId`, `BroadcasterAccessToken` set to dummy values; mock returns **`204`** / documented Helix success shape. |
+| **Test data** | [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs): `BroadcasterUserId`, `BroadcasterAccessToken` set to dummy values; mock returns **`204`** / documented Helix success shape. |
 
 ---
 
@@ -99,7 +99,7 @@ Each row maps to **Automated E2E** steps 1–4 and the middle of **SC-001**.
 | Mock | Purpose | Simulate | Expected behavior |
 |------|---------|----------|-------------------|
 | **MockEventSubWebhook** | Replace live Twitch → EBS delivery | **`POST /api/twitch/eventsub`** | Body includes `subscription.type` = `channel.chat.message`, `event.message_id`, `event.chatter_user_id`, `event.message.text`, `event.badges`. Headers: `Twitch-Eventsub-Message-Id`, `Timestamp`, `Signature` when secret configured. |
-| **MockExtensionJwt** | Auth for **`/api/pool/me`**, **`/api/payouts/claim`**, etc. | HS256 JWT | Signed with same key as [`Program.cs`](../../src/MimironsGoldOMatic.Backend/Program.cs) dev derivation or test secret; claims: `user_id`, optional `display_name`. |
+| **MockExtensionJwt** | Auth for **`/api/pool/me`**, **`/api/payouts/claim`**, etc. | HS256 JWT | Signed with same key as [`Program.cs`](../../src/MimironsGoldOMatic.Backend.Api/Program.cs) dev derivation or test secret; claims: `user_id`, optional `display_name`. |
 | **MockHelixApi** | No real Twitch chat send in CI | **`POST /helix/chat/messages`** (path as configured) | **`GET /health`** → **`status: healthy`**, **`component: MockHelixApi`**. **`POST`** → **204**; last body on **`GET /last-request`**. Optional **`MockHelix:StrictAuth=true`** enforces **`Bearer`** + **`Client-Id`**. |
 | **MockWoWClient** (conceptual) | Replace WoW + WinAPI in Tier A | N/A in process | **Not implemented as a service** in Tier A — replaced by **API choreography**. Tier B only: optional scripted window focus tools (out of scope for default **CI**). |
 | **SyntheticDesktop** | Replace Desktop executable in CI Tier B | Sequences of **`HttpClient`** calls | **`GET /health`** → **`healthy`**, **`component: SyntheticDesktop`**. **`POST /run-sequence`** with **`payoutId`** + **`characterName`** → **`confirm-acceptance`** → **`PATCH InProgress`** → **`PATCH Sent`**. **`GET /last-run`** returns step statuses. |
@@ -175,7 +175,7 @@ This section describes the **split** between **fast PR validation** (Tier A E2E)
 | **`build-desktop`** | `windows-latest` | **MimironsGoldOMatic.Desktop** (`dotnet publish`, `win-x64`, framework-dependent) | ZIP **`MimironsGoldOMatic-Desktop-<RELEASE_VERSION>-win.zip`** + embedded **`README.txt`** → artifact **`desktop-release`** |
 | **`build-wowaddon`** | `ubuntu-latest` | **`src/MimironsGoldOMatic.WoWAddon`** (`.toc`, `.lua`, manifest text; future locale folders can be added to the same pack step) | ZIP **`WoWAddon-<RELEASE_VERSION>.zip`** + **`README.txt`** → **`wow-addon-release`** |
 | **`build-twitch-extension`** | `ubuntu-latest` | **`src/MimironsGoldOMatic.TwitchExtension`** — `npm ci`, `npm run build` (Vite) | ZIP **`TwitchExtension-<RELEASE_VERSION>.zip`** containing **`dist/`** + **`README.txt`** → **`twitch-extension-release`** |
-| **`build-backend-docker`** | `ubuntu-latest` | **Backend** Docker image from [`src/MimironsGoldOMatic.Backend/Dockerfile`](../../src/MimironsGoldOMatic.Backend/Dockerfile) (build context **`src/`**) | Push **`ghcr.io/<owner-lowercase>/mimirons-goldomatic-backend:<RELEASE_VERSION>`** and **`:latest`** (OIDC/`GITHUB_TOKEN` with `packages: write`) |
+| **`build-backend-docker`** | `ubuntu-latest` | **Backend** Docker image from [`src/MimironsGoldOMatic.Backend.Api/Dockerfile`](../../src/MimironsGoldOMatic.Backend.Api/Dockerfile) (build context **`src/`**) | Push **`ghcr.io/<owner-lowercase>/mimirons-goldomatic-backend:<RELEASE_VERSION>`** and **`:latest`** (OIDC/`GITHUB_TOKEN` with `packages: write`) |
 
 **Sequential job (5)** — **must not start** until **all four** build jobs succeed (`needs:`).
 
@@ -225,7 +225,7 @@ Push to main (or workflow_dispatch)
 
 ### Accounts and identities (Tier B / live)
 
-- **Twitch:** broadcaster test account; **Extension** in **Testing** or **Released**; **Dev Rig** or hosted Extension; **OAuth** token with scopes for **Send Chat Message** (per Twitch docs and [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend/Configuration/TwitchOptions.cs) comments).
+- **Twitch:** broadcaster test account; **Extension** in **Testing** or **Released**; **Dev Rig** or hosted Extension; **OAuth** token with scopes for **Send Chat Message** (per Twitch docs and [`TwitchOptions`](../../src/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs) comments).
 - **WoW:** 3.3.5a client + test characters (subscriber flow is Twitch-side; in-game only needs whisper + mail).
 
 ### Environment variables / configuration
@@ -279,14 +279,14 @@ A **passed** Tier A **E2E** run should demonstrate:
 
 ### MockEventSubWebhook (`src/Mocks/MockEventSubWebhook/`)
 
-- **Purpose:** Stand-in for the **Twitch → EBS** edge. Accepts the same **`POST /api/twitch/eventsub`** shape the real [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs) expects, verifies **HMAC-SHA256** (`Twitch-Eventsub-Message-*` headers) when `Twitch:EventSubSecret` is set (same algorithm as EBS), logs, then **forwards** the raw body and headers to **`{Backend:BaseUrl}/api/twitch/eventsub`**.
+- **Purpose:** Stand-in for the **Twitch → EBS** edge. Accepts the same **`POST /api/twitch/eventsub`** shape the real [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend.Api/Controllers/TwitchEventSubController.cs) expects, verifies **HMAC-SHA256** (`Twitch-Eventsub-Message-*` headers) when `Twitch:EventSubSecret` is set (same algorithm as EBS), logs, then **forwards** the raw body and headers to **`{Backend:BaseUrl}/api/twitch/eventsub`**.
 - **Endpoints:** `GET /health`, **`POST /api/twitch/eventsub`**.
 - **Configuration:** `Backend:BaseUrl`, `Twitch:EventSubSecret`, **`ASPNETCORE_URLS`** (default local profile **9051** in `Properties/launchSettings.json`).
 - **Run:** `dotnet run --project src/Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj`
 
 ### MockExtensionJwt (`src/Mocks/MockExtensionJwt/`)
 
-- **Purpose:** Issues **HS256** Extension **Bearer** tokens using the **same signing material** as the Backend ([`Program.cs`](../../src/MimironsGoldOMatic.Backend/Program.cs): base64 `Twitch:ExtensionSecret`, or Development fallback `SHA256("mgm-dev-extension-secret-change-me")` when secret empty).
+- **Purpose:** Issues **HS256** Extension **Bearer** tokens using the **same signing material** as the Backend ([`Program.cs`](../../src/MimironsGoldOMatic.Backend.Api/Program.cs): base64 `Twitch:ExtensionSecret`, or Development fallback `SHA256("mgm-dev-extension-secret-change-me")` when secret empty).
 - **Endpoints:** `GET /health`, **`GET /token?userId=…&displayName=…`** → JSON `{ "access_token", "token_type", "expires_in" }` for **`GET /api/pool/me`**, **`POST /api/payouts/claim`**, etc.
 - **Configuration:** `Twitch:ExtensionSecret`, optional `Twitch:ExtensionClientId` (**aud**). **`ASPNETCORE_URLS`** (default **9052**).
 - **Run:** `dotnet run --project src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj`
@@ -355,7 +355,7 @@ E2E Tier A: pool enrollment verified.
 
 **3. HMAC path** — The workflow sets **`E2E_EVENTSUB_SECRET`** and passes **`--secret`** to Python; the mock verifies **`Twitch-Eventsub-Message-Signature`** (`sha256=` HMAC over **`message-id` + `timestamp` + raw body**) before forwarding to **`POST /api/twitch/eventsub`**. A successful run implies **no 401** from the mock or EBS on that POST.
 
-**4. JWT path** — **`MockExtensionJwt`** issues **`GET /token?userId=e2e-viewer-1&displayName=…`**; Backend **`Development`** uses the same signing material as the mock when **`Twitch:ExtensionSecret`** is empty (see [`Program.cs`](../../src/MimironsGoldOMatic.Backend/Program.cs)). A successful **`GET /api/pool/me`** confirms **Bearer** validation and **`user_id`** alignment with enrollment.
+**4. JWT path** — **`MockExtensionJwt`** issues **`GET /token?userId=e2e-viewer-1&displayName=…`**; Backend **`Development`** uses the same signing material as the mock when **`Twitch:ExtensionSecret`** is empty (see [`Program.cs`](../../src/MimironsGoldOMatic.Backend.Api/Program.cs)). A successful **`GET /api/pool/me`** confirms **Bearer** validation and **`user_id`** alignment with enrollment.
 
 ### Screenshots / deep links
 
@@ -591,9 +591,9 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 
 | Step | Task | Details |
 |------|------|---------|
-| **A1** | **Update [`HelixChatService.cs`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs)** | Today the POST URL is a **constant** (`https://api.twitch.tv/helix/chat/messages`). Replace with a **base URI** from `IOptions<TwitchOptions>` plus a fixed relative path **`/helix/chat/messages`** when the named **`HttpClient`** is configured with `BaseAddress`. If **`HelixApiBaseUrl`** is **empty**, register **`Helix`** client with base **`https://api.twitch.tv`** (current behavior). |
-| **A2** | **Configuration validation and defaults** | Add **`HelixApiBaseUrl`** (optional string) to [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend/Configuration/TwitchOptions.cs). On startup, if set: **must** be absolute HTTP(S); trim trailing slash. Document interaction with existing **`BroadcasterAccessToken`**, **`BroadcasterUserId`**, **`HelixClientId`** (still required for a real outbound call). |
-| **A3** | **`appsettings` schema** | Document in [`appsettings.Development.json`](../../src/MimironsGoldOMatic.Backend/appsettings.Development.json) / comments: **`Twitch:HelixApiBaseUrl`** example `http://127.0.0.1:9053` for local MockHelixApi. No secret in this field. |
+| **A1** | **Update [`HelixChatService.cs`](../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs)** | Today the POST URL is a **constant** (`https://api.twitch.tv/helix/chat/messages`). Replace with a **base URI** from `IOptions<TwitchOptions>` plus a fixed relative path **`/helix/chat/messages`** when the named **`HttpClient`** is configured with `BaseAddress`. If **`HelixApiBaseUrl`** is **empty**, register **`Helix`** client with base **`https://api.twitch.tv`** (current behavior). |
+| **A2** | **Configuration validation and defaults** | Add **`HelixApiBaseUrl`** (optional string) to [`TwitchOptions.cs`](../../src/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs). On startup, if set: **must** be absolute HTTP(S); trim trailing slash. Document interaction with existing **`BroadcasterAccessToken`**, **`BroadcasterUserId`**, **`HelixClientId`** (still required for a real outbound call). |
+| **A3** | **`appsettings` schema** | Document in [`appsettings.Development.json`](../../src/MimironsGoldOMatic.Backend.Api/appsettings.Development.json) / comments: **`Twitch:HelixApiBaseUrl`** example `http://127.0.0.1:9053` for local MockHelixApi. No secret in this field. |
 
 **Success criteria (A):** With **`HelixApiBaseUrl`** unset, integration/unit tests show **identical** request line to production Twitch. With base `http://localhost:9053`, **`HelixChatService`** POSTs only to the mock; **`HelixChatServiceTests`** updated or extended to cover both paths.
 
@@ -602,7 +602,7 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | Step | Task | Details |
 |------|------|---------|
 | **B1** | **New project** | **`src/Mocks/MockHelixApi/`** — **.NET 10.0**, ASP.NET Core minimal API, namespace **`MimironsGoldOMatic.Mocks.MockHelixApi`**, added to [`MimironsGoldOMatic.slnx`](../../src/MimironsGoldOMatic.slnx). |
-| **B2** | **`POST /helix/chat/messages`** | Match Twitch Helix shape: accept JSON with **`broadcaster_id`**, **`sender_id`**, **`message`**. Echo **`Authorization: Bearer`** and **`Client-Id`** validation (optional strict mode for CI). Return **`204`** or **`200`** with documented empty/small JSON body (align with [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) success handling). |
+| **B2** | **`POST /helix/chat/messages`** | Match Twitch Helix shape: accept JSON with **`broadcaster_id`**, **`sender_id`**, **`message`**. Echo **`Authorization: Bearer`** and **`Client-Id`** validation (optional strict mode for CI). Return **`204`** or **`200`** with documented empty/small JSON body (align with [`HelixChatService`](../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) success handling). |
 | **B3** | **Response templates** | Implement **success** plus **401** / **500** branches for future retry tests (see [`HelixChatServiceTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/Unit/HelixChatServiceTests.cs)). Store **last request body** in memory for **`GET /last-request`** (JSON) or structured logs for **`curl`** assertions. |
 | **B4** | **`GET /health`** | JSON **`{ "status": "healthy", "component": "MockHelixApi" }`** (Tier B mocks use **`component`** + **`healthy`**; Tier A mocks remain **`status`:** **`ok`** + **`service`**). |
 | **B5** | **E2E workflow** | Start with **`ASPNETCORE_URLS=http://127.0.0.1:9053`** (or next free port); Backend **`Twitch__HelixApiBaseUrl`** points here; see **D** below. |
@@ -614,7 +614,7 @@ On **failure**, the workflow runs a **Logs (on failure)** step with backend PID 
 | Step | Task | Details |
 |------|------|---------|
 | **C1** | **New project** | **`src/Mocks/SyntheticDesktop/`** — console or minimal host (**.NET 10.0**) that runs a **scripted HTTP sequence** only (no WPF). Optional name: **`MimironsGoldOMatic.Mocks.SyntheticDesktop`**. |
-| **C2** | **HTTP client sequence** | Use **`HttpClient`** with header **`X-MGM-ApiKey`** = same as workflow **`Mgm__ApiKey`**. Base address = Backend **`http://127.0.0.1:8080`**. Order: resolve **`payoutId`** (e.g. from **`GET /api/payouts/pending`** or seeded state) → **`POST /api/payouts/{id}/confirm-acceptance`** → **`PATCH /api/payouts/{id}/status`** with **`InProgress`** → **`PATCH`** with **`Sent`** (exact JSON bodies per [`DesktopPayoutsController`](../../src/MimironsGoldOMatic.Backend/Controllers/DesktopPayoutsController.cs) / DTOs). |
+| **C2** | **HTTP client sequence** | Use **`HttpClient`** with header **`X-MGM-ApiKey`** = same as workflow **`Mgm__ApiKey`**. Base address = Backend **`http://127.0.0.1:8080`**. Order: resolve **`payoutId`** (e.g. from **`GET /api/payouts/pending`** or seeded state) → **`POST /api/payouts/{id}/confirm-acceptance`** → **`PATCH /api/payouts/{id}/status`** with **`InProgress`** → **`PATCH`** with **`Sent`** (exact JSON bodies per [`DesktopPayoutsController`](../../src/MimironsGoldOMatic.Backend.Api/Controllers/DesktopPayoutsController.cs) / DTOs). |
 | **C3** | **`confirm-acceptance` and `PATCH` flows** | Preconditions must match domain rules (acceptance window, pool membership). Reuse seeding patterns from [`RouletteVerifyCandidateIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/RouletteVerifyCandidateIntegrationTests.cs) and [`PatchPayoutStatusIntegrationTests`](../../src/Tests/MimironsGoldOMatic.Backend.UnitTests/PatchPayoutStatusIntegrationTests.cs). |
 | **C4** | **Verification endpoints** | Expose **`GET /last-run`** (JSON: **`ok`**, **`steps`**, **`error`**) after **`POST /run-sequence`**; exit code **0** from CI when all steps return **2xx**. |
 
@@ -657,7 +657,7 @@ Run these checks **before** wiring Tier B into [`.github/workflows/e2e-test.yml`
 | **Health** | `GET http://127.0.0.1:9053/health` | **200** JSON **`{"status":"healthy","component":"MockHelixApi"}`**. |
 | **Base URL alignment** | Backend (after **A1–A2**) uses same host/port as mock root | **`HelixChatService`** POST targets **`{base}/helix/chat/messages`** (leading slash on relative path). |
 | **POST + capture** | [`.github/scripts/tier_b_verification/check_mockhelixapi.py`](../../.github/scripts/tier_b_verification/check_mockhelixapi.py) | Exit **0**; **`GET /last-request`** shows **`captured: true`** and body **`message`** matching probe. |
-| **Response templates** | Mock returns **204** for successful **`POST /helix/chat/messages`** | Matches [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) success handling (**2xx**). |
+| **Response templates** | Mock returns **204** for successful **`POST /helix/chat/messages`** | Matches [`HelixChatService`](../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) success handling (**2xx**). |
 
 Optional strict auth: set **`MockHelix__StrictAuth=true`** on the mock to require **`Authorization: Bearer`** and **`Client-Id`** (mirrors production headers).
 
@@ -684,7 +684,7 @@ Optional strict auth: set **`MockHelix__StrictAuth=true`** on the mock to requir
 | Port | Service |
 |------|---------|
 | **5432** | PostgreSQL (**service container** in Actions) |
-| **8080** | **MimironsGoldOMatic.Backend** |
+| **8080** | **MimironsGoldOMatic.Backend.Api** |
 | **9051** | **MockEventSubWebhook** |
 | **9052** | **MockExtensionJwt** |
 | **9053** | **MockHelixApi** |
@@ -711,7 +711,7 @@ End-to-end **first** Tier B rehearsal on a developer machine (mirrors **CI** [`.
    `python3 .github/scripts/run_e2e_tier_b.py --api-key <Mgm:ApiKey>`
    (calls **`POST /api/e2e/prepare-pending-payout`**, **`POST /run-sequence`**, asserts **MockHelix** + **`/last-run`** + **`GET /api/pool/me`**).
 8. **Manual alternative:** `curl -sS -X POST http://127.0.0.1:8080/api/e2e/prepare-pending-payout -H "Content-Type: application/json" -H "X-MGM-ApiKey: <key>" -d "{\"twitchUserId\":\"e2e-viewer-1\"}"` → use returned **`payoutId`** with **`check_syntheticdesktop.py --payout-id …`** or **`curl`** **`/run-sequence`** as in older steps.
-9. **Assert Helix capture:** `curl -sS http://127.0.0.1:9053/last-request` — **`message`** must match Russian §11 template (see [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs)).
+9. **Assert Helix capture:** `curl -sS http://127.0.0.1:9053/last-request` — **`message`** must match Russian §11 template (see [`HelixChatService`](../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs)).
 
 **Note:** Natural roulette tick → **`verify-candidate`** without the harness still requires **wall-clock** alignment (see [Tier B Integration Results — issues](#tier-b-integration-results)); **CI** uses the harness by design.
 
@@ -725,9 +725,9 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 
 | Issue | Root cause | Symptoms | Resolution |
 |-------|------------|----------|------------|
-| **Wrong base URL** | Backend still posts to **api.twitch.tv** | Mock never receives traffic; **`GET /last-request`** empty | Set **`Twitch__HelixApiBaseUrl`** to mock root (e.g. `http://127.0.0.1:9053`); verify **`Helix`** `HttpClient` **`BaseAddress`** in [`Program.cs`](../../src/MimironsGoldOMatic.Backend/Program.cs). |
+| **Wrong base URL** | Backend still posts to **api.twitch.tv** | Mock never receives traffic; **`GET /last-request`** empty | Set **`Twitch__HelixApiBaseUrl`** to mock root (e.g. `http://127.0.0.1:9053`); verify **`Helix`** `HttpClient` **`BaseAddress`** in [`Program.cs`](../../src/MimironsGoldOMatic.Backend.Api/Program.cs). |
 | **MockHelixApi returns 404** | Wrong mock root (missing port), typo in URL, or POST path not under **`/helix/chat/messages`** | Python **`check_mockhelixapi`** or Backend logs show **404 Not Found**; **`last-request`** never updates | Open **`GET /health`** on the same base URL you configured; compare with [`MockHelixApi/Program.cs`](../../src/Mocks/MockHelixApi/Program.cs). Ensure Backend uses base **without** trailing slash and relative path **`/helix/chat/messages`**. |
-| **Response format** | Mock returns body Helix client does not treat as success | **`HelixChatService`** logs warnings; payout still **`Sent`** (SPEC: no rollback) | Return **2xx** with empty body or documented Helix JSON; match [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) `IsSuccessStatusCode` check. |
+| **Response format** | Mock returns body Helix client does not treat as success | **`HelixChatService`** logs warnings; payout still **`Sent`** (SPEC: no rollback) | Return **2xx** with empty body or documented Helix JSON; match [`HelixChatService`](../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) `IsSuccessStatusCode` check. |
 | **Auth headers** | Strict mock rejects missing **`Client-Id`** / **`Bearer`** | **401** from mock | Align dummy **`Twitch__BroadcasterAccessToken`** and **`Twitch__HelixClientId`** with mock expectations; or leave **`MockHelix__StrictAuth`** unset/false for local smoke tests. |
 
 **Log patterns:** successful mock capture — **`POST /helix/chat/messages`** returns **204**; **`GET /last-request`** JSON **`captured: true`**. Failure — connection refused (mock not started); **404** (wrong URL path).
@@ -737,8 +737,8 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 | Issue | Root cause | Symptoms | Resolution |
 |-------|------------|----------|------------|
 | **Sequence timing** | **`confirm-acceptance`** before payout is **`Pending`** or wrong user | **400** / **404** from EBS | Seed Marten + run **`verify-candidate`** (or test seed helper) before SyntheticDesktop; align **`characterName`** with enrollment. |
-| **SyntheticDesktop sequence fails (HTTP 4xx/5xx)** | Invalid state transition, wrong **`payoutId`**, or Backend rules reject acceptance | **`POST /run-sequence`** returns **502**; **`last-run`** shows **`ok: false`** and first failing **`steps`** entry | Read **`steps[].bodySnippet`** from **`GET /last-run`**; fix domain order (**`Pending`** → confirm → **`InProgress`** → **`Sent`**). Compare with [`EbsMediator`](../../src/MimironsGoldOMatic.Backend/Application/EbsMediator.cs) transitions. |
-| **Status mismatches** | Invalid state transition (e.g. **`Sent`** without **`InProgress`**) | Handler validation error | Follow same order as real Desktop: **acceptance** → **`InProgress`** → **`Sent`** per domain rules in [`EbsMediator`](../../src/MimironsGoldOMatic.Backend/Application/EbsMediator.cs) / payout aggregate. |
+| **SyntheticDesktop sequence fails (HTTP 4xx/5xx)** | Invalid state transition, wrong **`payoutId`**, or Backend rules reject acceptance | **`POST /run-sequence`** returns **502**; **`last-run`** shows **`ok: false`** and first failing **`steps`** entry | Read **`steps[].bodySnippet`** from **`GET /last-run`**; fix domain order (**`Pending`** → confirm → **`InProgress`** → **`Sent`**). Compare with [`EbsMediator`](../../src/MimironsGoldOMatic.Backend.Domain/EbsMediator.Contracts.cs) transitions. |
+| **Status mismatches** | Invalid state transition (e.g. **`Sent`** without **`InProgress`**) | Handler validation error | Follow same order as real Desktop: **acceptance** → **`InProgress`** → **`Sent`** per domain rules in [`EbsMediator`](../../src/MimironsGoldOMatic.Backend.Domain/EbsMediator.Contracts.cs) / payout aggregate. |
 | **API key** | **`X-MGM-ApiKey`** missing or wrong | **401** / **403** | Match **`Mgm__ApiKey`** in workflow and SyntheticDesktop config. |
 
 **Log patterns:** harness logs show **`POST confirm-acceptance`** status; Backend logs may show **`PatchPayoutStatus`** validation. **`last-run.error`** summarizes exception message after **`EnsureSuccessStatusCode`**.
@@ -856,7 +856,7 @@ Symptoms, likely causes, and fixes for new Tier B components. Tier A issues rema
 1. Implement in [`src/Mocks/MockHelixApi/`](../../src/Mocks/MockHelixApi/) or [`src/Mocks/SyntheticDesktop/`](../../src/Mocks/SyntheticDesktop/).
 2. Update [`.github/scripts/run_e2e_tier_b.py`](../../.github/scripts/run_e2e_tier_b.py) and/or [`.github/scripts/tier_b_verification/`](../../.github/scripts/tier_b_verification/) if assertions or ports change.
 3. Run local Tier B sequence (see [Tier B First Run Guide](#tier-b-first-run-guide)) before opening PR.
-4. If **Helix** path or auth expectations change, update [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) **and** mock together.
+4. If **Helix** path or auth expectations change, update [`HelixChatService`](../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) **and** mock together.
 
 ### Add new test scenarios (Tier A / Tier B)
 

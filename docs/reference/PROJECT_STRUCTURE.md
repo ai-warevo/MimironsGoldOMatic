@@ -27,7 +27,7 @@ MimironsGoldOMatic/
 ├── src/
 │   ├── MimironsGoldOMatic.slnx
 │   ├── MimironsGoldOMatic.Shared/
-│   ├── MimironsGoldOMatic.Backend/
+│   ├── MimironsGoldOMatic.Backend.Api/
 │   ├── MimironsGoldOMatic.Desktop/
 │   ├── MimironsGoldOMatic.TwitchExtension/   (Vite + React; not always in every build scope)
 │   ├── MimironsGoldOMatic.WoWAddon/
@@ -57,7 +57,7 @@ Use this table when updating bookmarks, scripts, or old chat logs. **Do not** re
 
 | Old / informal path | Current path | Migration notes |
 |---------------------|--------------|-----------------|
-| `MimironsGoldOMatic.WEBAPI.Backend` / “WEBAPI Backend” | `src/MimironsGoldOMatic.Backend/` | EBS project name is **`MimironsGoldOMatic.Backend`**; see [`E2E_AUTOMATION_PLAN.md`](../e2e/E2E_AUTOMATION_PLAN.md) code roots. |
+| `MimironsGoldOMatic.WEBAPI.Backend` / legacy monolith `MimironsGoldOMatic.Backend` | `src/MimironsGoldOMatic.Backend.Api/` (+ **`Backend.Domain`**, **`Backend.Services`**, …) | ASP.NET host is **`MimironsGoldOMatic.Backend.Api`**; see [`E2E_AUTOMATION_PLAN.md`](../e2e/E2E_AUTOMATION_PLAN.md) code roots. |
 | `src/tests/...` (lowercase) | `src/Tests/...` | Test tree uses **PascalCase** `Tests` on Windows/Linux CI. |
 | `src/tests/MimironsGoldOMatic.Backend.UnitTests` | `src/Tests/MimironsGoldOMatic.Backend.UnitTests` | Same project names; path casing only. |
 | `src/tests/MimironsGoldOMatic.Backend.IntegrationTests` | `src/Tests/MimironsGoldOMatic.Backend.IntegrationTests` | Docker-backed integration tests. |

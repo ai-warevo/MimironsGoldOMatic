@@ -1,5 +1,5 @@
 using System.Text.Encodings.Web;
-using MimironsGoldOMatic.Backend.Auth;
+using MimironsGoldOMatic.Backend.Infrastructure.Auth;
 using MimironsGoldOMatic.Backend.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;

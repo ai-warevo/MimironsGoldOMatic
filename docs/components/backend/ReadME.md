@@ -1,11 +1,15 @@
 <!-- Updated: 2026-04-06 (Project structure alignment + Tier B finalization) -->
 
-## MimironsGoldOMatic.Backend — EBS (Extension Backend Service)
+### Migration — legacy monolith removed
+
+The former **`src/MimironsGoldOMatic.Backend/`** monolith directory is **deleted**. The **canonical ASP.NET Core host** is **`MimironsGoldOMatic.Backend.Api`** (`Program.cs` under `src/MimironsGoldOMatic.Backend.Api/`). Supporting code is in **`MimironsGoldOMatic.Backend.Domain`**, **`.Services`**, **`.DataAccess`**, **`.Infrastructure`**, **`.Abstract`**, and **`.Shared`**. **Docker** image: `src/MimironsGoldOMatic.Backend.Api/Dockerfile`. **CI** and local runbooks use **`dotnet` … `MimironsGoldOMatic.Backend.Api.csproj`** (see `.github/workflows/e2e-test.yml`, `docs/setup/SETUP-for-developer.md`).
+
+## Backend (EBS — Extension Backend Service)
 
 <!-- System pipeline and EBS role: docs/overview/ARCHITECTURE.md · Product digest: docs/overview/MVP_PRODUCT_SUMMARY.md -->
 
-- **EBS role:** `MimironsGoldOMatic.Backend` is the canonical integration service described in `docs/overview/SPEC.md`. It owns Twitch Extension JWT validation (**HS256** via **`Twitch:ExtensionSecret`**, optional **`aud`** = **`ExtensionClientId`**), EventSub ingestion (`channel.chat.message` via **`POST /api/twitch/eventsub`**), Helix reward-sent messaging (§11, inline **3x** retry in `HelixChatService`, no Outbox in MVP), and Desktop-facing routes protected by **`X-MGM-ApiKey`**.
-- **Repository status:** `src/MimironsGoldOMatic.Backend` implements **MVP-2** from `docs/overview/ROADMAP.md`: Marten on PostgreSQL, MediatR command/query handlers, Extension JWT + Desktop API key auth, EventSub chat enrollment, roulette/pool/payout APIs, Helix reward-sent announcement attempts, and hourly payout expiration. Configure `ConnectionStrings:PostgreSQL`, `Mgm:ApiKey`, and `Twitch:*` (`appsettings.Development.json` includes a local PostgreSQL example). **EF Core** is not currently used (read models are Marten documents).
+- **EBS role:** The backend stack (host **`MimironsGoldOMatic.Backend.Api`**, domain/services/infrastructure projects) is the canonical integration service described in `docs/overview/SPEC.md`. It owns Twitch Extension JWT validation (**HS256** via **`Twitch:ExtensionSecret`**, optional **`aud`** = **`ExtensionClientId`**), EventSub ingestion (`channel.chat.message` via **`POST /api/twitch/eventsub`**), Helix reward-sent messaging (§11, inline **3x** retry in `HelixChatService`, no Outbox in MVP), and Desktop-facing routes protected by **`X-MGM-ApiKey`**.
+- **Repository status:** `src/MimironsGoldOMatic.Backend.Api` (plus **`Backend.*` libraries**) implements **MVP-2** from `docs/overview/ROADMAP.md`: Marten on PostgreSQL, MediatR command/query handlers, Extension JWT + Desktop API key auth, EventSub chat enrollment, roulette/pool/payout APIs, Helix reward-sent announcement attempts, and hourly payout expiration. Configure `ConnectionStrings:PostgreSQL`, `Mgm:ApiKey`, and `Twitch:*` (`appsettings.Development.json` includes a local PostgreSQL example). **EF Core** is not currently used (read models are Marten documents).
 - **UI spec (consumer-facing):** [`docs/reference/UI_SPEC.md`](../../reference/UI_SPEC.md) (hub) and per-client [`docs/components/twitch-extension/UI_SPEC.md`](../twitch-extension/UI_SPEC.md), [`docs/components/desktop/UI_SPEC.md`](../desktop/UI_SPEC.md), [`docs/components/wow-addon/UI_SPEC.md`](../wow-addon/UI_SPEC.md); API shapes remain canonical in `docs/overview/SPEC.md`.
 - **Stack:** ASP.NET Core, Marten (Event Store), PostgreSQL. EF Core remains optional for future read-side tooling (`docs/overview/SPEC.md` §6).
 
@@ -74,7 +78,7 @@ Mirror the workflow on one machine (Linux/macOS/WSL or separate terminals on Win
    `Mgm__ApiKey=ci-desktop-api-key`
    `Mgm__DevSkipSubscriberCheck=true`
    `Twitch__EventSubSecret=<same secret as mocks>`
-   then `dotnet run --project src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.csproj -c Release` (or Debug).
+   then `dotnet run --project src/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj -c Release` (or Debug).
 3. **Terminal B — MockEventSubWebhook:**
    `ASPNETCORE_URLS=http://127.0.0.1:9051`
    `Backend__BaseUrl=http://127.0.0.1:8080`
@@ -93,7 +97,7 @@ Full checklist: [`docs/e2e/E2E_AUTOMATION_TASKS.md`](../../e2e/E2E_AUTOMATION_TA
 
 ### Setting up Tier B Environment
 
-Tier B adds **MockHelixApi** (loopback Helix stub on **9053**), **SyntheticDesktop** (HTTP harness on **9054**), and **`Twitch:HelixApiBaseUrl`** in [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) / [`TwitchOptions`](../../../src/MimironsGoldOMatic.Backend/Configuration/TwitchOptions.cs). Use this sequence for local integration and for [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) **[Tier B First Run Guide](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-first-run-guide)**.
+Tier B adds **MockHelixApi** (loopback Helix stub on **9053**), **SyntheticDesktop** (HTTP harness on **9054**), and **`Twitch:HelixApiBaseUrl`** in [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) / [`TwitchOptions`](../../../src/MimironsGoldOMatic.Backend.Abstract/Configuration/TwitchOptions.cs). Use this sequence for local integration and for [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) **[Tier B First Run Guide](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-first-run-guide)**.
 
 1. Complete **Tier A** local steps above (Postgres + Backend + **9051** + **9052** + synthetic enrollment).
 2. **Python deps:** `pip install -r .github/scripts/tier_b_verification/requirements.txt`
@@ -108,7 +112,7 @@ Tier B adds **MockHelixApi** (loopback Helix stub on **9053**), **SyntheticDeskt
    `dotnet run --project src/Mocks/SyntheticDesktop/MimironsGoldOMatic.Mocks.SyntheticDesktop.csproj -c Release`
    Verify: `python3 .github/scripts/tier_b_verification/check_syntheticdesktop.py`
    Full sequence (needs **`Pending`** payout): `python3 .github/scripts/tier_b_verification/check_syntheticdesktop.py --payout-id <GUID>`
-5. **Backend Helix → mock:** set **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, plus non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`** so [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs) does not skip the outbound call. Restart Backend.
+5. **Backend Helix → mock:** set **`Twitch__HelixApiBaseUrl=http://127.0.0.1:9053`**, plus non-empty **`Twitch__BroadcasterAccessToken`**, **`Twitch__BroadcasterUserId`**, **`Twitch__HelixClientId`** so [`HelixChatService`](../../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs) does not skip the outbound call. Restart Backend.
 6. **Sweep:** `python3 .github/scripts/tier_b_verification/check_workflow_integration.py` (or **`--skip-tier-b`** if Tier B processes are stopped).
 
 **References:** [`docs/e2e/E2E_AUTOMATION_PLAN.md`](../../e2e/E2E_AUTOMATION_PLAN.md) (**[Tier B Readiness Verification](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-readiness-verification)**), **[Tier B Troubleshooting](../../e2e/E2E_AUTOMATION_PLAN.md#tier-b-troubleshooting-guide)**, [`docs/e2e/TIER_B_PRELAUNCH_CHECKLIST.md`](../../e2e/TIER_B_PRELAUNCH_CHECKLIST.md).
@@ -145,7 +149,7 @@ With **`Twitch__HelixApiBaseUrl`** unset, **`HelixChatService`** uses the produc
 - **Health checks — Tier A:** **`GET /health`** on **9051** / **9052** → **`status`** **`ok`** and **`service`** field.
 - **Health checks — Tier B:** **`GET /health`** on **9053** / **9054** → **`status`** **`healthy`**, **`component`** **`MockHelixApi`** / **`SyntheticDesktop`**.
 - **`check_mockhelixapi` fails:** Ensure mock is on **9053**; if using strict auth, send **`Bearer`** + **`Client-Id`** (script always sends them; enable strict only when Backend is wired).
-- **`check_syntheticdesktop` / `run-sequence` 502:** Open **`GET /last-run`** on **9054** — **`steps`** lists HTTP status per call; compare with [`DesktopPayoutsController`](../../../src/MimironsGoldOMatic.Backend/Controllers/DesktopPayoutsController.cs) and domain transitions.
+- **`check_syntheticdesktop` / `run-sequence` 502:** Open **`GET /last-run`** on **9054** — **`steps`** lists HTTP status per call; compare with [`DesktopPayoutsController`](../../../src/MimironsGoldOMatic.Backend.Api/Controllers/DesktopPayoutsController.cs) and domain transitions.
 - **`check_workflow_integration` timeout:** Service not listening yet (slow **`dotnet run`**) or wrong port — see [Tier B Troubleshooting — workflow integration](../../e2e/E2E_AUTOMATION_PLAN.md#workflow-integration).
 
 ### Environment variables (local E2E)

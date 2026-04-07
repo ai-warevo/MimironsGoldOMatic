@@ -30,7 +30,7 @@
 
 | Area | Path / doc |
 |------|------------|
-| EBS APIs | `src/MimironsGoldOMatic.Backend/` — Desktop routes, Helix, harness `POST /api/e2e/prepare-pending-payout` (Development only). |
+| EBS APIs | `src/MimironsGoldOMatic.Backend.Api/` — Desktop routes, Helix, harness `POST /api/e2e/prepare-pending-payout` (Development only). |
 | Synthetic mock | `src/Mocks/SyntheticDesktop/` |
 | Helix mock | `src/Mocks/MockHelixApi/` |
 | Real Desktop | `src/MimironsGoldOMatic.Desktop/` — [`docs/components/desktop/ReadME.md`](../components/desktop/ReadME.md) |
@@ -94,7 +94,7 @@
 |--------|----------------|
 | **Goal** | Validate real **Helix** `POST /helix/chat/messages` and optional **EventSub** delivery using **test channel / dev rig** credentials. |
 | **Trigger** | **GitHub Environments** with required reviewers; **`workflow_dispatch`**; never auto-run on untrusted PRs. |
-| **Integration points** | [`HelixChatService`](../../src/MimironsGoldOMatic.Backend/Services/HelixChatService.cs), [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend/Controllers/TwitchEventSubController.cs), Extension JWT contract. |
+| **Integration points** | [`HelixChatService`](../../src/MimironsGoldOMatic.Backend.Services/HelixChatService.cs), [`TwitchEventSubController`](../../src/MimironsGoldOMatic.Backend.Api/Controllers/TwitchEventSubController.cs), Extension JWT contract. |
 | **Dependencies** | Broadcaster OAuth refresh strategy; Twitch app Client-Id; compliance with Twitch developer policies. |
 
 ### F3 — Parity tests (SyntheticDesktop vs Desktop)
@@ -129,7 +129,7 @@
 
 | Component | Path | Tier C touch |
 |-----------|------|--------------|
-| **EBS** | [`src/MimironsGoldOMatic.Backend/`](../../src/MimironsGoldOMatic.Backend/) | Optional **Helix** / **EventSub** env-specific config; harness remains **Development-only**. |
+| **EBS** | [`src/MimironsGoldOMatic.Backend.Api/`](../../src/MimironsGoldOMatic.Backend.Api/) | Optional **Helix** / **EventSub** env-specific config; harness remains **Development-only**. |
 | **SyntheticDesktop** | [`src/Mocks/SyntheticDesktop/`](../../src/Mocks/SyntheticDesktop/) | Source for parity tests; may reference shared library with Desktop. |
 | **Desktop** | [`src/MimironsGoldOMatic.Desktop/`](../../src/MimironsGoldOMatic.Desktop/) | Real WinAPI + log paths; CI may compile-test only. |
 | **Addon** | [`src/MimironsGoldOMatic.WoWAddon/`](../../src/MimironsGoldOMatic.WoWAddon/) | Contract tests + optional headless log replay fixtures. |

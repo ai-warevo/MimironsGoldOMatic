@@ -33,10 +33,10 @@ Each step is executed with a checklist supplied by the project owner (often inli
 
 ### MVP-0: Repo skeleton
 
-- Solution file: `src/MimironsGoldOMatic.slnx` (includes Shared, Backend, Desktop; extend for remaining projects in MVP-0)
+- Solution file: `src/MimironsGoldOMatic.slnx` (includes Shared, Backend stack, Desktop; extend for remaining projects in MVP-0)
 - Add projects under `src/`:
   - `MimironsGoldOMatic.Shared`
-  - `MimironsGoldOMatic.Backend`
+  - `MimironsGoldOMatic.Backend.Api` (+ **`Backend.*`** libraries; see `docs/components/backend/ReadME.md`)
   - `MimironsGoldOMatic.Desktop`
   - `MimironsGoldOMatic.TwitchExtension`
   - `MimironsGoldOMatic.WoWAddon`
@@ -74,7 +74,7 @@ Acting as **[EBS/API Expert]**:
   - `CreatePayoutRequest` record including: `CharacterName`, `EnrollmentRequestId`
 - Ensure the namespace is `MimironsGoldOMatic.Shared`.
 
-### MVP-2: EBS API + persistence (`MimironsGoldOMatic.Backend`)
+### MVP-2: EBS API + persistence (`MimironsGoldOMatic.Backend.Api` + `Backend.*`)
 
 - PostgreSQL + Marten (Event Store) + CQRS read projections
 - Persistence rules:
@@ -103,7 +103,7 @@ Acting as **[EBS/API Expert]**:
   - Extension **Bearer** JWT: HS256 validation using **`Twitch:ExtensionSecret`** (base64); **`Twitch:ExtensionClientId`** as JWT **`aud`** when set. **Development** may use an empty secret with a fixed dev-derived key (`Program.cs`).
   - Desktop uses a pre-shared **`Mgm:ApiKey`** (header **`X-MGM-ApiKey`**).
 
-**Status — implemented (code):** `src/MimironsGoldOMatic.Backend` — Marten + PostgreSQL (`ConnectionStrings:PostgreSQL`), MVP HTTP routes (Extension JWT + Desktop `X-MGM-ApiKey`), EventSub `channel.chat.message` at `POST /api/twitch/eventsub`, MediatR handlers, roulette sync + payout expiration hosted services, Helix §11 inline retry after `Sent`, global rate limiter (EventSub exempt). Configure `Mgm`, `Twitch`, and Postgres before running; see `docs/components/backend/ReadME.md` and `appsettings*.json`. Runtime E2E against Twitch/Helix not verified in CI.
+**Status — implemented (code):** `src/MimironsGoldOMatic.Backend.Api` (and **`Backend.*`**) — Marten + PostgreSQL (`ConnectionStrings:PostgreSQL`), MVP HTTP routes (Extension JWT + Desktop `X-MGM-ApiKey`), EventSub `channel.chat.message` at `POST /api/twitch/eventsub`, MediatR handlers, roulette sync + payout expiration hosted services, Helix §11 inline retry after `Sent`, global rate limiter (EventSub exempt). Configure `Mgm`, `Twitch`, and Postgres before running; see `docs/components/backend/ReadME.md` and `appsettings*.json`. Runtime E2E against Twitch/Helix not verified in CI.
 
 Spec links:
 
@@ -118,7 +118,7 @@ Spec links:
 Acting as **[EBS/API Expert]**:
 
 - Read `docs/overview/SPEC.md`, `docs/components/backend/ReadME.md`, and reference `MimironsGoldOMatic.Shared`.
-- Create the ASP.NET Core (.NET 10) Web API project `MimironsGoldOMatic.Backend` in `/src`.
+- Create the ASP.NET Core (.NET 10) Web API project for the EBS in `/src` *(this repo: **`MimironsGoldOMatic.Backend.Api`** is the host; the removed monolith **`MimironsGoldOMatic.Backend`** folder is not present)*.
 - Configure Marten Event Store with PostgreSQL and implement CQRS persistence:
   - Write-side events are the canonical source of truth
   - Read models include `TwitchUserId` and `TwitchDisplayName`

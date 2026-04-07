@@ -2,7 +2,7 @@
 
 ## MimironsGoldOMatic.Shared (.NET 10)
 
-- **Role:** Shared contract library for data structures and validation used by the EBS (`MimironsGoldOMatic.Backend`) and Desktop app.
+- **Role:** Shared contract library for data structures and validation used by the EBS (`MimironsGoldOMatic.Backend.Api` and related **`Backend.*`** projects) and Desktop app.
 - **Stack:** .NET 10 Class Library.
 
 ## High-level patterns

@@ -21,19 +21,19 @@ internal static class Program
 
     public static int Main(string[] args)
     {
-        if (args.Length != 3)
+        if (args.Length < 3)
         {
-            Console.Error.WriteLine("Usage: MimironsGoldOMatic.ApiTsGen <backendSourceRoot> <sharedSourceRoot> <tsApiOutputDir>");
+            Console.Error.WriteLine(
+                "Usage: MimironsGoldOMatic.ApiTsGen <sourceRoot1> [sourceRoot2 ...] <tsApiOutputDir>");
             return 1;
         }
 
-        var backendRoot = Path.GetFullPath(args[0]);
-        var sharedRoot = Path.GetFullPath(args[1]);
-        var outputDir = Path.GetFullPath(args[2]);
+        var outputDir = Path.GetFullPath(args[^1]);
         Directory.CreateDirectory(outputDir);
 
-        var syntaxTrees = LoadSyntaxTrees(backendRoot)
-            .Concat(LoadSyntaxTrees(sharedRoot))
+        var syntaxTrees = args[..^1]
+            .Select(a => Path.GetFullPath(a))
+            .SelectMany(LoadSyntaxTrees)
             .ToArray();
 
         var dtoMap = ParseDtoModels(syntaxTrees);

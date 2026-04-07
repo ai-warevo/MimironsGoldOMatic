@@ -16,7 +16,7 @@ Decision outcomes:
 ## 2. Scope
 
 This gate covers:
-- Backend (`MimironsGoldOMatic.Backend`)
+- Backend (`MimironsGoldOMatic.Backend.Api` + **`Backend.*`** libraries)
 - Desktop (`MimironsGoldOMatic.Desktop`)
 - WoW addon (`MimironsGoldOMatic.WoWAddon`)
 - Twitch Extension (`MimironsGoldOMatic.TwitchExtension`)

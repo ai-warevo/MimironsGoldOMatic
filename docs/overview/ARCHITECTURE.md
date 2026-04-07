@@ -7,14 +7,14 @@ This page is a non-normative architecture map. For contracts, payloads, and life
 ## System pipeline
 
 ```text
-Twitch Extension → EBS (MimironsGoldOMatic.Backend / ASP.NET Core) → WPF Desktop (WinAPI / PostMessage) → WoW 3.3.5a Addon (Lua)
+Twitch Extension → EBS (MimironsGoldOMatic.Backend.Api / ASP.NET Core) → WPF Desktop (WinAPI / PostMessage) → WoW 3.3.5a Addon (Lua)
 ```
 
 Viewers interact through the **Twitch Extension** and **broadcast Twitch chat**. The streamer operates through **Desktop** and the **WoW client**. The Extension and Desktop do not communicate directly; the EBS is the only integration hub.
 
 ## Extension Backend Service (EBS)
 
-**`MimironsGoldOMatic.Backend`** is the **EBS**. It validates Twitch Extension JWTs, ingests EventSub (`channel.chat.message`) for **`!twgold <CharacterName>`** enrollment, executes Helix actions (including §11 reward-sent chat announcements), and exposes REST APIs for both the Extension (Bearer JWT) and Desktop (`X-MGM-ApiKey`). MVP deployment scope is single-broadcaster per environment (see [`docs/overview/SPEC.md`](SPEC.md)).
+The **`MimironsGoldOMatic.Backend.Api`** host (with **`Backend.*`** libraries) is the **EBS**. It validates Twitch Extension JWTs, ingests EventSub (`channel.chat.message`) for **`!twgold <CharacterName>`** enrollment, executes Helix actions (including §11 reward-sent chat announcements), and exposes REST APIs for both the Extension (Bearer JWT) and Desktop (`X-MGM-ApiKey`). MVP deployment scope is single-broadcaster per environment (see [`docs/overview/SPEC.md`](SPEC.md)).
 
 ## Runtime components
 

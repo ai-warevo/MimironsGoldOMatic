@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using MimironsGoldOMatic.Backend.Configuration;
-using MimironsGoldOMatic.Backend.Controllers;
+using MimironsGoldOMatic.Backend.Api.Controllers;
 using MimironsGoldOMatic.Backend.Services;
 using MediatR;
 using Microsoft.AspNetCore.Http;
