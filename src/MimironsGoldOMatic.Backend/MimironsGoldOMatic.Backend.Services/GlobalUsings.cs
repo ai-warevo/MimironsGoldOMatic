@@ -1,3 +1,9 @@
 global using MimironsGoldOMatic.Shared.Gifts;
 global using MimironsGoldOMatic.Shared.Payouts;
 global using MimironsGoldOMatic.Shared.Versioning;
+global using MimironsGoldOMatic.Backend.Domain.System.Dtos;
+global using MimironsGoldOMatic.Backend.Domain.Gifts.Commands;
+global using MimironsGoldOMatic.Backend.Domain.Gifts.Queries;
+global using MimironsGoldOMatic.Backend.Domain.Roulette.Commands;
+global using MimironsGoldOMatic.Backend.Domain.Roulette.Queries;
+global using MimironsGoldOMatic.Backend.Domain.Roulette.Dtos;

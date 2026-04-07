@@ -1,22 +1,20 @@
 ## MimironsGoldOMatic.Backend.Domain
 
-MediatR request/query/command contracts for the backend write side (`EbsMediator.Contracts.cs` and related types).
+Bounded-context layout for MediatR contracts and domain-facing abstractions. Each context folder contains the standard slices (`Abstract`, `Commands`, `Dtos`, `Entities`, `Events`, `Exceptions`, `Handlers`, `Queries`, `Repositories`, `Services`). Empty slices are reserved with `.gitkeep` until types land.
+
+**Contexts (current):**
+
+- **`System`** — shared API result shapes (`ApiErrorDto`, `HandlerResult<T>`), E2E harness DTOs, and **`IUnitOfWork` / `IUnitOfWorkFactory`** (`System/Abstract`).
+- **`Roulette`** — spin / pool / payout / verify-candidate commands and queries.
+- **`Gifts`** — gift queue commands and queries.
+
+Handler implementations remain in **`MimironsGoldOMatic.Backend.Services`** (this project holds contracts only).
 
 ### Dependency direction (strict)
 
-- **Allowed:** `MimironsGoldOMatic.Backend.Domain` → `MimironsGoldOMatic.Backend.Abstract`, `MimironsGoldOMatic.Backend.Common`, and `MediatR` only.
-- **Not referenced:** `Backend.Services`, `Backend.DataAccess`, `Backend.Api`, `Backend.Infrastructure`, `Backend.Cli`, `Backend.IntegrationTests`.
+- **Allowed:** `MimironsGoldOMatic.Backend.Domain` → `MimironsGoldOMatic.Shared.*` and `MediatR` only (per this project’s `.csproj` references).
+- **Not referenced:** `Backend.Services`, `Backend.DataAccess`, `Backend.Api`, `Backend.Infrastructure`, `Backend.Cli`, integration tests.
 
-### Temporary compatibility
-
-No temporary compatibility reference is currently required in this project. Mediator contracts use `MimironsGoldOMatic.Backend.Abstract` DTOs.
-
-### Deferred cleanup (out of scope for compile migration)
-
-- Remove or replace placeholder `Class1.cs` when real domain types or split files are introduced.
-- Continue consolidating duplicate contract definitions across old/new backend layers as migration proceeds.
-
-### Verification handoff
+### Verification
 
 - **Gate (this layer):** `dotnet build src/MimironsGoldOMatic.Backend/MimironsGoldOMatic.Backend.Domain/MimironsGoldOMatic.Backend.Domain.csproj`
-- **Next (orchestrator):** `tmp/prompts/backend-layer-compiles/micro/41-verify-layer-gates.md` — re-run Services, DataAccess, and Domain builds before full solution verification.

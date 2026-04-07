@@ -6,7 +6,6 @@ using JasperFx.Events;
 using Marten;
 using Marten.Events;
 using MimironsGoldOMatic.Backend.Configuration;
-using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Services;
 using MimironsGoldOMatic.Backend.Services.Mediatr;

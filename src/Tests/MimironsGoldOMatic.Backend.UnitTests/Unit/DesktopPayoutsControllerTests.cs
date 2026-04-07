@@ -1,5 +1,4 @@
-﻿using MimironsGoldOMatic.Backend.Api.Controllers;
-using MimironsGoldOMatic.Backend.Domain;
+using MimironsGoldOMatic.Backend.Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;

@@ -1,4 +1,3 @@
-using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Common;
 using MimironsGoldOMatic.Backend.IntegrationTests.Support;

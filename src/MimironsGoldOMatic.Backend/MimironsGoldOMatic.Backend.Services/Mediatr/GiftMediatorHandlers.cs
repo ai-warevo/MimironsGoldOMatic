@@ -1,6 +1,5 @@
 using Marten;
 using MediatR;
-using MimironsGoldOMatic.Backend.Domain;
 using MimironsGoldOMatic.Backend.Persistence;
 using MimironsGoldOMatic.Backend.Common;
 
