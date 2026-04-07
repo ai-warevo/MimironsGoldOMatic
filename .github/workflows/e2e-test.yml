@@ -72,7 +72,7 @@ jobs:
         run: |
           set -e
           dotnet build src/MimironsGoldOMatic.Shared/MimironsGoldOMatic.Shared.csproj -c Release
-          dotnet build src/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj -c Release
+          dotnet build src/Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj -c Release
           dotnet build src/Mocks/MockEventSubWebhook/MimironsGoldOMatic.Mocks.MockEventSubWebhook.csproj -c Release
           dotnet build src/Mocks/MockExtensionJwt/MimironsGoldOMatic.Mocks.MockExtensionJwt.csproj -c Release
           dotnet build src/Mocks/MockHelixApi/MimironsGoldOMatic.Mocks.MockHelixApi.csproj -c Release
@@ -100,7 +100,7 @@ jobs:
           Twitch__HelixClientId: e2e-ci-helix-client
         run: |
           set -e
-          dotnet run --project src/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj -c Release --no-build >> /tmp/mgm-backend.log 2>&1 &
+          dotnet run --project src/Backend/MimironsGoldOMatic.Backend.Api/MimironsGoldOMatic.Backend.Api.csproj -c Release --no-build >> /tmp/mgm-backend.log 2>&1 &
           echo $! > /tmp/mgm-backend.pid
           echo "Waiting for Backend on :8080..."
           for i in $(seq 1 90); do

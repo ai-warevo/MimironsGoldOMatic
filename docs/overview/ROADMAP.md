@@ -103,7 +103,7 @@ Acting as **[EBS/API Expert]**:
   - Extension **Bearer** JWT: HS256 validation using **`Twitch:ExtensionSecret`** (base64); **`Twitch:ExtensionClientId`** as JWT **`aud`** when set. **Development** may use an empty secret with a fixed dev-derived key (`Program.cs`).
   - Desktop uses a pre-shared **`Mgm:ApiKey`** (header **`X-MGM-ApiKey`**).
 
-**Status — implemented (code):** `src/MimironsGoldOMatic.Backend.Api` (and **`Backend.*`**) — Marten + PostgreSQL (`ConnectionStrings:PostgreSQL`), MVP HTTP routes (Extension JWT + Desktop `X-MGM-ApiKey`), EventSub `channel.chat.message` at `POST /api/twitch/eventsub`, MediatR handlers, roulette sync + payout expiration hosted services, Helix §11 inline retry after `Sent`, global rate limiter (EventSub exempt). Configure `Mgm`, `Twitch`, and Postgres before running; see `docs/components/backend/ReadME.md` and `appsettings*.json`. Runtime E2E against Twitch/Helix not verified in CI.
+**Status — implemented (code):** `src/Backend/MimironsGoldOMatic.Backend.Api` (and **`Backend.*`**) — Marten + PostgreSQL (`ConnectionStrings:PostgreSQL`), MVP HTTP routes (Extension JWT + Desktop `X-MGM-ApiKey`), EventSub `channel.chat.message` at `POST /api/twitch/eventsub`, MediatR handlers, roulette sync + payout expiration hosted services, Helix §11 inline retry after `Sent`, global rate limiter (EventSub exempt). Configure `Mgm`, `Twitch`, and Postgres before running; see `docs/components/backend/ReadME.md` and `appsettings*.json`. Runtime E2E against Twitch/Helix not verified in CI.
 
 Spec links:
 
