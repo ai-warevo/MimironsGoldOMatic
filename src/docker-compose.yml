@@ -1,22 +1,44 @@
-version: "3"
-
 services:
     mgmdb:
-        environment:
-            - POSTGRES_DB=mgm
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
         image: postgres:16-alpine
         hostname: mgmdb
+        container_name: mgmdb
+        labels:
+            - SERVICE_NAME=mgmdb
+        environment:
+            - POSTGRES_DB=${DB_NAME}
+            - POSTGRES_USER=${DB_USER}
+            - POSTGRES_PASSWORD=${DB_PASS}
         expose:
             - 5432
         ports:
             - 5432:5432
-        container_name: mgmdb
-        labels:
-            - SERVICE_NAME=mgmdb
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U postgres -d mgm"]
+          interval: 5s
+          timeout: 5s
+          retries: 5
         volumes:
-            - postgres:/var/lib/postgresql/data
+            - ./pg_data:/var/lib/postgresql/data
+
+    mgmdbpga:
+        image: dpage/pgadmin4
+        depends_on:
+          mgmdb:
+            condition: service_healthy
+        hostname: mgmdbpga
+        container_name: mgmdbpga
+        labels:
+            - SERVICE_NAME=mgmdbpga
+        restart: always
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+            - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASS}
+        ports:
+            - "5050:80"
+        volumes:
+            - ./servers.json:/pgadmin4/servers.json
+
 
 volumes:
     postgres:
